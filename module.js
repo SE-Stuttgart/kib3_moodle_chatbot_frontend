@@ -17,12 +17,13 @@ M.block_chatbot = {
 	 * @param string server_port - the server port.
 	 * @param string server_url - the server url.
 	 * @param string container - the id or class of the chat container.
-	 * @param object user - the current user id and name.
+	 * @param object user - the current user: id, firstname, lastname.
 	 * @param object imgs - the images urls needed.
 	 */
 	init : function(Y, server_name, server_port, server_url, chat_container, user, imgs) {
 
 		console.log("JS INIT");
+		console.log('user', user);
 		
 		// Set Global Values
 		this.chat_container = chat_container;
@@ -40,7 +41,7 @@ M.block_chatbot = {
 			//Start Connection
 			// this.start_connection(Y, server_name, server_port, server_url, user);
 			// 193.196.53.252
-			this.start_connection(Y, 'localhost', 44123, 'localhost', 'testuser')
+			this.start_connection(Y, 'localhost', 44123, 'localhost', user.id);
 		}
 		else {
 			// The user browser doesn't support WebSockets
@@ -63,7 +64,7 @@ M.block_chatbot = {
 		conn.onopen = function() {
 
 			// Update Status to Online
-			console.log('connected');
+			console.log('connected', user);
 			self.start_session(Y, conn, server_url, null, true);
 
 			start_dialog_msg = {
