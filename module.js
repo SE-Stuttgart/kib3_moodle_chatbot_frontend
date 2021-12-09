@@ -9,7 +9,6 @@ M.block_chatbot = {
 	space_between_windows : 15,
 
 	
-	
 	/**
 	 * Initiates the connection with the server and creates the chat windows container.
 	 * @param object Y - YUI 3 object.
@@ -17,7 +16,7 @@ M.block_chatbot = {
 	 * @param string server_port - the server port.
 	 * @param string server_url - the server url.
 	 * @param string container - the id or class of the chat container.
-	 * @param object user - the current user: id, firstname, lastname.
+	 * @param object user - the current user: id, username.
 	 * @param object imgs - the images urls needed.
 	 */
 	init : function(Y, server_name, server_port, server_url, chat_container, user, imgs) {
@@ -41,7 +40,7 @@ M.block_chatbot = {
 			//Start Connection
 			// this.start_connection(Y, server_name, server_port, server_url, user);
 			// 193.196.53.252
-			this.start_connection(Y, 'localhost', 44123, 'localhost', user.id);
+			this.start_connection(Y, '193.196.53.252', 44123, '193.196.53.252', user.id);
 		}
 		else {
 			// The user browser doesn't support WebSockets
@@ -73,58 +72,30 @@ M.block_chatbot = {
 				topic: 'start_dialog' 
 			}
 			conn.send(JSON.stringify(start_dialog_msg));
-			// self.update_status(Y, conn, user, 'online');
-			// self.update_status(Y, conn, user.id, 'online');
 		};
 
 		let that = this;
 		conn.onmessage = function(msg) {
 			// Parse data received.
-			console.log('recv', msg);
-	        var data = msg.data;
-			console.log(' - msg', data);
+	        var data = JSON.parse(msg.data);
+			console.log('recv', data);
 			
 			var session = 1;
 			var chat_window_messages = Y.one('#chatbot_session_'+session).one('.messages');
+
+			// display system message in text form
 			var params = {
 				session: {
 					id: session
 				},
 				user: {
 					id: 1,
-					name: 'adviser'
+					username: 'adviser'
 				},
-				message: data
+				message: data.content,
+				format: data.format
 			};
 			that.create_message(Y, chat_window_messages, params);
-			
-
-			// if(data.action && data.params) {
-			// 	switch(data.action) {
-
-			// 		// When the current user or other user goes online.
-			// 		case 'get_users_and_sessions' :
-			// 			self.get_users_online(Y, conn, data.params);
-			// 			self.get_sessions(Y, conn, server_url, data.params);
-			// 			break;
-
-			// 		// When a user goes offline.
-			// 		case 'remove_users' :
-			// 			self.remove_users_offline(Y, conn, data.params);
-			// 			break;
-
-			// 		// When the current user starts a session.	
-			// 		case 'start_session' :
-			// 			self.start_session(Y, conn, server_url, data.params, true);
-			// 			break;
-
-			// 		// When the current user or other user posts a message to a session.	
-			// 		case 'post_message' :
-			// 			self.post_message(Y, conn, server_url, data.params);
-			// 			break;
-			// 	}
-			// }
-
 	    };
 
 		conn.onerror = function() {
@@ -133,11 +104,11 @@ M.block_chatbot = {
 
 		conn.onclose = function() {
 			setTimeout(function() {
+				// Try to re-connect every 5 seconds
 				self.start_connection(Y, server_name, server_port, server_url, user);
 			}, 5000);
 			
 			Y.all('.chat_window').remove(true);
-			
 			self.error(Y, 'connection-lost');
 		};
 	},
@@ -151,36 +122,15 @@ M.block_chatbot = {
 	 * @param object params - the data sent by the server.
 	 */
 	send_data : function(Y, conn, action, params) {
-		// var data = {};
-		// data.action = action;
-		// data.params = params;
-		// conn.send(Y.JSON.stringify(data));
 		dialog_msg = {
-			access_token: 'test',
+			userid: params.user.id,
 			domain: 0,
-			topic: 'user_utterance' ,
+			topic: 'user_utterance',
 			msg: params.message.text
 		}
 		console.log('sending', params);
 		conn.send(JSON.stringify(dialog_msg));
 	},
-	
-	
-	/**
-	 * Initiates the connection with the server and creates the chat windows container.
-	 * @param object Y - YUI 3 object.
-	 * @param object conn - the connection with the server.
-	 * @param int user_id - the user id.
-	 * @param string status - the user status.
-	 */
-	update_status : function(Y, conn, user_id, status) {
-		var params = {};
-		params.user_id = user_id;
-		params.status = status;
-
-		this.send_data(Y, conn, 'update_status', params);
-	},
-	
 	
 	
 	/**
@@ -209,7 +159,7 @@ M.block_chatbot = {
 		//User Name
 		var table_col_name = Y.Node.create('<td class="name"></td>');
 		var user_name = Y.Node.create('<p></p>');
-		user_name.setContent(user.name);
+		user_name.setContent(user.username);
 		table_col_name.append(user_name);
 		table_row.append(table_col_name);
 
@@ -319,14 +269,11 @@ M.block_chatbot = {
 						chat_window_header_actions_action.setStyle('display', 'none');
 					}
 				}
-
-
-
+				
 				// Window Messages
 				var chat_window_messages = Y.Node.create('<div></div>');
 				chat_window_messages.addClass('messages');
 				chat_window.append(chat_window_messages);
-
 
 				// Window Reply
 				var chat_window_reply = Y.Node.create('<div></div>');
@@ -442,10 +389,10 @@ M.block_chatbot = {
 		// 	chat_window.one('.chat_window_insert_text').focus();
 		// }
 
-		// If session as unseen messages
-		else if(parseInt(params.session.unseen)) {
-			chat_window.addClass('new_messages');
-		}
+		// // If session as unseen messages
+		// else if(parseInt(params.session.unseen)) {
+		// 	chat_window.addClass('new_messages');
+		// }
 	},
 	
 	
@@ -459,8 +406,6 @@ M.block_chatbot = {
 	 * @param object params - the data sent by the server.
 	 */
 	post_message : function(Y, conn, server_url, params) {
-
-		
 		if(params.session && params.message) {
 			if(params.message.userid == this.user.id) {
 				this.send_data(Y, conn, 'post_message', params);
@@ -473,8 +418,8 @@ M.block_chatbot = {
 			// }
 
 			//Create Message
-			params.user.name = 'student';
 			params.message = params.message.text;
+			params.format = "text";
 			var chat_window_messages = Y.one('#chatbot_session_'+params.session.id).one('.messages');
 			this.create_message(Y, chat_window_messages, params);
 
@@ -513,7 +458,6 @@ M.block_chatbot = {
 	 * @param object params - the data sent by the server.
 	 */
 	create_message : function(Y, chat_window_messages, params) {
-
 		//Get last user to post
 		var chat_window_last_user = chat_window_messages.all('> .user').slice(-1).item(0);
 
@@ -532,18 +476,28 @@ M.block_chatbot = {
 			}
 
 			//Create User
-			var chat_user = Y.Node.create('<p></p>');
+			var chat_user = Y.Node.create('<div></div>');
 			chat_user.addClass('user chatbot_user_'+params.user.id);
-			chat_user.setContent(params.user.name+':');
+			chat_user.addClass("username");
+			chat_user.setContent(params.user.username+':');
 			chat_window_messages.append(chat_user);
 		}
 
 		//Create Message
-		var chat_message = Y.Node.create('<p></p>');
-		chat_message.addClass('message');
-		chat_message.setContent(params.message);
-		chat_window_messages.append(chat_message);
-
+		if(params.format === "text")
+		{
+			// normal text
+			var chat_message = Y.Node.create('<p></p>');
+			chat_message.addClass('message');
+			chat_message.setContent(params.message);
+			chat_window_messages.append(chat_message);
+		} else if(params.format === "html")
+		{
+			// html content, e.g. iframe with h5p content
+			var chat_message = Y.Node.create(params.message);
+			// chat_message.addClass('message');
+			chat_window_messages.append(chat_message);
+		}
 		//Create Break Line
 		var chat_br = Y.Node.create('<br/>');
 		chat_window_messages.append(chat_br);

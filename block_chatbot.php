@@ -6,7 +6,7 @@ class block_chatbot extends block_base {
 
    
     public function get_content() {
-		global $CFG, $OUTPUT, $PAGE, $USER;
+		global $CFG, $OUTPUT, $PAGE, $USER, $DB;
 		require_once(__DIR__ . '/lib.php');
 
     	if ($this->content !== null) {
@@ -16,13 +16,16 @@ class block_chatbot extends block_base {
     	$this->content         =  new stdClass;
     	$this->content->footer = '';
 
+		// $h5p_content = block_chatbot_loadh5p($PAGE, $DB, '10', $USER->id);
+
 		// Init javascript
 		$data = array(
 			block_chatbot_get_server_name(), 
 			block_chatbot_get_server_port(), 
 			$CFG->wwwroot,
 			block_chatbot_get_chat_container(),
-			array('id' => $USER->id, 'firstname' => $USER->firstname, 'lastname' => $USER->lastname),
+			
+			array('id' => $USER->id, 'username' => $USER->username),
 			/*array(
 				'close' => array(
 					'img' => (string) $OUTPUT->image_url('close', 'block_chatbot'),

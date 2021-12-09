@@ -10,13 +10,13 @@
 /* Chat Windows
 ------------------------*/
 #chatbot .chat_window {
-	width: 250px;
-	height: 280px;
+	width: 450px;
+	height: 350px;
 	border-style: solid;
 	border-bottom: 0;
 	top: 100%;
 	right: 0;
-	margin-top: -280px;
+	margin-top: -350px;
 	position: fixed;
 }
 
@@ -82,7 +82,7 @@
 
 #chatbot .chat_window .messages {
 	font-size: 12px;
-	height: 220px;
+	height: 290px;
 	padding: 5px 10px;
 	overflow-y: auto;
 	background-color: white;
@@ -94,7 +94,7 @@
 	display: inline;
 }
 
-#chatbot .chat_window .messages p.user {
+.username {
 	font-weight: bold;
 	margin-top: 5px;
 	margin-right: 5px;
