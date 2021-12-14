@@ -96,6 +96,8 @@ M.block_chatbot = {
 				format: data.format
 			};
 			that.create_message(Y, chat_window_messages, params);
+			//Scroll to Bottom
+			that.messages_scroll_bottom(Y, chat_window_messages);
 	    };
 
 		conn.onerror = function() {
@@ -289,7 +291,7 @@ M.block_chatbot = {
 
 				var chat_window_reply_button = Y.Node.create('<input type="submit"></input>');
 				chat_window_reply_button.addClass('chat_window_submit_text');
-				chat_window_reply_button.setAttribute('value', M.util.get_string('send-message', 'block_chatbot'));
+				chat_window_reply_button.setAttribute('value', 'Senden');
 				chat_window_reply_form.append(chat_window_reply_button);
 
 
