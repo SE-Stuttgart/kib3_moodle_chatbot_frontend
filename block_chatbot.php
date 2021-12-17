@@ -1,10 +1,11 @@
 <?php
+defined('MOODLE_INTERNAL') || die();
+
 class block_chatbot extends block_base {
     public function init() {
         $this->title = get_string('chatbot', 'block_chatbot');
     }
-
-   
+ 
     public function get_content() {
 		global $CFG, $OUTPUT, $PAGE, $USER, $DB;
 		require_once(__DIR__ . '/lib.php');
@@ -16,7 +17,6 @@ class block_chatbot extends block_base {
     	$this->content         =  new stdClass;
     	$this->content->footer = '';
 
-		// $h5p_content = block_chatbot_loadh5p($PAGE, $DB, '10', $USER->id);
 
 		// Init javascript
 		$data = array(
