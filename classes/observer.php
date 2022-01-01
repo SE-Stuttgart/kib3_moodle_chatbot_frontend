@@ -15,10 +15,13 @@ class observer {
 
     public static function forward_event($url, $data){
         $curl = curl_init($url);
+        $json = json_encode($data->get_data());
         curl_setopt($curl, CURLOPT_POST, true);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json')); 
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $json);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         $response = curl_exec($curl);
+        curl_close($curl);
         // echo $response;
     }
 
@@ -28,7 +31,7 @@ class observer {
         // observer::alert($event->get_name());
         // echo "<script>console.log('Debug Objects: " . $event->get_name() . "' );</script>";
         global $PAGE;
-        observer::forward_event('http://193.196.53.252:44123/event', $event->get_name());
+        observer::forward_event('http://193.196.53.252:44123/event', $event);
 
         $PAGE->requires->js_init_call('M.block_chatbot.test_event', array('event' => $event->get_name()));	
     }
