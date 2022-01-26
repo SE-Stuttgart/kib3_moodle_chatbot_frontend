@@ -40,7 +40,7 @@ M.block_chatbot = {
 			//Start Connection
 			// this.start_connection(Y, server_name, server_port, server_url, user);
 			// 193.196.53.252
-			this.start_connection(Y, '193.196.53.252', 44123, '193.196.53.252', user.id);
+			this.start_connection(Y, '193.196.53.252', 44123, '193.196.53.252', user);
 		}
 		else {
 			// The user browser doesn't support WebSockets
@@ -58,7 +58,7 @@ M.block_chatbot = {
 	 * @param object imgs - the images urls needed.
 	 */
 	start_connection : function(Y, server_name, server_port, server_url, user) {
-		var self = this, conn = new WebSocket('ws://'+server_name+':'+server_port+'/ws?token=' + user  );
+		var self = this, conn = new WebSocket('ws://'+server_name+':'+server_port+'/ws?token=' + user.id  );
 
 		conn.onopen = function() {
 
@@ -67,7 +67,7 @@ M.block_chatbot = {
 			self.start_session(Y, conn, server_url, null, true);
 
 			start_dialog_msg = {
-				access_token: user,
+				access_token: user.id,
 				domain: 0,
 				topic: 'start_dialog' 
 			}
@@ -83,19 +83,22 @@ M.block_chatbot = {
 			var session = 1;
 			var chat_window_messages = Y.one('#chatbot_session_'+session).one('.messages');
 
-			// display system message in text form
-			var params = {
-				session: {
-					id: session
-				},
-				user: {
-					id: 1,
-					username: 'adviser'
-				},
-				message: data.content,
-				format: data.format
-			};
-			that.create_message(Y, chat_window_messages, params);
+			// display messages in text form
+			data.forEach(msg => {
+				const params = {
+					session: {
+						id: session
+					},
+					user: {
+						id: msg.party == "system"? 0 : 1,
+						username: msg.party == "system"? 'adviser' : user.username
+					},
+					message: msg.content,
+					format: msg.format
+				};
+				that.create_message(Y, chat_window_messages, params);
+			});
+			
 			//Scroll to Bottom
 			that.messages_scroll_bottom(Y, chat_window_messages);
 	    };
