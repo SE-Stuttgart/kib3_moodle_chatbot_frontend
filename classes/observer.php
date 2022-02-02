@@ -25,7 +25,8 @@ class observer {
         // echo $response;
     }
 
-    public static function course_module_completion_updated(\core\event\course_module_completion_updated $event) {
+    // public static function course_module_completion_updated(\core\event\course_module_completion_updated $event) {
+    public static function course_module_completion_updated(\core\event\base $event) {
         // file_put_contents('php://stderr', print_r("observed an event", TRUE));
         // observer::debug_to_console($event->get_name());
         // observer::alert($event->get_name());
