@@ -34,6 +34,6 @@ class observer {
         global $PAGE;
         observer::forward_event('http://193.196.53.252:44123/event', $event);
 
-        $PAGE->requires->js_init_call('M.block_chatbot.test_event', array('event' => $event->get_name()));	
+        // $PAGE->requires->js_init_call('M.block_chatbot.test_event', array('event' => $event->get_name()));	
     }
 }
