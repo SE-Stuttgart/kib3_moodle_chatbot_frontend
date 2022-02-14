@@ -8,6 +8,19 @@ M.block_chatbot = {
 	name : 'chatbot',
 	space_between_windows : 15,
 
+	isInsideIFrame : function() {
+		if ( window.location !== window.parent.location )
+		{
+			// inside iframe
+			return true;
+		} 
+		else {
+			  
+			// The page is not in an iFrame
+			return false;
+		}
+	},
+
 	
 	/**
 	 * Initiates the connection with the server and creates the chat windows container.
@@ -24,6 +37,10 @@ M.block_chatbot = {
 		console.log("JS INIT");
 		console.log('user', user);
 		
+		if(this.isInsideIFrame()) {
+			return; // don't create chatbot window if we're inside an iframe (then it probably would appear twice)
+		}
+
 		// Set Global Values
 		this.chat_container = chat_container;
 		this.user = user;
