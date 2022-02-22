@@ -51,21 +51,21 @@
 	font-weight: bold;
 	padding: 5px;
 	border-bottom-style: solid;
-	background-color: #4a6b96e7; /*[[setting:chat_window_header_color]]*/
+	background-color: #4a6b96; /*[[setting:chat_window_header_color]]*/
 }
 
 #chatbot .chat_window.new_messages .header {
-	background-color: #4a6b96e7; /*[[setting:chat_window_new_header_color]]*/
+	background-color: #4a6b96; /*[[setting:chat_window_new_header_color]]*/
 }
 
 #chatbot .chat_window .header a {
 	font-size: 14px;
 	line-height: 20px;
-	color: #4a6b96e7; /*[[setting:chat_window_text_color]]*/
+	color: #ffffff; /*[[setting:chat_window_text_color]]*/
 }
 
 #chatbot .chat_window.new_messages .header a {
-	color: black;
+	color: rgb(255, 255, 255);
 }
 
 #chatbot .chat_window .header .actions {
@@ -73,10 +73,10 @@
 	height: 20px;
 }
 
-#chatbot .chat_window .header .actions img {
+#chatbot .chat_window .header .actions svg {
 	float: right;
 	height: 16px;
-	padding: 2px;
+	padding-left: 5px;
 	cursor: pointer;
 }
 
@@ -205,7 +205,7 @@
 }
 
 .block_chatbot .column .status span.online {
-	background-color: 4a6b96e7;
+	background-color: #4a6b96;
 }
 
 .block_chatbot .column .status span.away {
@@ -213,5 +213,5 @@
 }
 
 .block_chatbot .column .status span.offline {
-	background-color: grey;
+	background-color: white;
 }

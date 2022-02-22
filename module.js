@@ -279,18 +279,11 @@ M.block_chatbot = {
 				var chat_window_header_actions = Y.Node.create('<div></div>');
 				chat_window_header_actions.addClass('actions');
 				chat_window_header.append(chat_window_header_actions);
-
-				for(i in this.imgs) {
-					var chat_window_header_actions_action = Y.Node.create('<img></img>');
-					chat_window_header_actions_action.addClass('icon');
-					chat_window_header_actions_action.addClass(i);
-					chat_window_header_actions_action.setAttribute('src', this.imgs[i].img);
-					chat_window_header_actions.append(chat_window_header_actions_action);
-
-					if(!this.imgs[i].visibility) {
-						chat_window_header_actions_action.setStyle('display', 'none');
-					}
-				}
+				
+				let minimizeBtn = Y.Node.create('<svg xmlns="http://www.w3.org/2000/svg" class="minimize" width="24" height="24" fill="white" viewBox="0 0 16 16"><path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z"/></svg>');
+				let maximizeBtn = Y.Node.create('<svg xmlns="http://www.w3.org/2000/svg" style="display:none;" class="maximize" width="16" height="16" fill="white" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707zm4.344-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707z"/></svg>');
+				chat_window_header_actions.append(minimizeBtn);
+				chat_window_header_actions.append(maximizeBtn);
 				
 				// Window Messages
 				var chat_window_messages = Y.Node.create('<div></div>');
@@ -316,23 +309,23 @@ M.block_chatbot = {
 
 
 				// Set Actions
-				//var minimize = chat_window_header_actions.one('.minimize');
-				//var maximize = chat_window_header_actions.one('.maximize');
+				var minimize = chat_window_header_actions.one('.minimize');
+				var maximize = chat_window_header_actions.one('.maximize');
 				//var close = chat_window_header_actions.one('.close');
 
 				// Minimize Event
-				// minimize.on('click', function(event) {
-				// 	chat_window.addClass('collapsed');
-				// 	this.setStyle('display', 'none');
-				// 	maximize.setStyle('display', 'block');
-				// });
+				minimize.on('click', function(event) {
+					chat_window.addClass('collapsed');
+					this.setStyle('display', 'none');
+					maximize.setStyle('display', 'block');
+				});
 
 				// // Maximize Event
-				// maximize.on('click', function(event) {
-				// 	chat_window.removeClass('collapsed');
-				// 	this.setStyle('display', 'none');
-				// 	minimize.setStyle('display', 'block');
-				// });
+				maximize.on('click', function(event) {
+					chat_window.removeClass('collapsed');
+					this.setStyle('display', 'none');
+					minimize.setStyle('display', 'block');
+				});
 
 				// // Close Event
 				// close.on('click', function(event) {
@@ -489,21 +482,21 @@ M.block_chatbot = {
 			last_user = last_user.split('_')[2];
 		}
 
-		if(last_user != params.user.id) {
-			if(last_user) {
-				//Create Users Separator
-				var chat_user_separator = Y.Node.create('<div></div>');
-				chat_user_separator.addClass('border');
-				chat_window_messages.append(chat_user_separator);
-			}
-
-			//Create User
-			var chat_user = Y.Node.create('<div></div>');
-			chat_user.addClass('user chatbot_user_'+params.user.id);
-			chat_user.addClass("username");
-			chat_user.setContent(params.user.username+':');
-			chat_window_messages.append(chat_user);
+		//if(last_user != params.user.id) {
+		if(last_user) {
+			//Create Users Separator
+			var chat_user_separator = Y.Node.create('<div></div>');
+			chat_user_separator.addClass('border');
+			chat_window_messages.append(chat_user_separator);
 		}
+
+		//Create User
+		var chat_user = Y.Node.create('<div></div>');
+		chat_user.addClass('user chatbot_user_'+params.user.id);
+		chat_user.addClass("username");
+		chat_user.setContent(params.user.username+':');
+		chat_window_messages.append(chat_user);
+		// }
 
 		//Create Message
 		if(params.format === "text")
