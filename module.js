@@ -46,6 +46,14 @@ M.block_chatbot = {
 		this.user = user;
 		this.imgs = imgs;
 
+		// Set or restore minimized state
+		if (localStorage.getItem("chatbot.minimized") === null) {
+			self.is_minimized = false;
+			localStorage.setItem("chatbot.minimized", "false")
+		} else {
+			this.is_minimized = localStorage.getItem("chatbot.minimized") === 'true';
+		}
+		
 		// Create Chat Windows Container
 		var container = Y.one(this.chat_container);
 		var chat = Y.Node.create('<div id="chatbot"></div>');
@@ -263,6 +271,11 @@ M.block_chatbot = {
 				chat_window.setAttribute('id', chat_window_id);
 				chat_window.addClass('chat_window chatbot_userto_'+user_to_id);
 				chat_window.setStyle('right', right_space+'px');
+				
+				if(this.is_minimized) {
+					chat_window.addClass("collapsed");
+				}
+
 				chat.append(chat_window);
 
 				// Window Header
@@ -313,11 +326,15 @@ M.block_chatbot = {
 				var maximize = chat_window_header_actions.one('.maximize');
 				//var close = chat_window_header_actions.one('.close');
 
+				let that = this;
+
 				// Minimize Event
 				minimize.on('click', function(event) {
 					chat_window.addClass('collapsed');
 					this.setStyle('display', 'none');
 					maximize.setStyle('display', 'block');
+					that.is_minimized = true;
+					localStorage.setItem("chatbot.minimized", "true");
 				});
 
 				// // Maximize Event
@@ -325,7 +342,14 @@ M.block_chatbot = {
 					chat_window.removeClass('collapsed');
 					this.setStyle('display', 'none');
 					minimize.setStyle('display', 'block');
+					that.is_minimized = false;
+					localStorage.setItem("chatbot.minimized", "false");
 				});
+
+				if(this.is_minimized) {
+					minimize.setStyle('display', 'none');
+					maximize.setStyle('display', 'block');
+				}
 
 				// // Close Event
 				// close.on('click', function(event) {
