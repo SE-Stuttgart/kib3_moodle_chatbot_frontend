@@ -284,7 +284,7 @@ M.block_chatbot = {
 				chat_window.append(chat_window_header);
 
 				var chat_window_header_name = Y.Node.create('<a></a>');
-				chat_window_header_name.setAttribute('href', server_url+'/user/profile.php?id='+user_to_id);
+				// chat_window_header_name.setAttribute('href', server_url+'/user/profile.php?id='+user_to_id);
 				chat_window_header_name.setContent(user_to_name);
 				chat_window_header.append(chat_window_header_name);
 
