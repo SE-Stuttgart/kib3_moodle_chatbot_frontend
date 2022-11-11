@@ -7,7 +7,7 @@ class block_chatbot extends block_base {
     }
  
     public function get_content() {
-		global $CFG, $OUTPUT, $PAGE, $USER, $DB;
+		global $CFG, $OUTPUT, $PAGE, $USER, $DB, $COURSE;
 		require_once(__DIR__ . '/lib.php');
 
     	if ($this->content !== null) {
@@ -26,6 +26,7 @@ class block_chatbot extends block_base {
 			block_chatbot_get_chat_container(),
 			
 			array('id' => $USER->id, 'username' => $USER->username),
+			$COURSE->id,
 			/*array(
 				'close' => array(
 					'img' => (string) $OUTPUT->image_url('close', 'block_chatbot'),

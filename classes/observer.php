@@ -32,8 +32,9 @@ class observer {
         // observer::alert($event->get_name());
         // echo "<script>console.log('Debug Objects: " . $event->get_name() . "' );</script>";
         global $PAGE;
+        // observer::debug_to_console(getHostByName(getHostName()));
         observer::forward_event('http://193.196.53.252:44123/event', $event);
-
+        // header("Refresh:0");
         // $PAGE->requires->js_init_call('M.block_chatbot.test_event', array('event' => $event->get_name()));	
     }
 }
