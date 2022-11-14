@@ -32,24 +32,27 @@ M.block_chatbot = {
 	 * @param object user - the current user: id, username.
 	 * @param object imgs - the images urls needed.
 	 */
-	init : function(Y, server_name, server_port, server_url, chat_container, user, imgs) {
+	init : function(Y, server_name, server_port, server_url, chat_container, user, courseid, imgs) {
 
 		console.log("JS INIT");
 		console.log('user', user);
+		console.log('courseid', courseid);
+		console.log('server', server_name, server_port);
 		
 		if(this.isInsideIFrame()) {
 			return; // don't create chatbot window if we're inside an iframe (then it probably would appear twice)
 		}
 
 		// Set Global Values
+		this.courseid = courseid;
 		this.chat_container = chat_container;
 		this.user = user;
 		this.imgs = imgs;
 
 		// Set or restore minimized state
 		if (localStorage.getItem("chatbot.minimized") === null) {
-			self.is_minimized = false;
-			localStorage.setItem("chatbot.minimized", "false")
+			this.is_minimized = true;
+			localStorage.setItem("chatbot.minimized", "true")
 		} else {
 			this.is_minimized = localStorage.getItem("chatbot.minimized") === 'true';
 		}
@@ -63,9 +66,7 @@ M.block_chatbot = {
 		if ("WebSocket" in window) {
 			
 			//Start Connection
-			// this.start_connection(Y, server_name, server_port, server_url, user);
-			// 193.196.53.252
-			this.start_connection(Y, '193.196.53.252', 44123, '193.196.53.252', user);
+			this.start_connection(Y, server_name, server_port, server_url, user);
 		}
 		else {
 			// The user browser doesn't support WebSockets
@@ -85,17 +86,21 @@ M.block_chatbot = {
 	start_connection : function(Y, server_name, server_port, server_url, user) {
 		var self = this, conn = new WebSocket('ws://'+server_name+':'+server_port+'/ws?token=' + user.id  );
 
-		conn.onopen = function() {
+		conn.onopen = () => {
 
 			// Update Status to Online
 			console.log('connected', user);
+			console.log('courseid in startconnection', self.courseid);
 			self.start_session(Y, conn, server_url, null, true);
 
 			start_dialog_msg = {
 				access_token: user.id,
 				domain: 0,
-				topic: 'start_dialog' 
+				topic: 'start_dialog',
+				courseid: self.courseid
 			}
+
+			console.log("START MSG", start_dialog_msg)
 			conn.send(JSON.stringify(start_dialog_msg));
 		};
 
@@ -156,6 +161,7 @@ M.block_chatbot = {
 			userid: params.user.id,
 			domain: 0,
 			topic: 'user_utterance',
+			courseid: params.courseid,
 			msg: params.message.text
 		}
 		console.log('sending', params);
@@ -211,6 +217,7 @@ M.block_chatbot = {
 			var params = {};
 			params.from_id = self.user.id;
 			params.to_id = id;
+			params.courseid = self.courseid;
 			
 			self.send_data(Y, conn, 'start_session', params);
 		});
@@ -394,6 +401,7 @@ M.block_chatbot = {
 						params.message = {};
 						params.message.text = message;
 						params.message.userid = self.user.id;
+						params.courseid = that.courseid;
 
 						self.post_message(Y, conn, server_url, params);
 						chat_window_reply_text.set('value', '');
@@ -481,7 +489,8 @@ M.block_chatbot = {
 			//Set all messages seen
 			var params = {
 				session_id : session_id,
-				user_id : this.user.id
+				user_id : this.user.id,
+				courseid: this.courseid	
 			};
 			this.send_data(Y, conn, 'seen_session', params);
 
