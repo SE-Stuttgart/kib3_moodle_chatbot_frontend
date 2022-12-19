@@ -35,4 +35,3 @@ if ($ADMIN->fulltree) {
 	$settings->add(new admin_setting_configselect($name, $title, $description, $default, $choices));
 
 }
-

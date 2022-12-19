@@ -1,47 +1,30 @@
-# Setup
+# KIB3 Chatbot Frontend
 
-* Install docker
-* Follow post-install actions from https://docs.docker.com/engine/install/linux-postinstall/ (important, otherwise needs sudo all the time)
-* Clone moodle docker from https://github.com/moodlehq/moodle-docker
-* Clone moodle using `git clone https://github.com/moodle/moodle.git --branch MOODLE_311_STABLE --single-branch`
-* Clone adviser
-	* install requirements
-* Set environment (just pack those into a .sh file and source it)
-	* `export MOODLE_DOCKER_WWWROOT=/home/ubuntu/moodle`
-	* `export MOODLE_DOCKER_DB=mysql`
-	* `export MOODLE_DOCKER_DIR=/home/ubuntu/moodle-docker`
-* Ensure customized config.php for the Docker containers is in place
-  `cp $MOODLE_DOCKER_DIR/config.docker-template.php $MOODLE_DOCKER_WWWROOT/config.php`
+## Installation 
 
-# Run
-1. adviser
-	* `python run_server.py` runs server on port 44123
-2. moodle
-	1. `$MOODLE_DOCKER_DIR/bin/moodle-docker-compose up -d`
-	2. `$MOODLE_DOCKER_DIR/bin/moodle-docker-wait-for-db`
-3. Port forward adviser and moodle
-	* `ssh -fNL 8000:localhost:8000 girlsday`
-	* `ssh -fNL 44123:localhost:44123 girlsday`
-4. Access via `http://localhost:8000`
-5. Shutdown using `$MOODLE_DOCKER_DIR/bin/moodle-docker-compose down`
+1. Clone this repository.
+2. Move the downloaded code into the following path relative to your Moodle server code top level directory: `./blocks/chatbot`.
+   I.e., the folder `./blocks/chatbot/` should contain the version information: `version.php`
+3. Open your Moodle administration page in your web browser, this should trigger the plugin installation.
+4. Configure the chatbot plugin by entering the IP address of the machine running the chatbot backend (e.g., `127.0.0.1` if you work on your local machine). Also, set the chatbot backend port, if you changed it in the python code (otherwise, default is `44123`):
+	<img width="827" alt="Bildschirm­foto 2022-11-14 um 10 15 50" src="https://media.github.tik.uni-stuttgart.de/user/3040/files/a2ff17ee-2a8e-48f0-a8f8-1ba597c07257">
 
-# Acces DB from inside docker
+## Adding the Block to Moodle (information taken from https://createdbycocoon.com/knowledge/adding-block-all-courses-moodle)
 
-1. Connect to bash of mysql docker container (get name using `docker ps`)
-	* `docker exec -it moodle-docker_db_1 mysql -u 'moodle' -p` (replace *docker_db_1* with mysql container name from `docker ps`)
-	* Enter password `m@0dl3ing` (find in https://github.com/moodlehq/moodle-docker/blob/master/db.mysql.yml)
-2. Access database
-	* `USE moodle;` to open database
-	* `SHOW TABLES;` to see all tables
-		* Can also view scheme at https://www.examulator.com/er/output/tables/lesson_pages.html
+1. Go to the frontpage of your Moodle site. 
+2. Turn editing on
+3. Click "+ Add a block"
+4. Select `Chatbot`
+5. Once the block has been added, click the settings icon, and then `Configure`.
+6. Look for setting `Where this block appears`, choose `Show throughout the entire site`.
 
-# Access DB from outside docker
-	* open `vim moodle-docker/base.yml`
-	* in section `services` -> `db` add 
-		* ```
-			ports:
-				- "3306:3306"
-		 ```
-	* now, can connect via bash or python, e.g.
-	 `mysql --host=127.0.0.1 --port=3306 --protocol=tcp -u "moodle" -p`
-	 	* password `m@0dl3ing`
+## Running
+
+1. Navigate to the KIB3 course in your moodle using your webbrowser.
+2. Make sure you are a student in the course.
+3. If the backend is running and everything is configured correctly, the chatbot window should show in the bottom right corner of the screen:
+
+<img width="488" alt="Bildschirm­foto 2022-11-14 um 10 37 35" src="https://media.github.tik.uni-stuttgart.de/user/3040/files/08ec9c83-3774-4eae-a933-9ab9ed089b7a">
+
+4. If nothing shows up, check both the javascript console and the output of the chatbot backend server.
+
