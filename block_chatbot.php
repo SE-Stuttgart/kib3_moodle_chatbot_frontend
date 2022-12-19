@@ -5,6 +5,8 @@ class block_chatbot extends block_base {
     public function init() {
         $this->title = get_string('chatbot', 'block_chatbot');
     }
+
+	function has_config() {return true;} // required to enable global settings
  
     public function get_content() {
 		global $CFG, $OUTPUT, $PAGE, $USER, $DB, $COURSE;

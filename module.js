@@ -37,6 +37,7 @@ M.block_chatbot = {
 		console.log("JS INIT");
 		console.log('user', user);
 		console.log('courseid', courseid);
+		console.log('server', server_name, server_port);
 		
 		if(this.isInsideIFrame()) {
 			return; // don't create chatbot window if we're inside an iframe (then it probably would appear twice)
@@ -65,9 +66,7 @@ M.block_chatbot = {
 		if ("WebSocket" in window) {
 			
 			//Start Connection
-			// this.start_connection(Y, server_name, server_port, server_url, user);
-			// 193.196.53.252
-			this.start_connection(Y, '193.196.53.252', 44123, '193.196.53.252', user);
+			this.start_connection(Y, server_name, server_port, server_url, user);
 		}
 		else {
 			// The user browser doesn't support WebSockets

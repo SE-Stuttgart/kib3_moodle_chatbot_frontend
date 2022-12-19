@@ -3,6 +3,8 @@
 namespace block_chatbot;
 defined('MOODLE_INTERNAL') || die();
 
+require_once(__DIR__ . '/../lib.php');
+
 class observer {
     public static function debug_to_console($text) {
         echo "<script type='text/javascript'>console.log('$text');</script>";
@@ -32,8 +34,7 @@ class observer {
         // observer::alert($event->get_name());
         // echo "<script>console.log('Debug Objects: " . $event->get_name() . "' );</script>";
         global $PAGE;
-        // observer::debug_to_console(getHostByName(getHostName()));
-        observer::forward_event('http://193.196.53.252:44123/event', $event);
+        observer::forward_event("http://" . block_chatbot_get_server_name() . ":" . block_chatbot_get_server_port() . "/event", $event);
         // header("Refresh:0");
         // $PAGE->requires->js_init_call('M.block_chatbot.test_event', array('event' => $event->get_name()));	
     }
