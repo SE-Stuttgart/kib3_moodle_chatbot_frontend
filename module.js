@@ -278,6 +278,7 @@ M.block_chatbot = {
 				chat_window.setAttribute('id', chat_window_id);
 				chat_window.addClass('chat_window chatbot_userto_'+user_to_id);
 				chat_window.setStyle('right', right_space+'px');
+				chat_window.setStyle('z-index', 999);
 				
 				if(this.is_minimized) {
 					chat_window.addClass("collapsed");
