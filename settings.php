@@ -16,7 +16,7 @@ if ($ADMIN->fulltree) {
 	$name = 'block_chatbot_server_name';
 	$title = get_string('server_name', 'block_chatbot');
 	$description = get_string('server_name_desc', 'block_chatbot');
-	$default = "127.0.0.1";
+	$default = "chatbot";
 	$settings->add(new admin_setting_configtext($name, $title, $description, $default, PARAM_HOST));
 
 	// Server Port
