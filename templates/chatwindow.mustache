@@ -1,0 +1,19 @@
+<div id="block_chatbot-chatwindow" class="block_chatbot-chatwindow">
+    <div class="block_chatbot-header">
+        <h5>Chatbot</h5>
+        <button id="block_chatbot-toggleWindowState" data-action="block_chatbot/toggleWindowState" class="btn btn-secondary"/>
+    </div>
+    <div id="block_chatbot-messagelist" class="block_chatbot-messagelist"></div>
+    <div class="block_chatbot-inputContainer">
+        <input id="block_chatbot-userUtterance" data-action="block_chatbot/textInput" placeholder="Bitte hier Fragen etc. eingeben"/>
+        <button data-action="block_chatbot/sendMessage">Senden</button>
+    </div>
+</div>
+
+{{^element.frozen}}
+{{#js}}
+require(['block_chatbot/chatbot'], function(Chatbot) {
+    let conn = Chatbot.init("{{server_name}}", "{{server_port}}", "{{server_url}}", "{{userid}}", "{{username}}", "{{courseid}}");
+});
+{{/js}}
+{{/element.frozen}}

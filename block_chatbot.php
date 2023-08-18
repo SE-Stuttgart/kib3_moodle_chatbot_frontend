@@ -3,32 +3,29 @@ defined('MOODLE_INTERNAL') || die();
 
 class block_chatbot extends block_base {
     public function init() {
+		$this->blockname = get_class($this);
         $this->title = get_string('chatbot', 'block_chatbot');
     }
 
 	function has_config() {return true;} // required to enable global settings
  
     public function get_content() {
-		global $CFG, $OUTPUT, $PAGE, $USER, $DB, $COURSE;
+		global $CFG, $PAGE, $USER, $DB, $COURSE;
 		require_once(__DIR__ . '/lib.php');
 
     	if ($this->content !== null) {
 	    	return $this->content;
     	}
 
-    	$this->content         =  new stdClass;
-    	$this->content->footer = '';
-
-
 		// Init javascript
 		$data = array(
-			block_chatbot_get_server_name(), 
-			block_chatbot_get_server_port(), 
-			$CFG->wwwroot,
-			block_chatbot_get_chat_container(),
-			
-			array('id' => $USER->id, 'username' => $USER->username),
-			$COURSE->id,
+			"server_name" => block_chatbot_get_server_name(), 
+			"server_port" => block_chatbot_get_server_port(), 
+			"server_url" => $CFG->wwwroot,
+			// block_chatbot_get_chat_container(),
+			"userid" => $USER->id,
+			'username' => $USER->username,
+			"courseid" => $COURSE->id,
 			/*array(
 				'close' => array(
 					'img' => (string) $OUTPUT->image_url('close', 'block_chatbot'),
@@ -43,19 +40,16 @@ class block_chatbot extends block_base {
 					'visibility' => 0
 				)
 			)*/
-			array()
 		);
-		$jsmodule = array(
-			'name' => 'module',
-			'fullpath' => '/blocks/chatbot/module.js',
-			'requires' => array('base', 'io', 'node', 'json', 'selector'),
-			'strings' => array(
-				#array('send-message', 'block_chatbot'),
-				#array('connection-lost', 'block_chatbot')
-			)
-		);
-		$PAGE->requires->js_init_call('M.block_chatbot.init', $data, false, $jsmodule);
+		// $PAGE->requires->js_call_amd('block_chatbot/chatbot', 'init', $data);
  
+		// Renderer needed to use templates
+        $renderer = $PAGE->get_renderer($this->blockname);
+		$text = $renderer->render_from_template('block_chatbot/chatwindow', $data);
+
+    	$this->content         =  new stdClass;
+    	$this->content->footer = '';
+		$this->content->text = $text;
     	return $this->content;
     } 
 }
