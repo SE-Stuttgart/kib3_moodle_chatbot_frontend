@@ -83,11 +83,12 @@ const setWindowState = (maximized) => {
 };
 
 class ChatbotConnection {
-    constructor(server_name, server_port, userid, courseid) {
+    constructor(server_name, server_port, userid, courseid, slidefindertoken) {
         this.server_name = server_name;
         this.server_port = server_port;
         this.userid = userid;
         this.courseid = courseid;
+        this.slidefindertoken = slidefindertoken;
         this.conn = null;
     }
 
@@ -103,7 +104,8 @@ class ChatbotConnection {
                 access_token: this.userid,
                 domain: 0,
                 topic: 'start_dialog',
-                courseid: this.courseid
+                courseid: this.courseid,
+                slidefindertoken: this.slidefindertoken
             };
 
             console.log("START MSG", start_dialog_msg);
@@ -152,7 +154,8 @@ const isInsideIFrame = () => {
 
 var conn;
 
-export const init = (server_name, server_port, server_url, userid, username, courseid) => {
+
+export const init = (server_name, server_port, server_url, userid, username, courseid, slidefindertoken) => {
     if(isInsideIFrame()) {
         console.log("IFrame detected - Chatbot won't be loaded");
         return;
@@ -162,9 +165,10 @@ export const init = (server_name, server_port, server_url, userid, username, cou
     console.log("URL", server_url);
     console.log("USER", userid, username);
     console.log("COURSE", courseid);
+    console.log("SLIDEFINDER TOKEN", slidefindertoken);
 
     registerEventListeners();
-    conn = new ChatbotConnection(server_name, server_port, userid, courseid);
+    conn = new ChatbotConnection(server_name, server_port, userid, courseid, slidefindertoken);
     conn.openConnection();
 
     // Move container into document root

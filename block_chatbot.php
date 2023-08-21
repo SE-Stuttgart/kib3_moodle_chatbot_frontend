@@ -17,6 +17,22 @@ class block_chatbot extends block_base {
 	    	return $this->content;
     	}
 
+		// try to get token for slidefinder webservice
+		$slidefinder_token = "";
+		// check if slidefinder plugin is installed first
+		if ($DB->record_exists('external_services_functions', array('functionname' => 'block_slidefinder_get_searched_locations'))) {
+			// echo "EXISTS";
+			// get id of slidefinder service
+			$slidefinder_service_id = $DB->get_record('external_services_functions', 
+													   array('functionname' => 'block_slidefinder_get_searched_locations'),
+												       'externalserviceid'
+			)->externalserviceid;
+			$slidefinder_token = $DB->get_record('external_tokens', 
+												  array('externalserviceid' => $slidefinder_service_id),
+												  'token'
+			)->token;
+		}
+
 		// Init javascript
 		$data = array(
 			"server_name" => block_chatbot_get_server_name(), 
@@ -26,6 +42,7 @@ class block_chatbot extends block_base {
 			"userid" => $USER->id,
 			'username' => $USER->username,
 			"courseid" => $COURSE->id,
+			"slidefindertoken" => $slidefinder_token
 			/*array(
 				'close' => array(
 					'img' => (string) $OUTPUT->image_url('close', 'block_chatbot'),
