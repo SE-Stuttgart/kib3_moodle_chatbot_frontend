@@ -13,7 +13,7 @@
 {{^element.frozen}}
 {{#js}}
 require(['block_chatbot/chatbot'], function(Chatbot) {
-    let conn = Chatbot.init("{{server_name}}", "{{server_port}}", "{{server_url}}", "{{userid}}", "{{username}}", "{{courseid}}");
+    let conn = Chatbot.init("{{server_name}}", "{{server_port}}", "{{server_url}}", "{{userid}}", "{{username}}", "{{courseid}}", "{{slidefindertoken}}");
 });
 {{/js}}
 {{/element.frozen}}
