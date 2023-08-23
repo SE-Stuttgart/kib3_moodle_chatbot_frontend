@@ -18,7 +18,7 @@ function block_chatbot_get_server_name() {
 	if (!empty($CFG->block_chatbot_server_name)) {
 		return $CFG->block_chatbot_server_name;
 	} else {
-	    return $_SERVER['SERVER_NAME'];
+	    return "127.0.0.1";
 	}
 }
 
