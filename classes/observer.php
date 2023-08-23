@@ -30,11 +30,11 @@ class observer {
     // public static function course_module_completion_updated(\core\event\course_module_completion_updated $event) {
     public static function course_module_completion_updated(\core\event\base $event) {
         // file_put_contents('php://stderr', print_r("observed an event", TRUE));
-        // observer::debug_to_console($event->get_name());
+        observer::debug_to_console($event->get_name());
         // observer::alert($event->get_name());
         // echo "<script>console.log('Debug Objects: " . $event->get_name() . "' );</script>";
         global $PAGE;
-        observer::forward_event("http://" . block_chatbot_get_server_name() . ":" . block_chatbot_get_server_port() . "/event", $event);
+        observer::forward_event("http://" . block_chatbot_get_event_server_name() . ":" . block_chatbot_get_server_port() . "/event", $event);
         // header("Refresh:0");
         // $PAGE->requires->js_init_call('M.block_chatbot.test_event', array('event' => $event->get_name()));	
     }

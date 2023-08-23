@@ -18,7 +18,8 @@ but other themes can use the element with id page.';
 
 //Settings
 $string['server_name'] = 'Server name';
-$string['server_name_desc'] = 'The name used to connect with the server. Examples: localhost, www.moodle.com.';
+$string['server_name_desc'] = 'The name used to connect with the chatbot server. Examples: localhost, www.moodle.com.';
+$string['event_server_name_desc'] = 'The name used to connect with the chatbot server event endpoint. Examples: localhost, www.moodle.com.';
 
 $string['server_port'] = 'Server port';
-$string['server_port_desc'] = 'The port used to connect with the server.';
+$string['server_port_desc'] = 'The port used to connect with the chatbot server.';
