@@ -69,14 +69,17 @@ const addSystemMessage = (utterance) => {
 
 const setWindowState = (maximized) => {
     console.log("Window state", maximized);
-    $("#block_chatbot-toggleWindowState").html(maximized? "-" : "+");
 
     if(maximized) {
         $("#block_chatbot-messagelist").removeClass('block_chatbot-hidden');
         $(".block_chatbot-inputContainer").removeClass('block_chatbot-hidden');
+        $(".block_chatbot-chatwindowInner").removeClass('block_chatbot-hidden');
+        $(".block_chatbot-headerMinimized").addClass('block_chatbot-hidden');
     } else {
         $("#block_chatbot-messagelist").addClass('block_chatbot-hidden');
         $(".block_chatbot-inputContainer").addClass('block_chatbot-hidden');
+        $(".block_chatbot-chatwindowInner").addClass('block_chatbot-hidden');
+        $(".block_chatbot-headerMinimized").removeClass('block_chatbot-hidden');
     }
     // remember state
     localStorage.setItem("chatbot.maximized", maximized? "true" : "false");

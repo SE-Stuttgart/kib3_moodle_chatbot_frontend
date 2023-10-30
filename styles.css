@@ -1,24 +1,63 @@
-.block_chatbot-chatwindow {
+.block_chatbot-chatwindowInner {
     /* height: 100%; */
+    display: flex;
+    flex-flow: column nowrap;
+    /* border-style: solid; */
+    /* border-width: px; */
+    /* border-color: darkgray; */
+    right: 1em;
+    bottom: 1em;
+    position: fixed;
+    z-index: 9999;
+    background-color: white;
+    box-shadow: 1px 1px 7px rgb(0 0 0 / 0.5);
+    border-radius: 1em;
+}
+
+
+.block_chatbot-headerMaximized {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    background-color: lightgray;
+    border-top-left-radius: 1em;
+    border-top-right-radius: 1em;
+    align-items: center;
+}
+
+.block_chatbot-minimizeButton {
+    background-color: transparent;
+    border: none;
+    width: 1.5em;
+    height: 1em;
+}
+.block_chatbot-minimizeButton:hover {
+    stroke: #399be2;
+}
+
+.block_chatbot-maximizeButton {
+    background-color: #399be2;
+    border-radius: 50%;
+    width: 5em;
+    height: 5em;
     display: flex;
     flex-flow: column nowrap;
     border-style: solid;
     border-width: 1px;
     border-color: darkgray;
-    right: 0;
-    bottom: 0;
+    right: 1em;
+    bottom: 1em;
     position: fixed;
     z-index: 9999;
-    background-color: white;
-    box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
+    box-shadow: 1px 1px 7px rgb(0 0 0 / 0.3);
+    padding: 1em;
 }
-.block_chatbot-header {
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: space-between;
-    background-color: lightgray;
+
+.block_chatbot-header_text {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
 }
 
 /* stylelint-disable declaration-no-important */
@@ -35,7 +74,7 @@
     flex-grow: 1;
     flex-flow: row nowrap;
     overflow-y: auto;
-    width: 40vw;
+    width: 30vw;
     height: 40vh;
 }
 .block_chatbot-inputContainer {
@@ -45,64 +84,62 @@
     width: 100%;
     background-color: lightgrey;
     padding: 0.75em;
+    border-bottom-left-radius: 1em;
+    border-bottom-right-radius: 1em;
+}
+
+.block_chatbot-text_input {
+    flex-grow: 1;
+    margin-right: 0.5em;
+    border-radius: 1em;
+    border-width: 0;
+    padding-left: 0.5em;
+}
+.block_chatbot-text_send {
+    background-color: #399be2;
+    border-width: 0;
+    border-radius: 50%;
+    padding: .5em;
+    stop-color: #fff;
+    width: 2.5em;
+    height: 2.5em;
+}
+.block_chatbot-text_send:hover {
+    background-color: orange;
 }
 
 .block_chatbot-speech-bubble {
     position: relative;
-    border-radius: .4em;
+    border-radius: 1em;
     clear: both;
     margin-bottom: 1em;
     margin-top: 1em;
     padding-bottom: 0.5em;
     font-size: 1rem;
-}
-.block_chatbot-speech-bubble::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    width: 0;
-    height: 0;
-    border: 21px solid transparent;
-    border-top: 0;
-    margin-top: -10px;
+    box-shadow: 0 0 0.5em #bdbdbd;
 }
 
 .block_chatbot-system {
-    background: #e5e5ea;
+    background: #399be2;
     text-align: left;
     float: left;
+    color: white;
+    border-top-left-radius: 0;
 }
-.block_chatbot-system:after {
-    left: 0;
-    border-right-color: #e5e5ea;
-    border-left: 0;
-    margin-left: -20px;
-}
+
 .block_chatbot-user {
-    background: #ccf2ff;
+    background: white;
     text-align: right;
     float: right;
+    border-top-right-radius: 0;
 }
-.block_chatbot-user:after {
-    right: 0;
-    border-left-color: #ccf2ff;
-    border-right: 0;
-    margin-right: -20px;
-}
+
 
 .block_chatbot-message {
     padding: 0.5em;
-    color: black;
     font-family: Arial, Helvetica, sans-serif;
 }
-.block_chatbot-systemMsg {
-    margin-left: 0.5em;
-    margin-right: 0.5em;
-    margin-top: 0.5em;
-    border-radius: .4em;
-    padding: 0.5em;
-    font-family: Arial, Helvetica, sans-serif;
-}
+
 .block_chatbot-answer_candidate_list {
     display: flex;
     flex-flow: row wrap;
@@ -117,5 +154,5 @@
     cursor: pointer;
 }
 .block_chatbot-answer_candidate:hover {
-    background-color: #ccf2ff;
+    background-color: #399be2;
 }
