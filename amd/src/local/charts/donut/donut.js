@@ -2,7 +2,9 @@
 class DonutChart {
     constructor(percentageOuter, percentageInner) {
         this.percentageOuter = percentageOuter;
-        this.percentageInner = percentageInner;
+        this.percentageOuterEmpty = 100 - this.percentageOuter;
+        this.percentageInnerEmpty = (100 - percentageInner) * 0.75;
+        this.percentageInner = percentageInner * 0.75;
     }
 
     render = () => {
@@ -11,14 +13,14 @@ class DonutChart {
 
         const outer_ring = `
         <circle class="donut-ring" cx="20" cy="20" r="16" fill="transparent" stroke-width="3.5"/>
-        <circle class="donut-segment" cx="20" cy="20" r="16" fill="transparent" stroke-width="4" 
-            stroke-dasharray="${this.percentageOuter} ${100 - this.percentageOuter}"
+        <circle class="donut-segment-outer" cx="20" cy="20" r="16" fill="transparent" stroke-width="4" 
+            stroke-dasharray="${this.percentageOuter} ${this.percentageOuterEmpty}"
             stroke-dashoffset="25"/>`;
 
         const inner_ring = this.percentageInner !== null? `
         <circle class="donut-ring" cx="20" cy="20" r="12" fill="transparent" stroke-width="3.5"/>
         <circle class="donut-segment-inner" cx="20" cy="20" r="12" fill="transparent" stroke-width="4"
-            stroke-dasharray="${this.percentageInner*0.75} ${0.75*(100 - this.percentageInner)}"
+            stroke-dasharray="${this.percentageInner} ${this.percentageInnerEmpty}"
             stroke-dashoffset="18.75"></circle>`
             : "";
 
@@ -28,6 +30,19 @@ class DonutChart {
                 ${inner_ring}
             </svg>`;
 
+        chart.getElementsByClassName('donut-segment-outer')[0].animate(
+            [
+                { strokeDasharray: "0, 100" },
+                { strokeDasharray: `${this.percentageOuter} ${this.percentageOuterEmpty}`}
+            ], {duration: 3000}
+        );
+        chart.getElementsByClassName('donut-segment-inner')[0].animate(
+            [
+                { strokeDasharray: "0, 75" },
+                { strokeDasharray: `${this.percentageInner} ${this.percentageInnerEmpty}`}
+            ], {duration: 3000}
+        );
+
         return chart;
         //     <g class="donut-text">
         //     <text y="50%" transform="translate(0, 2)">
@@ -36,3 +51,5 @@ class DonutChart {
         // </g>
     };
 }
+
+export default DonutChart;

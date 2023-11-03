@@ -1,4 +1,5 @@
 import Selectors from './local/selectors';
+import DonutChart from './local/charts/donut/donut';
 import $ from 'jquery';
 
 
@@ -51,6 +52,15 @@ const addUserMessage = (utterance) => {
     messagelist.animate({ scrollTop: messagelist.prop("scrollHeight")}, 500);
 };
 
+const renderChart = (utterance) => {
+    if(utterance.startsWith("$DONUT")) {
+        const args = utterance.split(",");
+        const outerValue = args[1];
+        const innerValue = args[2];
+        return new DonutChart(outerValue, innerValue).render();
+    }
+};
+
 const addSystemMessage = (utterance) => {
     /*
     Adds a new messagebox to the message list
@@ -58,11 +68,23 @@ const addSystemMessage = (utterance) => {
         utterance (String): the system utterance
     */
     const messagelist = $('#block_chatbot-messagelist');
-    messagelist.append(`
-        <div class="block_chatbot-speech-bubble block_chatbot-system">
-            <div class="block_chatbot-message" style="color: anthrazit">${utterance}</div>
-        </div>
-    `);
+    if(utterance.startsWith("$DONUT")) {
+        const messageBubble = document.createElement("div");
+        messageBubble.className = "block_chatbot-speech-bubble block_chatbot-system";
+        const message = document.createElement("div");
+        message.className = "block_chatbot-message";
+        message.style.color = "anthrazit";
+        message.append(renderChart(utterance));
+        messageBubble.append(message);
+        messagelist.append(messageBubble);
+    } else {
+        messagelist.append(`
+            <div class="block_chatbot-speech-bubble block_chatbot-system">
+                <div class="block_chatbot-message" style="color: anthrazit">${utterance}</div>
+            </div>`
+        );
+    }
+
     // scroll to newest message
     messagelist.animate({ scrollTop: messagelist.prop("scrollHeight")}, 500);
 };
@@ -122,6 +144,10 @@ class ChatbotConnection {
             data.forEach(message => {
                 if(message.party === "system") {
                     addSystemMessage(message.content);
+                } else if(message.party === "control") {
+                    if(message.content === "UI_OPEN") {
+                        setWindowState(true);
+                    }
                 }
                 else {
                     addUserMessage(message.content);
