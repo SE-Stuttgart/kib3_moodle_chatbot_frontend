@@ -100,7 +100,7 @@
     border-width: 0;
     border-radius: 50%;
     padding: .5em;
-    stop-color: #fff;
+    color: #fff;
     width: 2.5em;
     height: 2.5em;
 }
@@ -155,4 +155,101 @@
 }
 .block_chatbot-answer_candidate:hover {
     background-color: #399be2;
+}
+
+/*
+* DONUT CHART
+*/
+.svg-item {
+    width: 100%;
+    font-size: 16px;
+    margin: 0 auto;
+    animation: donutfade 1s;
+}
+
+@keyframes donutfade {
+    0% {
+        opacity: .2;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.donut-ring {
+    stroke: #ebebeb;
+}
+
+.donut-segment-outer {
+    transform-origin: center;
+    stroke: #399be2;
+    animation: donutOuter 3s;
+}
+
+.donut-segment-inner {
+    transform-origin: center;
+    stroke: orange;
+    animation: donutInner 3s;
+}
+
+.donut-percent {
+    animation: donutfadelong 1s;
+}
+
+@keyframes donutfadelong {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes donutOuter {
+    0% {
+        stroke-dasharray: 0, 100;
+    }
+    100% {
+        stroke-dasharray: 60, 40;
+    }
+}
+
+@keyframes donutInner {
+    0% {
+        stroke-dasharray: 0, 75;
+    }
+    100% {
+        stroke-dasharray: 45, 30;
+    }
+}
+
+.donut-text {
+    font-family: Arial, Helvetica, sans-serif;
+    fill: #ff6200;
+}
+
+.donut-label {
+    font-size: 0.28em;
+    font-weight: 700;
+    line-height: 1;
+    fill: #000;
+    transform: translateY(0.25em);
+}
+
+.donut-percent {
+    font-size: 0.5em;
+    line-height: 1;
+    transform: translateY(0.5em);
+    font-weight: bold;
+}
+
+.donut-data {
+    font-size: 0.12em;
+    line-height: 1;
+    transform: translateY(0.5em);
+    text-align: center;
+    text-anchor: middle;
+    color: #666;
+    fill: #666;
+    animation: donutfadelong 1s;
 }
