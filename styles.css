@@ -112,9 +112,9 @@
     position: relative;
     border-radius: 1em;
     clear: both;
-    margin-bottom: 1em;
-    margin-top: 1em;
-    padding-bottom: 0.5em;
+    margin-bottom: 0.5em;
+    margin-top: 0.5em;
+    /* padding-bottom: 0.5em; */
     font-size: 1rem;
     box-shadow: 0 0 0.5em #bdbdbd;
 }
@@ -143,18 +143,25 @@
 .block_chatbot-answer_candidate_list {
     display: flex;
     flex-flow: row wrap;
-    gap: 0.2em;
+    gap: 0.4em;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
     align-items: center;
 }
 .block_chatbot-answer_candidate {
     color: black;
-    border-radius: 2px;
+    border-radius: 0.75em;
     background-color: #f5f5fa;
-    padding: 0.3em;
+    padding-left: 0.4em;
+    padding-top: 0.3em;
+    padding-right: 0.4em;
+    padding-bottom: 0.3em;
     cursor: pointer;
+    font-size: 0.75em;
 }
 .block_chatbot-answer_candidate:hover {
-    background-color: #399be2;
+    background-color: orange;
+    color: white;
 }
 
 /*

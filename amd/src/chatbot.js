@@ -10,7 +10,10 @@ const registerEventListeners = () => {
         } else if(e.target.closest(Selectors.actions.minimizeChatWindow)) {
             window.alert("MINIMIZE");
         } else if(e.target.closest(Selectors.actions.sendMessage)) {
-            sendMessage();
+            // get value of input field, then send
+            const textInputField = $("#block_chatbot-userUtterance");
+            const user_input = textInputField.val();
+            sendMessage(user_input);
         } else if(e.target.closest(Selectors.actions.toggleWindowState)) {
             setWindowState(!(localStorage.getItem("chatbot.maximized") === "true"));
         }
@@ -24,17 +27,17 @@ const registerEventListeners = () => {
     });
 };
 
-const sendMessage = () => {
-    const textInputField = $("#block_chatbot-userUtterance");
-    // get value of input field
-    const user_input = textInputField.val();
+const sendMessage = (user_input) => {
+    console.log("SENDING");
     // forwad value of input field to socket & send message
     conn.sendMessage(user_input);
     // show user message in messagelist
     addUserMessage(user_input);
     // clear input field
+    const textInputField = $("#block_chatbot-userUtterance");
     textInputField.val("");
 };
+
 
 const addUserMessage = (utterance) => {
     /*
@@ -42,12 +45,17 @@ const addUserMessage = (utterance) => {
     Args:
         utterance (String): the user utterance
     */
+   // remove answer candidates
+    $(".block_chatbot-answer_candidate_list").remove();
+
+    // add user message
     const messagelist = $('#block_chatbot-messagelist');
     messagelist.append(`
         <div class="block_chatbot-speech-bubble block_chatbot-user">
             <div class="block_chatbot-message" style="color: anthrazit">${utterance}</div>
         </div>
     `);
+    
     // scroll to newest message
     messagelist.animate({ scrollTop: messagelist.prop("scrollHeight")}, 500);
 };
@@ -61,6 +69,14 @@ const renderChart = (utterance) => {
     }
 };
 
+const createAnswerCandidateButton = (candidate) => {
+    var button = document.createElement("p");
+    button.className = "block_chatbot-answer_candidate";
+    button.textContent = candidate;
+    button.onclick = () => sendMessage(candidate);
+    return button;
+};
+
 const addSystemMessage = (utterance) => {
     /*
     Adds a new messagebox to the message list
@@ -68,21 +84,33 @@ const addSystemMessage = (utterance) => {
         utterance (String): the system utterance
     */
     const messagelist = $('#block_chatbot-messagelist');
-    if(utterance.startsWith("$DONUT")) {
+    const content = utterance[0];
+    const answerCandidates = utterance[1];
+
+    if(content.startsWith("$DONUT")) {
         const messageBubble = document.createElement("div");
         messageBubble.className = "block_chatbot-speech-bubble block_chatbot-system";
         const message = document.createElement("div");
         message.className = "block_chatbot-message";
         message.style.color = "anthrazit";
-        message.append(renderChart(utterance));
+        message.append(renderChart(content));
         messageBubble.append(message);
         messagelist.append(messageBubble);
     } else {
-        messagelist.append(`
-            <div class="block_chatbot-speech-bubble block_chatbot-system">
-                <div class="block_chatbot-message" style="color: anthrazit">${utterance}</div>
-            </div>`
-        );
+        var systemBubble = document.createElement("div");
+        systemBubble.className = "block_chatbot-speech-bubble block_chatbot-system";
+        var systemMessage = document.createElement("div");
+        systemMessage.innerHTML = content;
+        systemMessage.className = "block_chatbot-message";
+        systemMessage.style.color = "anthrazit";
+        systemBubble.append(systemMessage);
+        if(answerCandidates.length > 0) {
+            var answer_candidate_el = document.createElement("div");
+            answer_candidate_el.className = "block_chatbot-answer_candidate_list";
+            answerCandidates.forEach(cand => answer_candidate_el.append(createAnswerCandidateButton(cand)));
+            systemBubble.append(answer_candidate_el);
+        }
+        messagelist.append(systemBubble);
     }
 
     // scroll to newest message
