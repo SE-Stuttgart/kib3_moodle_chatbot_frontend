@@ -57,7 +57,7 @@ const renderChart = (utterance) => {
         const args = utterance.split(",");
         const outerValue = args[1];
         const innerValue = args[2];
-        return new DonutChart(outerValue, innerValue).render();
+        return new DonutChart(outerValue, "Kurs", innerValue, "Wiederholte Quizze").render();
     }
 };
 
