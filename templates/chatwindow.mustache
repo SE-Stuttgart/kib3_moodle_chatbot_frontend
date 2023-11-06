@@ -43,8 +43,8 @@
 
 {{^element.frozen}}
 {{#js}}
-require(['block_chatbot/chatbot'], function(Chatbot) {
-    let conn = Chatbot.init("{{server_name}}", "{{server_port}}", "{{server_url}}", "{{userid}}", "{{username}}", "{{courseid}}", "{{slidefindertoken}}");
+require(['block_chatbot/chatbot', 'https://cdn.plot.ly/plotly-2.27.0.min.js'], function(Chatbot, Plotly) {
+    let conn = Chatbot.init("{{server_name}}", "{{server_port}}", "{{server_url}}", "{{userid}}", "{{username}}", "{{courseid}}", "{{slidefindertoken}}", Plotly);
 });
 {{/js}}
 {{/element.frozen}}

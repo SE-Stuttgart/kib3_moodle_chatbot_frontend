@@ -1,5 +1,6 @@
 import Selectors from './local/selectors';
 import DonutChart from './local/charts/donut/donut';
+import LineChart from './local/charts/line/line';
 import $ from 'jquery';
 
 
@@ -55,7 +56,7 @@ const addUserMessage = (utterance) => {
             <div class="block_chatbot-message" style="color: anthrazit">${utterance}</div>
         </div>
     `);
-    
+
     // scroll to newest message
     messagelist.animate({ scrollTop: messagelist.prop("scrollHeight")}, 500);
 };
@@ -210,9 +211,9 @@ const isInsideIFrame = () => {
 };
 
 var conn;
+var Plotly;
 
-
-export const init = (server_name, server_port, server_url, userid, username, courseid, slidefindertoken) => {
+export const init = (server_name, server_port, server_url, userid, username, courseid, slidefindertoken, plotly) => {
     if(isInsideIFrame()) {
         console.log("IFrame detected - Chatbot won't be loaded");
         return;
@@ -224,6 +225,7 @@ export const init = (server_name, server_port, server_url, userid, username, cou
     console.log("COURSE", courseid);
     console.log("SLIDEFINDER TOKEN", slidefindertoken);
 
+    Plotly = plotly;
     registerEventListeners();
     conn = new ChatbotConnection(server_name, server_port, userid, courseid, slidefindertoken);
     conn.openConnection();
