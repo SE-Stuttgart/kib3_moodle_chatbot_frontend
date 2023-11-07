@@ -62,18 +62,36 @@ const addUserMessage = (utterance) => {
 };
 
 const renderChart = (utterance) => {
+    const messagelist = $('#block_chatbot-messagelist');
+    const messageBubble = document.createElement("div");
+    messageBubble.className = "block_chatbot-speech-bubble block_chatbot-system";
+    const message = document.createElement("div");
+    message.className = "block_chatbot-message";
+    message.style.color = "anthrazit";
+
     const args = utterance.split(";");
     const chart_type = args[0].replace("$$", "");
     if(chart_type === "DONUT") {
         const outerValue = args[1];
         const innerValue = args[2];
-        return new DonutChart(outerValue, "Kurs", innerValue, "Wiederholte Quizze").render();
+        const plot = new DonutChart(outerValue, "Kurs", innerValue, "Wiederholte Quizze").render();
+        message.append(plot);
+        messageBubble.append(message);
+        messagelist.append(messageBubble);
     } else if(chart_type === "LINECHART") {
         const legendTitle1 = args[1];
         const values1 = JSON.parse(args[2]);
         const legendTitle2 = args[3];
         const values2 = JSON.parse(args[4]);
-        return new LineChart(legendTitle1, values1, legendTitle2, values2).render();
+        var plot = document.createElement("div");
+        plot.className = "block_chatbot-plotly-chart";
+        console.log("TITLE", legendTitle1, ",", legendTitle2);
+        console.log("DATA1", values1);
+        console.log("DATA2", values2);
+        message.append(plot);
+        messageBubble.append(message);
+        messagelist.append(messageBubble);
+        new LineChart(plot, legendTitle1, values1, legendTitle2, values2).render(Plotly);
     }
 };
 
@@ -96,14 +114,7 @@ const addSystemMessage = (utterance) => {
     const answerCandidates = utterance[1];
 
     if(content.startsWith("$$")) {
-        const messageBubble = document.createElement("div");
-        messageBubble.className = "block_chatbot-speech-bubble block_chatbot-system";
-        const message = document.createElement("div");
-        message.className = "block_chatbot-message";
-        message.style.color = "anthrazit";
-        message.append(renderChart(content));
-        messageBubble.append(message);
-        messagelist.append(messageBubble);
+        renderChart(content);
     } else {
         var systemBubble = document.createElement("div");
         systemBubble.className = "block_chatbot-speech-bubble block_chatbot-system";

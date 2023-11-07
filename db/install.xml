@@ -6,7 +6,7 @@
   <TABLES>
    <TABLE NAME="chatbot_weekly_summary" COMMENT="Stores the chatbot user events">
         <FIELDS>
-            <FIELD NAME="userid" TYPE="int" NOTNULL="true"/>
+            <FIELD NAME="userid" LENGTH="10" TYPE="int" NOTNULL="true"/>
             <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         </FIELDS> 
         <KEYS>
@@ -16,7 +16,7 @@
     </TABLE>
    <TABLE NAME="chatbot_progress_summary" COMMENT="Stores the chatbot user events">
         <FIELDS>
-            <FIELD NAME="userid" TYPE="int" NOTNULL="true"/>
+            <FIELD NAME="userid" LENGTH="10" TYPE="int" NOTNULL="true"/>
             <FIELD NAME="progress" TYPE="float" NOTNULL="true"/>
             <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         </FIELDS> 
@@ -27,7 +27,7 @@
     </TABLE> 
     <TABLE NAME="chatbot_settings" COMMENT="Stores the chatbot user settings">
         <FIELDS>
-            <FIELD NAME="userid" TYPE="int" NOTNULL="true"/>
+            <FIELD NAME="userid" LENGTH="10" TYPE="int" NOTNULL="true"/>
             <FIELD NAME="allow_auto_open" TYPE="binary" NOTNULL="true" DEFAULT="true"/>
             <FIELD NAME="preferred_content_fromat" TYPE="text" NOTNULL="false"/>
         </FIELDS> 
@@ -39,9 +39,9 @@
     <TABLE NAME="chatbot_history" COMMENT="Stores the chatbot history">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int"  LENGTH="10" NOTNULL="true"/> 
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Timestamp of when the instance was added to the course."/>
         <FIELD NAME="speaker" TYPE="text" NOTNULL="true"/> 
-        <FIELD NAME="userid" TYPE="int" NOTNULL="true"/> 
         <FIELD NAME="message" TYPE="text" NOTNULL="false"/> 
       </FIELDS>
       <KEYS>

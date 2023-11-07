@@ -1,5 +1,6 @@
 class LineChart {
-    constructor(legendTitle1, dataArray1, legendTitle2, dataArray2) {
+    constructor(parentDiv, legendTitle1, dataArray1, legendTitle2, dataArray2) {
+        this.parentDiv = parentDiv;
         this.legendTitle1 = legendTitle1;
         this.dataArray1 = dataArray1;
         this.legendTitle2 = legendTitle2;
@@ -7,12 +8,8 @@ class LineChart {
     }
 
     render = (Plotly) => {
-        var plot = document.createElement("div");
-        plot.className = "block_chatbot-plotly-chart";
-
         const trace1 = {
-            x: this.dataArray1.keys(),
-            y: this.dataArray1.map(key => this.dataArray1[key]),
+            ...this.dataArray1,
             name: this.legendTitle1,
             mode: 'lines+markers'
         };
@@ -20,8 +17,7 @@ class LineChart {
 
         if(this.dataArray2 !== null) {
             var trace2 = {
-                x: this.dataArray2.keys(),
-                y: this.dataArray2.map(key => this.dataArray2[key]),
+                ...this.dataArray2,
                 name: this.legendTitle2,
                 mode: 'lines+markers'
             };
@@ -43,8 +39,7 @@ class LineChart {
             displayModeBar: false,
         };
 
-        Plotly.newPlot(plot, data, layout, config);
-        return plot;
+        Plotly.newPlot(this.parentDiv, data, layout, config);
     };
 }
 
