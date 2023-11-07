@@ -42,7 +42,8 @@ class block_chatbot extends block_base {
 			"userid" => $USER->id,
 			'username' => $USER->username,
 			"courseid" => $COURSE->id,
-			"slidefindertoken" => $slidefinder_token
+			"slidefindertoken" => $slidefinder_token,
+			"timestamp" => (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp()
 			/*array(
 				'close' => array(
 					'img' => (string) $OUTPUT->image_url('close', 'block_chatbot'),
