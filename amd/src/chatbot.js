@@ -62,11 +62,18 @@ const addUserMessage = (utterance) => {
 };
 
 const renderChart = (utterance) => {
-    if(utterance.startsWith("$DONUT")) {
-        const args = utterance.split(",");
+    const args = utterance.split(";");
+    const chart_type = args[0].replace("$$", "");
+    if(chart_type === "DONUT") {
         const outerValue = args[1];
         const innerValue = args[2];
         return new DonutChart(outerValue, "Kurs", innerValue, "Wiederholte Quizze").render();
+    } else if(chart_type === "LINECHART") {
+        const legendTitle1 = args[1];
+        const values1 = JSON.parse(args[2]);
+        const legendTitle2 = args[3];
+        const values2 = JSON.parse(args[4]);
+        return new LineChart(legendTitle1, values1, legendTitle2, values2).render();
     }
 };
 
@@ -88,7 +95,7 @@ const addSystemMessage = (utterance) => {
     const content = utterance[0];
     const answerCandidates = utterance[1];
 
-    if(content.startsWith("$DONUT")) {
+    if(content.startsWith("$$")) {
         const messageBubble = document.createElement("div");
         messageBubble.className = "block_chatbot-speech-bubble block_chatbot-system";
         const message = document.createElement("div");

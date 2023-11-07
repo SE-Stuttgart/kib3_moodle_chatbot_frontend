@@ -18,7 +18,7 @@ class DonutChart {
 
     render = () => {
         var chart = document.createElement("div");
-        chart.classList.add('svg-chart');
+        chart.classList.add('block_chatbot-svg-chart');
 
         const font = '5px serif';
         const outerTextWidth = this.getTextWidth(this.legendOuter, font);
@@ -26,8 +26,8 @@ class DonutChart {
         const totalWidth = 40 + 3 + 7 + Math.max(outerTextWidth, innerTextWidth); // chart size + spacing + rect + legend
 
         const outer_ring = `
-        <circle class="donut-ring" cx="20" cy="20" r="16" fill="transparent" stroke-width="3.5"/>
-        <circle class="donut-segment-outer" cx="20" cy="20" r="16" fill="transparent" stroke-width="4" 
+        <circle class="block_chatbot-donut-ring" cx="20" cy="20" r="16" fill="transparent" stroke-width="3.5"/>
+        <circle class="block_chatbot-donut-segment-outer" cx="20" cy="20" r="16" fill="transparent" stroke-width="4" 
             stroke-dasharray="${this.percentageOuter} ${this.percentageOuterEmpty}"
             stroke-dashoffset="25"/>`;
         const outer_legend = `<g>
@@ -38,8 +38,8 @@ class DonutChart {
                             </g>`;
 
         const inner_ring = this.percentageInner !== null? `
-        <circle class="donut-ring" cx="20" cy="20" r="12" fill="transparent" stroke-width="3.5"/>
-        <circle class="donut-segment-inner" cx="20" cy="20" r="12" fill="transparent" stroke-width="4"
+        <circle class="block_chatbot-donut-ring" cx="20" cy="20" r="12" fill="transparent" stroke-width="3.5"/>
+        <circle class="block_chatbot-donut-segment-inner" cx="20" cy="20" r="12" fill="transparent" stroke-width="4"
             stroke-dasharray="${this.percentageInner} ${this.percentageInnerEmpty}"
             stroke-dashoffset="18.75"></circle>`
             : "";
@@ -50,8 +50,8 @@ class DonutChart {
                 </text>
             </g>` : "";
 
-        chart.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 ${totalWidth} 40" class="donut">
-                <circle class="donut-hole" cx="20" cy="20" r="15.91549430918954" fill="#fff"/>
+        chart.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 ${totalWidth} 40" class="block_chatbot-donut">
+                <circle class="block_chatbot-donut-hole" cx="20" cy="20" r="15.91549430918954" fill="#fff"/>
                 ${outer_ring}
                 ${inner_ring}
                 <g transform="translate(43 17.5)">
@@ -60,13 +60,13 @@ class DonutChart {
                 </g>
             </svg>`;
 
-        chart.getElementsByClassName('donut-segment-outer')[0].animate(
+        chart.getElementsByClassName('block_chatbot-donut-segment-outer')[0].animate(
             [
                 { strokeDasharray: "0, 100" },
                 { strokeDasharray: `${this.percentageOuter} ${this.percentageOuterEmpty}`}
             ], {duration: 3000}
         );
-        chart.getElementsByClassName('donut-segment-inner')[0].animate(
+        chart.getElementsByClassName('block_chatbot-donut-segment-inner')[0].animate(
             [
                 { strokeDasharray: "0, 75" },
                 { strokeDasharray: `${this.percentageInner} ${this.percentageInnerEmpty}`}

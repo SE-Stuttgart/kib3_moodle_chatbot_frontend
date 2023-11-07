@@ -167,13 +167,13 @@
 /*
 * DONUT CHART
 */
-.svg-chart {
+.block_chatbot-svg-chart {
     height: 7em;
     margin: 0 auto;
-    animation: donutfade 1s;
+    animation: block_chatbot-donutfade 1s;
 }
 
-@keyframes donutfade {
+@keyframes block_chatbot-donutfade {
     0% {
         opacity: .2;
     }
@@ -182,27 +182,27 @@
     }
 }
 
-.donut-ring {
+.block_chatbot-donut-ring {
     stroke: #ebebeb;
 }
 
-.donut-segment-outer {
+.block_chatbot-donut-segment-outer {
     transform-origin: center;
     stroke: #8de239;
     /* animation: donutOuter 3s; */
 }
 
-.donut-segment-inner {
+.block_chatbot-donut-segment-inner {
     transform-origin: center;
     stroke: orange;
     /* animation: donutInner 3s; */
 }
 
-.donut-percent {
-    animation: donutfadelong 1s;
+.block_chatbot-donut-percent {
+    animation: block_chatbot-donutfadelong 1s;
 }
 
-@keyframes donutfadelong {
+@keyframes block_chatbot-donutfadelong {
     0% {
         opacity: 0;
     }
@@ -230,12 +230,12 @@
     }
 } */
 
-.donut-text {
+.block_chatbot-donut-text {
     font-family: Arial, Helvetica, sans-serif;
     fill: #ff6200;
 }
 
-.donut-label {
+.block_chatbot-donut-label {
     font-size: 0.28em;
     font-weight: 700;
     line-height: 1;
@@ -243,14 +243,14 @@
     transform: translateY(0.25em);
 }
 
-.donut-percent {
+.block_chatbot-donut-percent {
     font-size: 0.5em;
     line-height: 1;
     transform: translateY(0.5em);
     font-weight: bold;
 }
 
-.donut-data {
+.block_chatbot-donut-data {
     font-size: 0.12em;
     line-height: 1;
     transform: translateY(0.5em);
@@ -258,5 +258,10 @@
     text-anchor: middle;
     color: #666;
     fill: #666;
-    animation: donutfadelong 1s;
+    animation: block_chatbot-donutfadelong 1s;
+}
+
+.block_chatbot-plotly-chart {
+    width: 15em;
+    height: 12em;
 }
