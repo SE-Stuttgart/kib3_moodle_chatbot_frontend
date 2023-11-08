@@ -8,6 +8,7 @@
         <FIELDS>
             <FIELD NAME="userid" LENGTH="10" TYPE="int" NOTNULL="true"/>
             <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+            <FIELD NAME="firstweek" TYPE="binary" NOTNULL="true" COMMNET="True if the chatbot is used by the user for the first week - should change stat display."/>`
         </FIELDS> 
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="userid"/>
