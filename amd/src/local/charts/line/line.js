@@ -11,29 +11,49 @@ class LineChart {
         const trace1 = {
             ...this.dataArray1,
             name: this.legendTitle1,
-            mode: 'lines+markers'
+            mode: 'lines+markers',
+            marker: {
+                color: 'orange',
+            },
+            line: {
+                color: 'orange',
+            },
         };
         var data = [trace1];
+        var maxValue = Math.max(...this.dataArray1.y);
 
         if(this.dataArray2 !== null) {
             var trace2 = {
                 ...this.dataArray2,
                 name: this.legendTitle2,
-                mode: 'lines+markers'
+                mode: 'lines+markers',
+                marker: {
+                    color: '#399be2',
+                },
+                line: {
+                    color: '#399be2',
+                }
             };
             data.push(trace2);
+            maxValue = Math.max(maxValue, Math.max(...this.dataArray2.y));
         }
 
         const layout = {
             autosize: true,
-            margin: {
-                l: 20,
-                r: 2,
-                b: 20,
-                t: 2,
-                pad: 2
-            },
             showlegend: true,
+            legend: {
+                orientation: 'h',
+            },
+            yaxis: {
+                tickmode: "array",
+                tickvals: [...Array(maxValue+2).keys()],
+            },
+            margin: {
+                l: 25,
+                r: 5,
+                b: 20,
+                t: 10,
+            },
         };
         const config = {
             displayModeBar: false,
