@@ -262,5 +262,15 @@ export const init = (server_name, server_port, server_url, userid, username, cou
     }
     setWindowState(localStorage.getItem("chatbot.maximized") === "true");
 
+    // Minimize chatbot when clicking outside
+    document.addEventListener('click', function(event) {
+        var chatbot = document.getElementById('block_chatbot-chatwindow');
+        // Check if the clicked element is outside the "chatbot" div
+        if (event.target !== chatbot && !chatbot.contains(event.target)) {
+            // Check if the clicked element is not inside the "chatbot" div
+            setWindowState(false);
+        }
+    });
+
     return conn;
 };
