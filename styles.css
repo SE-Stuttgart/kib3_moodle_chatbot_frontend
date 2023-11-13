@@ -126,6 +126,10 @@
     color: white;
     border-top-left-radius: 0;
 }
+.block_chatbot-system a {
+    text-decoration: underline;
+    color: white;
+}
 
 .block_chatbot-user {
     background: white;
