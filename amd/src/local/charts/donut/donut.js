@@ -4,8 +4,8 @@ class DonutChart {
         this.percentageOuter = percentageOuter;
         this.legendOuter = legendOuter;
         this.percentageOuterEmpty = 100 - this.percentageOuter;
-        this.percentageInnerEmpty = (100 - percentageInner) * 0.75;
-        this.percentageInner = percentageInner * 0.75;
+        this.percentageInnerEmpty = percentageInner === null? null : (100 - percentageInner) * 0.75;
+        this.percentageInner = percentageInner === null? null : percentageInner * 0.75;
         this.legendInner = legendInner;
     }
 
@@ -66,12 +66,14 @@ class DonutChart {
                 { strokeDasharray: `${this.percentageOuter} ${this.percentageOuterEmpty}`}
             ], {duration: 3000}
         );
-        chart.getElementsByClassName('block_chatbot-donut-segment-inner')[0].animate(
-            [
-                { strokeDasharray: "0, 75" },
-                { strokeDasharray: `${this.percentageInner} ${this.percentageInnerEmpty}`}
-            ], {duration: 3000}
-        );
+        if(this.percentageInner !== null ) {
+            chart.getElementsByClassName('block_chatbot-donut-segment-inner')[0].animate(
+                [
+                    { strokeDasharray: "0, 75" },
+                    { strokeDasharray: `${this.percentageInner} ${this.percentageInnerEmpty}`}
+                ], {duration: 3000}
+            );
+        }
 
         return chart;
         //     <g class="donut-text">

@@ -22,14 +22,17 @@ const registerEventListeners = () => {
     document.addEventListener('keydown', e => {
         if (e.target.closest(Selectors.actions.textInput)) {
             if(e.key === "Enter") {
-              sendMessage();
+                // get value of input field, then send
+                const textInputField = $("#block_chatbot-userUtterance");
+                const user_input = textInputField.val();
+                sendMessage(user_input);
             }
         }
     });
 };
 
 const sendMessage = (user_input) => {
-    console.log("SENDING");
+    console.log("SENDING", user_input);
     // forwad value of input field to socket & send message
     conn.sendMessage(user_input);
     // show user message in messagelist
@@ -72,9 +75,11 @@ const renderChart = (utterance) => {
     const args = utterance.split(";");
     const chart_type = args[0].replace("$$", "");
     if(chart_type === "DONUT") {
-        const outerValue = args[1];
-        const innerValue = args[2];
-        const plot = new DonutChart(outerValue, "Kurs", innerValue, "Wiederholte Quizze").render();
+        const outerTitle = args[1];
+        const outerValue = args[2];
+        const innerTitle = args.length > 3? args[3] : null;
+        const innerValue = args.length > 4? args[4] : null;
+        const plot = new DonutChart(outerValue, outerTitle, innerValue, innerTitle).render();
         message.append(plot);
         messageBubble.append(message);
         messagelist.append(messageBubble);
