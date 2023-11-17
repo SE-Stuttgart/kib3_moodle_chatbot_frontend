@@ -64,7 +64,7 @@ const addUserMessage = (utterance) => {
     messagelist.animate({ scrollTop: messagelist.prop("scrollHeight")}, 500);
 };
 
-const renderChart = (utterance) => {
+const renderComponent = (utterance) => {
     const messagelist = $('#block_chatbot-messagelist');
     const messageBubble = document.createElement("div");
     messageBubble.className = "block_chatbot-speech-bubble block_chatbot-system";
@@ -73,17 +73,15 @@ const renderChart = (utterance) => {
     message.style.color = "anthrazit";
 
     const args = utterance.split(";");
-    const chart_type = args[0].replace("$$", "");
-    if(chart_type === "DONUT") {
+    const component_type = args[0].replace("$$", "");
+    if(component_type === "DONUT") {
         const outerTitle = args[1];
         const outerValue = args[2];
         const innerTitle = args.length > 3? args[3] : null;
         const innerValue = args.length > 4? args[4] : null;
         const plot = new DonutChart(outerValue, outerTitle, innerValue, innerTitle).render();
         message.append(plot);
-        messageBubble.append(message);
-        messagelist.append(messageBubble);
-    } else if(chart_type === "LINECHART") {
+    } else if(component_type === "LINECHART") {
         const legendTitle1 = args[1];
         const values1 = JSON.parse(args[2]);
         const legendTitle2 = args[3];
@@ -94,11 +92,23 @@ const renderChart = (utterance) => {
         console.log("DATA1", values1);
         console.log("DATA2", values2);
         message.append(plot);
-        messageBubble.append(message);
-        messagelist.append(messageBubble);
         new LineChart(plot, legendTitle1, values1, legendTitle2, values2).render(Plotly);
+    } else if(component_type === "QUIZ") {
+        const quiz_args = JSON.parse(args[1]);
+        console.log("QUIZ ARGS", quiz_args);
+        messageBubble.style.width = `80%`;
+        message.style.width = `100%`;
+        var iframe = document.createElement("iframe");
+        iframe.src = `${quiz_args.host}/h5p/embed.php?url=${quiz_args.host}/pluginfile.php/${quiz_args.context}` +
+                     `/mod_h5pactivity/${quiz_args.filearea}/${quiz_args.itemid}/${quiz_args.filename}` +
+                     `&preventredirect=1&component=mod_h5pactivity`;
+        iframe.className = "h5p-player border-0 block_chatbot-quiz";
+        message.append(iframe);
     }
+    messageBubble.append(message);
+    messagelist.append(messageBubble);
 };
+
 
 const createAnswerCandidateButton = (candidate) => {
     var button = document.createElement("p");
@@ -119,7 +129,7 @@ const addSystemMessage = (utterance) => {
     const answerCandidates = utterance[1];
 
     if(content.startsWith("$$")) {
-        renderChart(content);
+        renderComponent(content);
     } else {
         var systemBubble = document.createElement("div");
         systemBubble.className = "block_chatbot-speech-bubble block_chatbot-system";
@@ -157,6 +167,18 @@ const setWindowState = (maximized) => {
     }
     // remember state
     localStorage.setItem("chatbot.maximized", maximized? "true" : "false");
+};
+
+const resizeWindow = (size) => {
+    console.log("Resize to", size);
+
+    if(size == "UI_SIZE_DEFAULT") {
+        $(".block_chatbot-chatwindowInner").removeClass('block_chatbot-big');
+        $(".block_chatbot-chatwindowInner").addClass('block_chatbot-default');
+    } else if(size == "UI_SIZE_LARGE") {
+        $(".block_chatbot-chatwindowInner").removeClass('block_chatbot-default');
+        $(".block_chatbot-chatwindowInner").addClass('block_chatbot-big');
+    }
 };
 
 class ChatbotConnection {
@@ -201,6 +223,8 @@ class ChatbotConnection {
                 } else if(message.party === "control") {
                     if(message.content === "UI_OPEN") {
                         setWindowState(true);
+                    } else if(message.content.startsWith("UI_SIZE")) {
+                        resizeWindow(message.content);
                     }
                 }
                 else {
