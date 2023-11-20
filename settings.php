@@ -48,7 +48,7 @@ if ($ADMIN->fulltree) {
 	foreach ($courses as $course) {
 		$courselist[$course->id] = $course->fullname;
 	}
-	$settingspage->add(new admin_setting_configmulticheckbox(
+	$settings->add(new admin_setting_configmulticheckbox(
 		'block_chatbot/courseids',
 		get_string('courses', 'block_chatbot'),
 		get_string('courses_description', 'block_chatbot'),

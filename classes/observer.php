@@ -32,11 +32,8 @@ class observer {
         observer::debug_to_console($event->get_name());
         observer::debug_to_console($event->courseid);
 
-        // Find course module associated with event.
-        $cm = $DB->get_record('course_modules', array('id' => $event->courseid));
-
         // Check if course associated with update is in whitelist specified in settings.
-        if (in_array($cm->course, explode(",", get_config('block_chatbot', "courseids"))) == false) {
+        if (in_array($event->courseid, explode(",", get_config('block_chatbot', "courseids"))) == true) {
             // If not in whitelist, then return.
             observer::forward_event("http://" . block_chatbot_get_event_server_name() . ":" . block_chatbot_get_server_port() . "/event", $event);
         }
