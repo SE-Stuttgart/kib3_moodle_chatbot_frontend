@@ -44,7 +44,7 @@ class DonutChart {
             stroke-dashoffset="18.75"></circle>`
             : "";
         const inner_legend = this.percentageInner !== null? `<g>
-                <rect x="0" y="7" width="4" height="4" fill="#ff6200"/>
+                <rect x="0" y="7" width="4" height="4" fill="orange"/>
                 <text x="7" y="9.5" font-size="5" alignment-baseline="middle" fill="white">
                     ${this.legendInner}
                 </text>

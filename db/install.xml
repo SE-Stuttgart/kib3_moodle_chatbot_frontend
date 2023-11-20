@@ -44,6 +44,7 @@
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Timestamp of when the instance was added to the course."/>
         <FIELD NAME="speaker" TYPE="text" NOTNULL="true"/> 
         <FIELD NAME="message" TYPE="text" NOTNULL="false"/> 
+        <FIELD NAME="act" TYPE="text" NOTNULL="false"/> 
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
