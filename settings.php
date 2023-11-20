@@ -41,4 +41,18 @@ if ($ADMIN->fulltree) {
 	$choices = array('body' => 'Body', '#page' => 'Page');
 	$settings->add(new admin_setting_configselect($name, $title, $description, $default, $choices));
 
+	// Course configuration: which courses should the plugin be active for.
+	$courses = get_courses("all", "c.sortorder ASC", "c.id,c.fullname");
+	$courselist = array();
+	// Get list of all courses and add those to the offered selection.
+	foreach ($courses as $course) {
+		$courselist[$course->id] = $course->fullname;
+	}
+	$settingspage->add(new admin_setting_configmulticheckbox(
+		'block_chatbot/courseids',
+		get_string('courses', 'block_chatbot'),
+		get_string('courses_description', 'block_chatbot'),
+		null,
+		$courselist));
+
 }

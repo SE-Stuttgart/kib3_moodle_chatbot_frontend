@@ -24,3 +24,6 @@ $string['event_server_name_desc'] = 'The name used to connect with the chatbot s
 
 $string['server_port'] = 'Server port';
 $string['server_port_desc'] = 'The port used to connect with the chatbot server.';
+
+$string['courses'] = 'Available Courses';
+$string['courses_description'] = 'Select all the courses the autocompletion should be enabled for';
