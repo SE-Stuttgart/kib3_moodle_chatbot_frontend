@@ -81,6 +81,8 @@ const renderComponent = (utterance) => {
         const innerValue = args.length > 4? args[4] : null;
         const plot = new DonutChart(outerValue, outerTitle, innerValue, innerTitle).render();
         message.append(plot);
+        messageBubble.append(message);
+        messagelist.append(messageBubble);
     } else if(component_type === "LINECHART") {
         const legendTitle1 = args[1];
         const values1 = JSON.parse(args[2]);
@@ -92,6 +94,8 @@ const renderComponent = (utterance) => {
         console.log("DATA1", values1);
         console.log("DATA2", values2);
         message.append(plot);
+        messageBubble.append(message);
+        messagelist.append(messageBubble);
         new LineChart(plot, legendTitle1, values1, legendTitle2, values2).render(Plotly);
     } else if(component_type === "QUIZ") {
         const quiz_args = JSON.parse(args[1]);
@@ -104,9 +108,9 @@ const renderComponent = (utterance) => {
                      `&preventredirect=1&component=mod_h5pactivity`;
         iframe.className = "h5p-player border-0 block_chatbot-quiz";
         message.append(iframe);
+        messageBubble.append(message);
+        messagelist.append(messageBubble);
     }
-    messageBubble.append(message);
-    messagelist.append(messageBubble);
 };
 
 

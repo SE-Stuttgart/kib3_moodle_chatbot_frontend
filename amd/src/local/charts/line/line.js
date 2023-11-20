@@ -57,6 +57,7 @@ class LineChart {
         };
         const config = {
             displayModeBar: false,
+            responsive: true
         };
 
         Plotly.newPlot(this.parentDiv, data, layout, config);
