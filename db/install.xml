@@ -4,6 +4,22 @@
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
+    <TABLE NAME="chatbot_recentlyaccessed" COMMENT="Stores the last viewed course modules by user">
+        <FIELDS>
+            <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+            <FIELD NAME="userid" LENGTH="10" TYPE="int" NOTNULL="true" SEQUENCE="false"/>
+            <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+            <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+            <FIELD NAME="timeaccess" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+            <FIELD NAME="completionstate" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false"/>
+        </FIELDS> 
+        <KEYS>
+            <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            <KEY NAME="fk_user" TYPE="foreign" FIELDS="userid" REFTABLE="users" REFFIELDS="id"/>
+            <KEY NAME="fk_coursemodule" TYPE="foreign" FIELDS="cmid" REFTABLE="course_modules" REFFIELDS="id"/>
+            <KEY NAME="fk_course" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        </KEYS>
+    </TABLE>
    <TABLE NAME="chatbot_weekly_summary" COMMENT="Stores the chatbot user events">
         <FIELDS>
             <FIELD NAME="userid" LENGTH="10" TYPE="int" NOTNULL="true"/>
