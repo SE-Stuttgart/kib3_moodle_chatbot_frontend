@@ -6,17 +6,17 @@ import $ from 'jquery';
 
 const registerEventListeners = () => {
     document.addEventListener('click', e => {
-        if (e.target.closest(Selectors.actions.maximiseChatWindow)) {
-            window.alert("MAXIMISE");
-        } else if(e.target.closest(Selectors.actions.minimizeChatWindow)) {
-            window.alert("MINIMIZE");
-        } else if(e.target.closest(Selectors.actions.sendMessage)) {
+        if(e.target.closest(Selectors.actions.sendMessage)) {
             // get value of input field, then send
             const textInputField = $("#block_chatbot-userUtterance");
             const user_input = textInputField.val();
             sendMessage(user_input);
         } else if(e.target.closest(Selectors.actions.toggleWindowState)) {
             setWindowState(!(localStorage.getItem("chatbot.maximized") === "true"));
+        } else if(e.target.closest(Selectors.actions.toggleWindowSize)) {
+            // toggle current size
+            const new_size = localStorage.getItem("chatbot.size") === "UI_SIZE_DEFAULT"? "UI_SIZE_LARGE" : "UI_SIZE_DEFAULT";
+            resizeWindow(new_size);
         }
     });
     document.addEventListener('keydown', e => {
@@ -42,8 +42,34 @@ const sendMessage = (user_input) => {
     textInputField.val("");
 };
 
+const extend_chat_history = (party, message) => {
+    // extend chat history in local storage, truncate after 10 items
+    const storage_history = localStorage.getItem("chatbot.history");
+    var chat_history = storage_history===null? [] : JSON.parse(storage_history);
 
-const addUserMessage = (utterance) => {
+    chat_history.push({party: party, message: message});
+    if(chat_history.length > 10) {
+        chat_history = chat_history.slice(1);
+        $('#block_chatbot-messagelist:first-child').remove();
+    }
+    localStorage.setItem("chatbot.history", JSON.stringify(chat_history));
+};
+
+const restore_chat_history = () => {
+    const storage_history = localStorage.getItem("chatbot.history");
+    var chat_history = storage_history===null? [] : JSON.parse(storage_history);
+
+    chat_history.forEach(item => {
+        if(item.party === 'user') {
+            addUserMessage(item.message, false);
+        }
+        else if(item.party === 'system'){
+            addSystemMessage(item.message, false);
+        }
+    });
+};
+
+const addUserMessage = (utterance, shouldScroll = true) => {
     /*
     Adds a new messagebox to the message list
     Args:
@@ -60,8 +86,14 @@ const addUserMessage = (utterance) => {
         </div>
     `);
 
+    extend_chat_history('user', utterance);
+
     // scroll to newest message
-    messagelist.animate({ scrollTop: messagelist.prop("scrollHeight")}, 500);
+    if(shouldScroll){
+        messagelist.animate({ scrollTop: messagelist.prop("scrollHeight")}, 500);
+    } else {
+        messagelist.scrollTop(messagelist.prop("scrollHeight"));
+    }
 };
 
 const renderComponent = (utterance) => {
@@ -122,7 +154,7 @@ const createAnswerCandidateButton = (candidate) => {
     return button;
 };
 
-const addSystemMessage = (utterance) => {
+const addSystemMessage = (utterance, shouldScroll = false) => {
     /*
     Adds a new messagebox to the message list
     Args:
@@ -131,6 +163,9 @@ const addSystemMessage = (utterance) => {
     const messagelist = $('#block_chatbot-messagelist');
     const content = utterance[0];
     const answerCandidates = utterance[1];
+
+    extend_chat_history('system', utterance);
+    const scrollTop = messagelist.prop("scrollHeight");
 
     if(content.startsWith("$$")) {
         renderComponent(content);
@@ -152,7 +187,11 @@ const addSystemMessage = (utterance) => {
     }
 
     // scroll to newest message
-    messagelist.animate({ scrollTop: messagelist.prop("scrollHeight")}, 500);
+    if(shouldScroll) {
+        // messagelist.animate({ scrollTop: messagelist.prop("scrollHeight")}, 500);
+    } else {
+        messagelist.scrollTop(scrollTop);
+    }
 };
 
 const setWindowState = (maximized) => {
@@ -183,6 +222,8 @@ const resizeWindow = (size) => {
         $(".block_chatbot-chatwindowInner").removeClass('block_chatbot-default');
         $(".block_chatbot-chatwindowInner").addClass('block_chatbot-big');
     }
+
+    localStorage.setItem("chatbot.size", size);
 };
 
 class ChatbotConnection {
@@ -289,17 +330,26 @@ export const init = (server_name, server_port, server_url, userid, username, cou
     chatwindow.detach();
     $(document.body).append(chatwindow);
 
+    // Restore chat history
+    restore_chat_history();
+
     // Set or restore minimized state
     if (localStorage.getItem("chatbot.maximized") === null) {
         localStorage.setItem("chatbot.maximized", "false");
     }
     setWindowState(localStorage.getItem("chatbot.maximized") === "true");
+    // Set or restore chatbot size
+    if (localStorage.getItem("chatbot.size") === null) {
+        localStorage.setItem("chatbot.size", "UI_SIZE_DEFAULT");
+    }
+    resizeWindow(localStorage.getItem("chatbot.size"));
 
     // Minimize chatbot when clicking outside
     document.addEventListener('click', function(event) {
         var chatbot = document.getElementById('block_chatbot-chatwindow');
         // Check if the clicked element is outside the "chatbot" div
         if (event.target !== chatbot && !chatbot.contains(event.target)) {
+            console.log(event.target);
             // Check if the clicked element is not inside the "chatbot" div
             setWindowState(false);
         }
