@@ -277,6 +277,10 @@ class ChatbotConnection {
                 }
             });
         };
+        this.conn.onclose = () => {
+            this.conn.close();
+            setTimeout(this.openConnection, 2500);
+        };
     };
 
     sendMessage = (message) => {
