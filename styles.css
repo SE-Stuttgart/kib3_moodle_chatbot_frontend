@@ -37,13 +37,14 @@
     align-items: center;
 }
 
-.block_chatbot-minimizeButton {
+.block_chatbot-headerButton {
     background-color: transparent;
     border: none;
     width: 1.5em;
     height: 1em;
+    font-weight: bold;
 }
-.block_chatbot-minimizeButton:hover {
+.block_chatbot-headerButton:hover {
     stroke: #399be2;
 }
 

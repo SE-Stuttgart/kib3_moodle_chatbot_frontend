@@ -17,6 +17,19 @@ class block_chatbot extends block_base {
 	    	return $this->content;
     	}
 
+		// check if the user has enabled chatbot.
+		// if not, don't render it
+		if($DB->record_exists('chatbot_usersettings', array('userid' => $USER->id))) {
+			$usersettings = $DB->get_record('chatbot_usersettings', array('userid' => $USER->id));
+			if($usersettings->enabled == 0) {
+				// user has disabled chatbot -> don't load JS, don't render
+				$this->content         =  new stdClass;
+				$this->content->footer = '';
+				$this->content->text = '';
+				return $this->content;
+			}
+		}
+
 		// try to get token for slidefinder webservice
 		$slidefinder_token = "";
 		// check if slidefinder plugin is installed first

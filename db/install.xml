@@ -4,6 +4,27 @@
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
+    <TABLE NAME="chatbot_usersettings" COMMENT="Stores the user specific settings">
+        <FIELDS>
+            <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+            <FIELD NAME="userid" LENGTH="10" TYPE="int" NOTNULL="true" SEQUENCE="false"/>
+            <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/> 
+            <FIELD NAME="logging" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/> 
+            <FIELD NAME="preferedcontenttype" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/> 
+            <FIELD NAME="numsearchresults" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/> 
+            <FIELD NAME="numreviewquizzes" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/> 
+            <FIELD NAME="openonlogin" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/> 
+            <FIELD NAME="openonquiz" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/> 
+            <FIELD NAME="openonsection" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/> 
+            <FIELD NAME="openonbranch" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/> 
+            <FIELD NAME="openonbadge" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/> 
+        </FIELDS>
+        <KEYS>
+            <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            <KEY NAME="fk_user" TYPE="foreign" FIELDS="userid" REFTABLE="users" REFFIELDS="id"/>
+            <KEY NAME="fk_module" TYPE="foreign" FIELDS="preferedcontenttype" REFTABLE="modules" REFFIELDS="id"/>
+        </KEYS>
+    </TABLE>
     <TABLE NAME="chatbot_recentlyaccessed" COMMENT="Stores the last viewed course modules by user">
         <FIELDS>
             <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
@@ -36,17 +57,6 @@
             <FIELD NAME="userid" LENGTH="10" TYPE="int" NOTNULL="true"/>
             <FIELD NAME="progress" TYPE="float" NOTNULL="true"/>
             <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        </FIELDS> 
-        <KEYS>
-            <KEY NAME="primary" TYPE="primary" FIELDS="userid"/>
-            <KEY NAME="fk_user" TYPE="foreign" FIELDS="userid" REFTABLE="users" REFFIELDS="id"/>
-        </KEYS>
-    </TABLE> 
-    <TABLE NAME="chatbot_settings" COMMENT="Stores the chatbot user settings">
-        <FIELDS>
-            <FIELD NAME="userid" LENGTH="10" TYPE="int" NOTNULL="true"/>
-            <FIELD NAME="allow_auto_open" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
-            <FIELD NAME="preferred_content_fromat" TYPE="text" NOTNULL="false"/>
         </FIELDS> 
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="userid"/>

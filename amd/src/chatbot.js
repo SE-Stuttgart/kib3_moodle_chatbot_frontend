@@ -17,6 +17,10 @@ const registerEventListeners = () => {
             // toggle current size
             const new_size = localStorage.getItem("chatbot.size") === "UI_SIZE_DEFAULT"? "UI_SIZE_LARGE" : "UI_SIZE_DEFAULT";
             resizeWindow(new_size);
+        } else if(e.target.closest(Selectors.actions.help)) {
+            sendMessage("Hilfe");
+        } else if(e.target.closest(Selectors.actions.settings)) {
+            // TODO open settings modal
         }
     });
     document.addEventListener('keydown', e => {
