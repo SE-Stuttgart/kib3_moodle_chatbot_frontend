@@ -115,17 +115,10 @@ class block_chatbot_external extends external_api {
     public static function get_section_id($cmid) {
         global $DB;
         $params = self::validate_parameters(self::get_section_id_parameters(), array('cmid' => $cmid));
-        $result = $DB->get_records_sql_menu("SELECT {course_sections}.id, {course_sections}.name 
-                                    FROM {course_sections}
-                                    JOIN {course_modules} ON {course_sections}.id = {course_modules}.section
-                                    WHERE {course_modules}.id = :cmid
-                                    LIMIT 1",
-                                    array("cmid" => $cmid)
-                                );
-        $sectionid = array_keys($result)[0];
+        [$sectionid, $name] = get_section_id_and_name($cmid);
         return array(
             'id' => $sectionid, 
-            'name' => $result[$sectionid]
+            'name' => $name
         );
     }
 
@@ -230,5 +223,353 @@ class block_chatbot_external extends external_api {
             "branch" => $topicletter,
             "candidates" => $result
         );
+    }
+
+
+
+    public static function has_seen_any_course_modules_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'),
+                'courseid' => new external_value(PARAM_INT, 'course id')
+            )
+        );
+    }
+    public static function has_seen_any_course_modules_returns() {
+        return new external_single_structure(
+            array(
+                'seen' => new external_value(PARAM_BOOL, 'true, if the given user has seen at least one module in the given course'),
+                'warnings' => new external_warnings(),
+            )
+        );
+    }
+    public static function has_seen_any_course_modules($userid, $courseid) {
+        global $DB;
+        $params = self::validate_parameters(self::has_seen_any_course_modules_parameters(), array('userid' => $userid, 'courseid' => $courseid));
+        
+        $result = $DB->record_exists_sql(
+                                "SELECT {course_modules_viewed}.coursemoduleid FROM {course_modules_viewed}
+                                JOIN {course_modules} ON {course_modules}.id = {course_modules_viewed}.coursemoduleid
+                                WHERE {course_modules_viewed}.userid = :userid
+                                AND {course_modules}.course = :courseid",
+                            array("userid" => $userid,
+                                    "courseid" => $courseid)
+                            );
+        // var_dump($result);
+        return array(
+            'seen' => $result
+        );
+    }
+
+
+
+    public static function get_last_viewed_course_modules_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'), 
+                'courseid' => new external_value(PARAM_INT, 'course id'), 
+                'completed' => new external_value(PARAM_BOOL, 'whether the module status should be viewed or completed'), 
+            )
+        );
+    }
+    public static function get_last_viewed_course_modules_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'cmid' => new external_value(PARAM_INT, 'id of the course module'),
+                    'section' => new external_value(PARAM_INT, "id of the course module's section"),
+                    'timeaccess' => new external_value(PARAM_INT, "timestamp of the course module's last access"),
+                    'completionstate' => new external_value(PARAM_INT, "course module's completionstate"),
+                    'warnings' => new external_warnings(),
+                )
+            )
+        );
+    }
+    public static function get_last_viewed_course_modules($userid, $courseid, $completed) {
+        global $DB;
+        $params = self::validate_parameters(self::get_last_viewed_course_modules_parameters(), array('userid' => $userid, 'courseid' => $courseid, 'completed' => $completed));
+        
+        $results = $DB->get_records_sql("SELECT ra.cmid, ra.timeaccess, ra.completionstate, cm.section FROM {chatbot_recentlyaccessed} AS ra
+                              JOIN {course_modules} as cm 
+                                ON cm.id = ra.cmid
+                              WHERE ra.userid = :userid
+                              AND ra.courseid = :courseid
+                              AND ra.completionstate = :completionstate
+                              ORDER BY timeaccess DESC", array(
+            "courseid" => $courseid,
+            "completionstate" => $completed,
+            "userid" => $userid
+        ));
+        // var_dump($results);
+        return $results;
+    }
+
+
+
+    public static function get_first_available_course_module_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'), 
+                'sectionid' => new external_value(PARAM_INT, 'section id (where to look for for the first course module)'),
+                'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
+                'allowonlyunfinished' => new external_value(PARAM_BOOL, 'if True, will filter for only course modules that were not completed by the user')
+            )
+        );
+    }
+    public static function get_first_available_course_module_returns() {
+        return new external_single_structure(
+            array(
+                'cmid' => new external_value(PARAM_INT, 'id of the course module'),
+                'warnings' => new external_warnings(),
+            )
+        );
+    }
+    public static function get_first_available_course_module($userid, $sectionid, $includetypes, $allowonlyunfinished) {
+        global $DB;
+        $params = self::validate_parameters(self::get_first_available_course_module_parameters(), array(
+            'userid' => $userid, 
+            'sectionid' => $sectionid,
+            'includetypes' => $includetypes, 
+            'allowonlyunfinished' => $allowonlyunfinished));
+        
+        # get name + all modules from current section
+        $section = $DB->get_record("course_sections", array(
+            "id" => $sectionid
+        ), "name,sequence");
+
+        foreach(explode(",", $section->sequence) as $cmid) {
+            # loop over all course modules in current section
+            // echo "\nCMID: " . $cmid . " -> completed: ";
+            // echo "\nCOMPLETED: " .  course_module_is_completed($userid, $cmid);
+            // echo "\nTYPE: " . get_module_type_name($cmid) . " -> " . in_array(get_module_type_name($cmid), explode(",", $includetypes));
+            // echo "\nAVAILABLE: " . is_available_course_module($userid, $cmid);
+            if(in_array(get_module_type_name($cmid), explode(",", $includetypes)) && is_available_course_module($userid, $cmid) && (($allowonlyunfinished && !course_module_is_completed($userid, $cmid)) || !$allowonlyunfinished)) {
+                return array(
+                    "cmid" => $cmid
+                );
+            }
+        }
+
+        return array("cmid" => null);
+    }
+
+
+    public static function get_course_module_content_link_parameters() {
+        return new external_function_parameters(
+            array(
+                'cmid' => new external_value(PARAM_INT, 'course module id'), 
+                'alternativedisplaytext' => new external_value(PARAM_TEXT, 'alternative display text for html a element')
+            )
+        );
+    }
+    public static function get_course_module_content_link_returns() {
+        return new external_single_structure(
+            array(
+                'url' => new external_value(PARAM_RAW, 'embeddable html href link (a) element'),
+                'warnings' => new external_warnings(),
+            )
+        );
+    }
+    public static function get_course_module_content_link($cmid, $alternativedisplaytext) {
+        global $DB;
+        global $CFG;
+
+        $params = self::validate_parameters(self::get_course_module_content_link_parameters(), array(
+            'cmid' => $cmid,
+            'alternativedisplaytext' => $alternativedisplaytext
+        ));
+        
+        $base_path = $CFG->wwwroot;
+        // get course module name and type. name can be used as default display text.
+        [$display_name, $type_name] = get_course_module_name_and_typename($cmid);
+        if(!empty($alternativedisplaytext)) {
+            // overwrite display text
+            $display_name = $alternativedisplaytext;
+        }
+        // construct and return link
+        $url = "<a href=\"{$base_path}/mod/{$type_name}/view.php?id={$cmid}\">{$display_name}</a>";
+        // var_dump("<a href=\"{$base_path}/mod/{$type_name}/view.php?id={$cmid}\">{$display_name}</a>");
+        return array("url" => $url);
+    }
+
+
+    public static function get_available_new_course_sections_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'), 
+                'courseid' => new external_value(PARAM_INT, 'course id'), 
+            )
+        );
+    }
+    public static function get_available_new_course_sections_returns() {
+        return new external_single_structure(
+            array(
+                'sectionids' => new external_multiple_structure(
+                    new external_value(PARAM_INT, 'section id')
+                )
+            )
+        );
+    }
+    public static function get_available_new_course_sections($userid, $courseid) {
+        global $DB;
+
+        $params = self::validate_parameters(self::get_available_new_course_sections_parameters(), array(
+            'userid' => $userid,
+            'courseid' => $courseid
+        ));
+        
+        // get all course sections for the given course, then check availability
+        $available = array();
+        $all_sections = $DB->get_records("course_sections",
+                                            array("course" => $courseid),
+                                            '',
+                                            "id,name,visible,availability,sequence");
+        foreach($all_sections as $section) {
+            if(is_available_course_section($userid, $section->id, $section->name,$section->visible,$section->availability) && !section_is_completed($userid, $section->id)) {
+                $section_cmids = explode(",", $section->sequence);
+                $all_course_modules_available = true;
+                foreach($section_cmids as $cmid) {
+                    if(!is_available_course_module($userid, $cmid)) {
+                        $all_course_modules_available = false;
+                        break;
+                    }
+                }
+                if($all_course_modules_available) {
+                    array_push($available, $section->id);
+                }
+            }
+        }
+        
+        return array('sectionids' => $available);
+    }
+
+
+
+    public static function get_icecreamgame_course_module_id_parameters() {
+        return new external_function_parameters(
+            array(
+                'courseid' => new external_value(PARAM_INT, 'course id'), 
+            )
+        );
+    }
+    public static function get_icecreamgame_course_module_id_returns() {
+        new external_single_structure(
+            array(
+                'id' => new external_value(PARAM_INT, 'ice cream game id for the given course'),
+                'warnings' => new external_warnings(),
+            )
+        );
+    }
+    public static function get_icecreamgame_course_module_id($courseid) {
+        global $DB;
+
+        $params = self::validate_parameters(self::get_icecreamgame_course_module_id_parameters(), array(
+            'courseid' => $courseid
+        ));
+        
+        $icecreamgame_cmid = $DB->get_field_sql("SELECT cm.id
+                                                 FROM {course_modules} as cm
+                                                 JOIN {modules} ON {modules}.id = cm.module
+                                                 WHERE {modules}.name = :modulename
+                                                 AND cm.course = :courseid",
+                                                 array(
+                                                    "courseid" => $courseid,
+                                                    "modulename" => 'icecreamgame')
+                                            );
+        return array("id" => $icecreamgame_cmid->id);
+    }
+
+
+
+    public static function  get_next_available_course_module_id_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'),
+                'cmid' => new external_value(PARAM_INT, 'current course module id'),
+                'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
+                'allowonlyunfinished' => new external_value(PARAM_BOOL, 'if True, will filter for only course modules that were not completed by the user'),
+                'currentcoursemodulecompletion' => new external_value(PARAM_BOOL, 'TODO')
+            )
+        );
+    }
+    public static function get_next_available_course_module_id_returns() {
+        return new external_single_structure(
+            array(
+                'cmid' => new external_value(PARAM_INT, 'next course module id'),
+                'warnings' => new external_warnings(),
+            )
+        );
+    }
+    public static function get_next_available_course_module_id($userid, $cmid, $includetypes, $allowonlyunfinished, $currentcoursemodulecompletion) {
+        global $DB;
+
+        $params = self::validate_parameters(self::get_next_available_course_module_id_parameters(), array(
+            'userid' => $userid,
+            'cmid' => $cmid,
+            'includetypes' => $includetypes,
+            'allowonlyunfinished' => $allowonlyunfinished,
+            'currentcoursemodulecompletion' => $currentcoursemodulecompletion
+        ));
+
+        // get all course modules from current section
+        [$sectionid, $sectionname] = get_section_id_and_name($cmid);
+        $sequence = explode(",", $DB->get_field('course_sections', 'sequence', array("id" => $sectionid)));
+        $unfinished_modules = array();
+        // var_dump($sequence);
+        foreach($sequence as $index => $nextcmid) {
+            // walk over all section modules
+            $typename = get_module_type_name($nextcmid);
+            // echo "\n";
+            // echo "\nNEXT CMID {$nextcmid}";
+            // echo "\nTYPE {$typename}";
+            if(str_contains($includetypes, $typename) && is_available_course_module($userid, $nextcmid)) {
+                // only look at modules that are 1) available and 2) whitelisted by type
+                
+                // take provided module completion if course module we look at is the one passed in, otherwise query database
+                if($cmid == $nextcmid && $currentcoursemodulecompletion) {
+                    // echo "\nCOMPLETED OVERRIDE {$currentcoursemodulecompletion}";
+                    $completed = $currentcoursemodulecompletion;
+                } else {
+                    $completed = course_module_is_completed($userid, $nextcmid); 
+                }
+                $open_respecting_unfinished = ($allowonlyunfinished && !$completed) || (!$allowonlyunfinished);
+                // echo "\nCOMPLETED {$completed}";
+                // echo "\nOPEN {$open_respecting_unfinished}";
+                // echo "\nCMID < 0? {{$cmid} < 0}";
+                // echo "\n";
+
+                if((!$completed) && $cmid == $nextcmid) {
+                    // module not completed, but it's the currentModule: return, because it still has to be finished
+                    // echo "\n 22 --> {$nextcmid} \n";
+                    return array("cmid" => $nextcmid);
+                }
+                if((!$open_respecting_unfinished) && $cmid == $nextcmid) {
+                    // echo "\n 33 --> {$nextcmid} \n";
+                    // module is the current module, and it has been completed:
+                    // get next module from section in sequence (if exists)
+                    //  - if that hasen't been completed yet, return it
+                    if(count($sequence) > $index + 1) {
+                        $nextcandidateid = $sequence[$index + 1];
+                        $completed = course_module_is_completed($userid, $nextcandidateid);
+                        $open_respecting_unfinished = ($allowonlyunfinished && !$completed) || (!$allowonlyunfinished);
+                        if($open_respecting_unfinished && str_contains($includetypes, get_module_type_name($nextcandidateid))) {
+                            return array("cmid" => $nextcandidateid);
+                        }
+                    }
+                }
+                if($open_respecting_unfinished) {
+                    // echo "\n 44 --> {$nextcmid} \n";
+                    // keep track of all unfinished modules in the section
+                    array_push($unfinished_modules, $nextcmid);
+                }
+            }
+        }
+        if(!empty($unfinished_modules)) {
+            // we haven't returned from any of the conditions above, so just return 1st unfinished module
+            // echo "\n 55 --> {$nextcmid} \n";
+            return array("cmid" => $unfinished_modules[0]);
+        }
+        // echo "\n 66 --> {$nextcmid} \n";
+        return array("cmid" => null); // no open modules in current section
     }
 }
