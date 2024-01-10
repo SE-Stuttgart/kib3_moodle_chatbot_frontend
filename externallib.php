@@ -572,4 +572,74 @@ class block_chatbot_external extends external_api {
         // echo "\n 66 --> {$nextcmid} \n";
         return array("cmid" => null); // no open modules in current section
     }
+
+
+
+    public static function count_viewed_course_modules_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'),
+                'courseid' => new external_value(PARAM_INT, 'course id'),
+                'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
+                'starttime' => new external_value(PARAM_INT, 'start point of interval)'),
+                'endtime' => new external_value(PARAM_INT, 'end point of interval (or 0, if there should be no time limit)')
+            )
+        );
+    }
+    public static function count_viewed_course_modules_returns() {
+        return new external_single_structure(
+            array(
+                'count' => new external_value(PARAM_INT, 'number of viewed course modules in given course during specified time range'),
+                'warnings' => new external_warnings(),
+            )
+        );
+    }
+    public static function count_viewed_course_modules($userid, $courseid, $includetypes, $starttime, $endtime) {
+        global $DB;
+
+        $params = self::validate_parameters(self::count_viewed_course_modules_parameters(), array(
+            'userid' => $userid,
+            'courseid' => $courseid,
+            'includetypes' => $includetypes,
+            'starttime' => $starttime,
+            'endtime' => $endtime
+        ));
+
+
+        [$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $includetypes), SQL_PARAMS_NAMED, 'types');
+        if($endtime <= 0 || $endtime <= $starttime) {
+            // no time interval - return count of all viewed course modules
+            $count = $DB->count_records_sql("SELECT COUNT({course_modules_viewed}.id)
+                                             FROM {course_modules_viewed}
+                                             JOIN {course_modules} ON {course_modules}.id = {course_modules_viewed}.coursemoduleid
+                                             JOIN {modules} ON {modules}.id = {course_modules}.module
+                                             WHERE {course_modules_viewed}.userid = :userid
+                                             AND {course_modules}.course = :courseid
+                                             AND {modules}.name $_insql_types",
+                                            array_merge(array(
+                                                "userid" => $userid,
+                                                "courseid" => $courseid,
+                                            ), $_insql_types_params)
+                                        );
+        } else {
+            // time interval - return count of viewed course modules during given interval only
+            $count = $DB->count_records_sql("SELECT COUNT({course_modules_viewed}.id)
+                                             FROM {course_modules_viewed}
+                                             JOIN {course_modules} ON {course_modules}.id = cmv.coursemoduleid
+                                             JOIN {modules} ON {modules}.id = {course_modules}.module
+                                             WHERE {course_modules_viewed}.userid = :userid
+                                             AND {course_modules_viewed}.timecreated >= :starttime
+                                             AND {course_modules_viewed}.timecreated <= :endtime
+                                             AND {course_modules}.course = :courseid
+                                             AND {modules}.name $_insql_types",
+                                            array_merge(array(
+                                                "userid" => $userid,
+                                                "courseid" => $courseid,
+                                                "starttime" => $starttime,
+                                                "endtime" => $endtime
+                                            ), $_insql_types_params)
+                                        );
+        }
+        return array("count" => $count);
+    }
 }
