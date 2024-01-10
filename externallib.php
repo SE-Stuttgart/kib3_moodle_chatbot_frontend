@@ -642,4 +642,154 @@ class block_chatbot_external extends external_api {
         }
         return array("count" => $count);
     }
+
+
+
+    public static function get_user_statistics_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'),
+                'courseid' => new external_value(PARAM_INT, 'course id'),
+                'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
+                'updatedb' => new external_value(PARAM_BOOL, 'whether to update the progress column in the database with the newly calculated values')
+            )
+        );
+    }
+    public static function get_user_statistics_returns() {
+        return new external_single_structure(
+            array(
+                'course_completion_percentage' => new external_value(PARAM_FLOAT, 'percentage of course completed by user so far'),
+                'quiz_repetition_percentage' => new external_value(PARAM_FLOAT, 'percentage of quizzes repeated by the user so far'),
+                'warnings' => new external_warnings(),
+            )
+        );
+    }
+    public static function get_user_statistics($userid, $courseid, $includetypes, $updatedb) {
+        global $DB;
+
+        $params = self::validate_parameters(self::get_user_statistics_parameters(), array(
+            'userid' => $userid,
+            'courseid' => $courseid,
+            'includetypes' => $includetypes,
+            'updatedb' => $updatedb
+        ));
+
+        // calculate current progress percentage for quizzes
+        [$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $includetypes), SQL_PARAMS_NAMED, 'types');
+        $total_num_quizzes = $DB->count_records_sql("SELECT COUNT(id)
+                                                     FROM {grade_items}
+                                                     WHERE courseid = :courseid
+                                                     AND itemmodule $_insql_types",
+                                                array_merge(
+                                                    array("courseid" => $courseid),
+                                                    $_insql_types_params    
+                                                ));
+        $num_repeated_quizzes = count($DB->get_fieldset_sql("SELECT {grade_grades_history}.id
+                                                        FROM {grade_grades_history}
+                                                        JOIN {grade_items} ON {grade_items}.id = {grade_grades_history}.itemid
+                                                        WHERE {grade_grades_history}.userid = :userid
+                                                        AND {grade_items}.courseid = :courseid
+                                                        AND {grade_grades_history}.finalgrade IS NOT NULL
+                                                        AND {grade_grades_history}.source = :source
+                                                        GROUP BY {grade_grades_history}.itemid
+                                                        HAVING COUNT({grade_grades_history}.id) > 1
+                                                    ",
+                                                array("userid" => $userid,
+                                                        "courseid" => $courseid,
+                                                        "source" => "mod/h5pactivity")
+                                                )
+                                        );
+        // var_dump($num_repeated_quizzes);
+        $percentage_repeated_quizzes = $num_repeated_quizzes / $total_num_quizzes;
+        
+        $percentage_done = get_user_course_completion_percentage($userid, $courseid, $includetypes);
+        if($updatedb) {
+            // update database with newly calculated values
+            $progress_summary_record = $DB->get_record("chatbot_progress_summary", array("userid" => $userid));
+            $progress_summary_record->progress = $percentage_done;
+            $progress_summary_record->timecreated = (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp();
+            $DB->update_record("chatbot_progress_summary", $progress_summary_record);
+        }
+
+        return array(
+            "course_completion_percentage" => $percentage_done,
+            "quiz_repetition_percentage" => $percentage_repeated_quizzes
+        );
+    }
+
+
+
+
+    public static function get_last_user_weekly_summary_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'),
+                'courseid' => new external_value(PARAM_INT, 'course id'),
+                'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
+            )
+        );
+    }
+    public static function get_last_user_weekly_summary_returns() {
+        return new external_single_structure(
+            array(
+                'first_turn_ever' => new external_value(PARAM_BOOL, 'true, if the user is using the chatbot for the first time'),
+                'first_week' => new external_value(PARAM_BOOL, "is this the user's first week using the chatbot"),
+                'timecreated' => new external_value(PARAM_INT, 'timestamp for last update of this record'),
+                'course_progress_percentage' => new external_value(PARAM_FLOAT, "last course progress displayed to the user"), 
+                'warnings' => new external_warnings(),
+            )
+        );
+    }
+    public static function get_last_user_weekly_summary($userid, $courseid, $includetypes) {
+        global $DB;
+
+        $params = self::validate_parameters(self::get_last_user_weekly_summary_parameters(), array(
+            'userid' => $userid,
+            'courseid' => $courseid,
+            'includetypes' => $includetypes
+        ));
+
+        // check if we have a summary entry for the current user
+        // if not, that means that the user is using the chatbot for the first time, 
+        // and we should create this entry
+        $first_turn_ever = !$DB->record_exists("chatbot_weekly_summary", array("userid" => $userid));
+        // TODO should this also depend on the course id? 
+        if($first_turn_ever) {
+            // create first entry
+            $timecreated = (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp();
+            echo "\nHERE";
+            $DB->insert_record("chatbot_weekly_summary", (object)array(
+                "userid" => $userid,
+                "timecreated" => $timecreated,
+                "firstweek" => 1
+            ), false);
+            
+            $percentage_done = get_user_course_completion_percentage($userid, $courseid, $includetypes);
+            var_dump($percentage_done);
+            $DB->insert_record("chatbot_progress_summary", (object)array(
+                "userid" => $userid,
+                "progress" => $percentage_done,
+                "timecreated" => $timecreated
+            ), false);
+
+            $firstweek = 1;
+        } else {
+            echo "\nTHERE";
+            $last_summary = $DB->get_record("chatbot_weekly_summary", array("userid" => $userid), "firstweek,timecreated");
+            $firstweek = $last_summary->firstweek;
+            $timecreated = $last_summary->timecreated;
+            $percentage_done = $DB->get_field('chatbot_progress_summary', 'progress', array("userid" => $userid));
+        }
+
+        return array(
+            "first_turn_ever" => $first_turn_ever,
+            "first_week" => (bool)$firstweek,
+            "timecreated" => $timecreated,
+            "course_progress_percentage" => $percentage_done         
+        );
+    }
+
+
+
+    
 }

@@ -423,3 +423,34 @@ function get_section_id_and_name($cmid) {
 		$result[$sectionid]
 	);
 }
+
+
+function get_user_course_completion_percentage($userid, $courseid, $includetypes) {
+	global $DB;
+	// calculate current course progress percentage
+	[$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $includetypes), SQL_PARAMS_NAMED, 'types');
+	$total_num_modules = $DB->count_records_sql("SELECT COUNT({course_modules}.id)
+												FROM {course_modules}
+												JOIN {modules} ON {modules}.id = {course_modules}.module
+												WHERE {course_modules}.course = :courseid
+												AND {modules}.name $_insql_types",
+										array_merge(
+											array("courseid" => $courseid),
+											$_insql_types_params    
+										)
+	);
+	$done_modules = $DB->count_records_sql("SELECT COUNT({course_modules_viewed}.id)
+											FROM {course_modules_viewed}
+											JOIN {course_modules} ON {course_modules}.id = {course_modules_viewed}.coursemoduleid
+											JOIN {modules} ON {modules}.id = {course_modules}.module
+											WHERE {course_modules_viewed}.userid = :userid
+											AND {course_modules}.course = :courseid
+											AND {modules}.name $_insql_types",
+										array_merge(
+											array("userid" => $userid,
+												"courseid" => $courseid),
+											$_insql_types_params    
+										)
+	);
+	return $done_modules / $total_num_modules;
+}
