@@ -726,6 +726,7 @@ class block_chatbot_external extends external_api {
                 'userid' => new external_value(PARAM_INT, 'user id'),
                 'courseid' => new external_value(PARAM_INT, 'course id'),
                 'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
+                'updatedb' => new external_value(PARAM_BOOL, 'whether to update the timecreated timestamp and firstweek = false')
             )
         );
     }
@@ -740,13 +741,14 @@ class block_chatbot_external extends external_api {
             )
         );
     }
-    public static function get_last_user_weekly_summary($userid, $courseid, $includetypes) {
+    public static function get_last_user_weekly_summary($userid, $courseid, $includetypes, $updatedb) {
         global $DB;
 
         $params = self::validate_parameters(self::get_last_user_weekly_summary_parameters(), array(
             'userid' => $userid,
             'courseid' => $courseid,
-            'includetypes' => $includetypes
+            'includetypes' => $includetypes,
+            'updatedb' => $updatedb
         ));
 
         // check if we have a summary entry for the current user
@@ -757,7 +759,6 @@ class block_chatbot_external extends external_api {
         if($first_turn_ever) {
             // create first entry
             $timecreated = (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp();
-            echo "\nHERE";
             $DB->insert_record("chatbot_weekly_summary", (object)array(
                 "userid" => $userid,
                 "timecreated" => $timecreated,
@@ -765,7 +766,6 @@ class block_chatbot_external extends external_api {
             ), false);
             
             $percentage_done = get_user_course_completion_percentage($userid, $courseid, $includetypes);
-            var_dump($percentage_done);
             $DB->insert_record("chatbot_progress_summary", (object)array(
                 "userid" => $userid,
                 "progress" => $percentage_done,
@@ -774,8 +774,13 @@ class block_chatbot_external extends external_api {
 
             $firstweek = 1;
         } else {
-            echo "\nTHERE";
-            $last_summary = $DB->get_record("chatbot_weekly_summary", array("userid" => $userid), "firstweek,timecreated");
+            $last_summary = $DB->get_record("chatbot_weekly_summary", array("userid" => $userid));
+            if($updatedb) {
+                // update record to current time and > first week
+                $last_summary->firstweek = false;
+                $last_summary->timecreated = (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp();
+                $DB->update_record("chatbot_weekly_summary", $last_summary);
+            }
             $firstweek = $last_summary->firstweek;
             $timecreated = $last_summary->timecreated;
             $percentage_done = $DB->get_field('chatbot_progress_summary', 'progress', array("userid" => $userid));
