@@ -45,7 +45,6 @@ class block_chatbot extends block_base {
 												  'token'
 			)->token;
 		}
-
 		// Init javascript
 		$data = array(
 			"server_name" => block_chatbot_get_server_name(), 
@@ -56,6 +55,11 @@ class block_chatbot extends block_base {
 			'username' => $USER->username,
 			"courseid" => $COURSE->id,
 			"slidefindertoken" => $slidefinder_token,
+			"wsuserid" => $DB->get_field("user", "id", array(
+				"username" => "kib3_webservice",
+				"firstname" => "KIB3 Webservice",
+				"lastname" => "KIB3 Webservice"
+			)),
 			"timestamp" => (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp()
 			/*array(
 				'close' => array(

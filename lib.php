@@ -454,3 +454,25 @@ function get_user_course_completion_percentage($userid, $courseid, $includetypes
 	);
 	return $done_modules / $total_num_modules;
 }
+
+
+function get_badge_id_by_name($name) {
+	global $DB;
+	$_likesql_badgename = $DB->sql_like('name', ':badgename');
+	return $DB->get_field_sql("SELECT id FROM {badge} WHERE $_likesql_badgename",
+							 array("badgename" => $name . "%"));
+}
+
+function get_badge_completion_percentage($userid, $cmids) {
+	// calculate percentage of completed modules in the list of given course module ids
+	$todo_modules = array();
+	foreach($cmids as $cmid) {
+		if(!course_module_is_completed($userid, $cmid)) {
+			array_push($todo_modules, intval($cmid));
+		}
+	}
+	return array(
+		1.0 - count($todo_modules) / count($cmids),
+		$todo_modules
+	);
+}

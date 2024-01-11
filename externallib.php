@@ -379,7 +379,6 @@ class block_chatbot_external extends external_api {
             'alternativedisplaytext' => $alternativedisplaytext
         ));
         
-        $base_path = $CFG->wwwroot;
         // get course module name and type. name can be used as default display text.
         [$display_name, $type_name] = get_course_module_name_and_typename($cmid);
         if(!empty($alternativedisplaytext)) {
@@ -387,8 +386,7 @@ class block_chatbot_external extends external_api {
             $display_name = $alternativedisplaytext;
         }
         // construct and return link
-        $url = "<a href=\"{$base_path}/mod/{$type_name}/view.php?id={$cmid}\">{$display_name}</a>";
-        // var_dump("<a href=\"{$base_path}/mod/{$type_name}/view.php?id={$cmid}\">{$display_name}</a>");
+        $url = '<a href="' . $CFG->wwwroot . '/mod/' . $type_name . '/view.php?id=' . $cmid . '">' . $display_name . '</a>';
         return array("url" => $url);
     }
 
@@ -402,16 +400,18 @@ class block_chatbot_external extends external_api {
         );
     }
     public static function get_available_new_course_sections_returns() {
-        return new external_single_structure(
-            array(
-                'sectionids' => new external_multiple_structure(
-                    new external_value(PARAM_INT, 'section id')
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'id' => new external_value(PARAM_INT, 'section id'),
+                    'url' => new external_value(PARAM_RAW, 'url to section')
                 )
             )
         );
     }
     public static function get_available_new_course_sections($userid, $courseid) {
         global $DB;
+        global $CFG;
 
         $params = self::validate_parameters(self::get_available_new_course_sections_parameters(), array(
             'userid' => $userid,
@@ -435,12 +435,17 @@ class block_chatbot_external extends external_api {
                     }
                 }
                 if($all_course_modules_available) {
-                    array_push($available, $section->id);
+                    array_push($available, 
+                        array(
+                            "id" => $section->id,
+                            "url" => '<a href="' . $CFG->wwwroot . '/course/view.php?id=' . $courseid . '&section=' . $section->id . '">' .  $section->name . '</a>'
+                        )
+                    );
                 }
             }
         }
         
-        return array('sectionids' => $available);
+        return $available;
     }
 
 
@@ -453,7 +458,7 @@ class block_chatbot_external extends external_api {
         );
     }
     public static function get_icecreamgame_course_module_id_returns() {
-        new external_single_structure(
+        return new external_single_structure(
             array(
                 'id' => new external_value(PARAM_INT, 'ice cream game id for the given course'),
                 'warnings' => new external_warnings(),
@@ -476,7 +481,7 @@ class block_chatbot_external extends external_api {
                                                     "courseid" => $courseid,
                                                     "modulename" => 'icecreamgame')
                                             );
-        return array("id" => $icecreamgame_cmid->id);
+        return array("id" => intval($icecreamgame_cmid));
     }
 
 
@@ -795,6 +800,252 @@ class block_chatbot_external extends external_api {
     }
 
 
+    public static function get_closest_badge_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'),
+                'courseid' => new external_value(PARAM_INT, 'course id'),
+            )
+        );
+    }
+    public static function get_closest_badge_returns() {
+        return new external_single_structure(
+            array(
+                'id' => new external_value(PARAM_INT, 'id of the badge the user is closest to completing, none if badges are disabled or all badges were obtained'),
+                'name' => new external_value(PARAM_TEXT, 'name of the badge'),
+                'completion_percentage' => new external_value(PARAM_FLOAT, 'percentage of completed course modules from badge criteria'),
+                'open_modules' => new external_multiple_structure(
+                    new external_value(PARAM_INT, "course module ids of not yet completed course modules for this badge")
+                ),
+                'warnings' => new external_warnings(),
+            )
+        );
+    }
+    public static function get_closest_badge($userid, $courseid) {
+        global $DB;
+
+        $params = self::validate_parameters(self::get_closest_badge_parameters(), array(
+            'userid' => $userid,
+            'courseid' => $courseid,
+        ));
+
+        // get IDs of 'Regression' badges to exclude from suggestions, because they were handled differently in the materials
+        $bronze_badge_reg_id = get_badge_id_by_name("Bronzemedaille Regression");
+        $silver_badge_reg_id = get_badge_id_by_name("Silbermedaille Regression");
+        $gold_badge_reg_id = get_badge_id_by_name("Goldmedaille Regression");
+
+        if(is_null($bronze_badge_reg_id) || is_null($silver_badge_reg_id) || is_null($gold_badge_reg_id)) {
+            // no badges - give up by pretending all badges were earned
+            return array(
+                "badgeid" => null
+            );
+        }
+
+        // get badges that were already issued
+        $closed_badges = $DB->get_fieldset_sql("SELECT {badge}.id
+                                                 FROM {badge}
+                                                 JOIN {badge_issued} ON {badge_issued}.badgeid = {badge}.id
+                                                 WHERE {badge}.courseid = :courseid
+                                                 AND {badge_issued}.userid = :userid",
+                                            array(
+                                                "courseid" => $courseid,
+                                                "userid" => $userid
+                                            )
+                                    );
+        array_push($closed_badges, $bronze_badge_reg_id, $silver_badge_reg_id, $gold_badge_reg_id);
+
+        // compute difference to all badges -> get open badges
+        // there should only be ONE possible criterium (either method=all or method=any) for any badge
+        $_sql_group_concat = $DB->sql_group_concat("{badge_criteria_param}.value");
+        $badge_info_and_criteria = $DB->get_records_sql("SELECT {badge}.id, {badge}.name, $_sql_group_concat AS criteria
+                                                   FROM {badge}
+                                                   JOIN {badge_criteria} ON {badge_criteria}.badgeid = {badge}.id
+                                                   JOIN {badge_criteria_param} ON {badge_criteria_param}.critid = {badge_criteria}.id
+                                                   WHERE {badge}.courseid = :courseid
+                                                   AND {badge_criteria}.criteriatype = 1
+                                                   AND {badge_criteria}.method = 1
+                                                   GROUP BY {badge}.id",
+                                                array(
+                                                    "courseid" => $courseid,
+                                                )
+        );
+        $closest_available_badge_info = array();
+        foreach($badge_info_and_criteria as $candidate) {
+            // check that user doesn't already have current badge
+            if((!in_array($candidate->id, $closed_badges))) {
+                $available = true;
+                // check if all course modules required for current badge are already available to user
+                foreach(explode(",", $candidate->criteria) as $crit) {
+                   if(!is_available_course_module($userid, $crit)) {
+                        // one course module is not available -> can't be an available badge
+                        $available = false;
+                        break;
+                   } 
+                }
+                // check progress on current badge
+                if($available) {
+                    [$completion_percentage, $todo_cmids] = get_badge_completion_percentage($userid, explode(",", $candidate->criteria));
+                    if(empty($closest_available_badge_info) || $closest_available_badge_info['completion_percentage'] < $completion_percentage) {
+                        // current badge is closer than previous ones -> overwrite with current badge
+                        $closest_available_badge_info = array("id" => $candidate->id,
+                                                              "name" => $candidate->name,
+                                                              "completion_percentage" => $completion_percentage,
+                                                              "open_modules" => $todo_cmids);
+                    }
+                }
+            }
+        }
+
+        if(empty($closest_available_badge_info)) {
+            $closest_available_badge_info = array("id" => null,
+                                                "name" => null,
+                                                "completion_percentage" => array(),
+                                                "open_modules" => null);
+        }
+        return $closest_available_badge_info;
+    }
+    
 
     
+    
+
+    public static function get_badge_info_parameters() {
+        return new external_function_parameters(
+            array(
+                'badgeid' => new external_value(PARAM_INT, 'user id'),
+                'contextid' => new external_value(PARAM_INT, 'context id of badge issued event'),
+            )
+        );
+    }
+    public static function get_badge_info_returns() {
+        return new external_single_structure(
+            array(
+                'id' => new external_value(PARAM_INT, 'id of the badge the user is closest to completing, none if badges are disabled or all badges were obtained'),
+                'name' => new external_value(PARAM_TEXT, 'name of the badge'),
+                'url' => new external_value(PARAM_RAW, "Url of badge"),
+                'warnings' => new external_warnings(),
+            )
+        );
+    }
+    public static function get_badge_info($badgeid, $contextid) {
+        global $DB;
+        global $CFG;
+
+        $params = self::validate_parameters(self::get_badge_info_parameters(), array(
+            'badgeid' => $badgeid,
+            'contextid' => $contextid
+        ));
+
+        $name = $DB->get_field("badge", "name", array("id" => $badgeid));
+
+        return array(
+            "id" => $badgeid,
+            "name" => $name,
+            "url" => '<img src="' . $CFG->wwwroot . '/pluginfile.php/' . $contextid . '/badges/badgeimage/'. $badgeid . '/f1" alt="' . $name . '"/>'
+        );
+    }
+
+
+    public static function get_h5pquiz_params_parameters() {
+        return new external_function_parameters(
+            array(
+                'cmid' => new external_value(PARAM_INT, 'course module id for h5p activity'),
+            )
+        );
+    }
+    public static function get_h5pquiz_params_returns() {
+        return new external_single_structure(
+            array(
+                'host' => new external_value(PARAM_RAW, "host address of this moodle"),
+                'context' => new external_value(PARAM_INT, 'context id'),
+                'filearea' => new external_value(PARAM_TEXT, 'filearea'),
+                'itemid' => new external_value(PARAM_INT, 'item id'),
+                'filename' => new external_value(PARAM_TEXT, 'file name')
+            )
+        );
+    }
+    public static function get_h5pquiz_params($cmid) {
+        global $DB;
+        global $CFG;
+
+        $params = self::validate_parameters(self::get_h5pquiz_params_parameters(), array(
+            'cmid' => $cmid,
+        ));
+        
+        $_likesql_filename = $DB->sql_like('{files}.filename', ':filename');
+        var_dump($_likesql_filename);
+        $result = $DB->get_record_sql("SELECT {context}.id AS context, {files}.filearea AS filearea, {files}.itemid AS itemid,
+                                              {files}.itemid AS itemid, {files}.filename AS filename
+                                       FROM {course_modules}
+                                       JOIN {context} ON {context}.instanceid = {course_modules}.id
+                                       JOIN {files} ON {files}.contextid = {context}.id
+                                       WHERE {course_modules}.id = :cmid
+                                       AND $_likesql_filename
+                                       ",
+                                    array(
+                                        "cmid" => $cmid,
+                                        "filename" => "%.h5p"
+                                    )
+                            );
+        var_dump($result);
+        return array(
+            "host" => $CFG->wwwroot,
+            "context" => $result->context,
+            "filearea" => $result->filearea,
+            "itemid" => $result->itemid,
+            "filename" => $result->filename
+        );
+    }
+
+
+    public static function get_oldest_worst_grade_attempts_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'the user id'),
+                'courseid' => new external_value(PARAM_INT, 'course module id'),
+                'max_results' => new external_value(PARAM_INT, 'how many results to return'),
+            )
+        );
+    }
+    public static function get_oldest_worst_grade_attempts_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    "cmid" => new external_value(PARAM_INT, 'repeatable course module id, sorted by grade and then date'),
+                    "grade" => new external_value(PARAM_FLOAT, 'grade obtained by given user for this course module')
+                )
+            )
+        );
+    }
+    public static function get_oldest_worst_grade_attempts($userid, $courseid, $max_results) {
+        global $DB;
+
+        $params = self::validate_parameters(self::get_oldest_worst_grade_attempts_parameters(), array(
+            'userid' => $userid,
+            'courseid' => $courseid,
+            'max_results' => $max_results
+        ));
+
+        $result = $DB->get_records_sql("SELECT {course_modules}.id AS cmid, {grade_grades}.finalgrade AS grade
+                                          FROM {course_modules}
+                                          JOIN {grade_items} ON {grade_items}.iteminstance = {course_modules}.instance
+                                          JOIN {grade_grades} ON {grade_grades}.itemid = {grade_items}.id
+                                          WHERE {grade_items}.courseid = :courseid
+                                          AND {grade_items}.itemmodule = 'h5pactivity'
+                                          AND {grade_grades}.finalgrade >= 0
+                                          AND {grade_grades}.userid = :userid
+                                          ORDER BY {grade_grades}.finalgrade ASC,
+                                                   {grade_grades}.timemodified ASC
+                                          LIMIT $max_results
+                                          ",
+                                        array(
+                                            "userid" => $userid,
+                                            "courseid" => $courseid,
+                                            "maxresults" => $max_results
+                                        )
+        );
+        return (array)$result;
+    }
 }
+
+
