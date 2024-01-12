@@ -50,9 +50,9 @@ class observer {
         observer::debug_to_console(json_encode($event->get_data()));
         
         // Check if course associated with update is in whitelist specified in settings.
-        // if (in_array($event->courseid, explode(",", get_config('block_chatbot', "courseids"))) == true) {
-        //     // If not in whitelist, then return.
-        //     observer::send("http://" . block_chatbot_get_event_server_name() . ":" . block_chatbot_get_server_port() . "/event", $event);
-        // }
+        if (in_array($event->courseid, explode(",", get_config('block_chatbot', "courseids"))) == true) {
+            // If not in whitelist, then return.
+            observer::send("http://" . block_chatbot_get_event_server_name() . ":" . block_chatbot_get_server_port() . "/event", $event);
+        }
     }
 }
