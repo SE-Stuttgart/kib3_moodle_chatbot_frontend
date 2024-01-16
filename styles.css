@@ -40,9 +40,9 @@
 .block_chatbot-headerButton {
     background-color: transparent;
     border: none;
-    width: 1.5em;
-    height: 1em;
     font-weight: bold;
+    width: 2.5em;
+    height: 2.5em;
 }
 .block_chatbot-headerButton:hover {
     stroke: #399be2;

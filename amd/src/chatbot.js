@@ -11,6 +11,9 @@ const registerEventListeners = () => {
             const textInputField = $("#block_chatbot-userUtterance");
             const user_input = textInputField.val();
             sendMessage(user_input);
+        } else if(e.target.closest(Selectors.actions.answerCandidate)) {
+            const msg = e.target.textContent;
+            sendMessage(msg);
         } else if(e.target.closest(Selectors.actions.toggleWindowState)) {
             setWindowState(!(localStorage.getItem("chatbot.maximized") === "true"));
         } else if(e.target.closest(Selectors.actions.toggleWindowSize)) {
@@ -154,7 +157,7 @@ const createAnswerCandidateButton = (candidate) => {
     var button = document.createElement("p");
     button.className = "block_chatbot-answer_candidate";
     button.textContent = candidate;
-    button.onclick = () => sendMessage(candidate);
+    button.setAttribute("data-action", "block_chatbot/answerCandidate");
     return button;
 };
 
@@ -360,8 +363,7 @@ export const init = (server_name, server_port, server_url, userid, username, cou
     document.addEventListener('click', function(event) {
         var chatbot = document.getElementById('block_chatbot-chatwindow');
         // Check if the clicked element is outside the "chatbot" div
-        if (event.target !== chatbot && !chatbot.contains(event.target)) {
-            console.log(event.target);
+        if ((event.target !== chatbot && !chatbot.contains(event.target)) && !event.target.className.includes('block_chatbot')) {
             // Check if the clicked element is not inside the "chatbot" div
             setWindowState(false);
         }
