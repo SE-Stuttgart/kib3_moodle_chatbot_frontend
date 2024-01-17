@@ -45,7 +45,8 @@ class block_chatbot_external extends external_api {
                 'userid' => new external_value(PARAM_INT, 'user id'),
                 'enabled' => new external_value(PARAM_BOOL, 'should chatbot be enabled'),
                 'logging' => new external_value(PARAM_BOOL, 'should chatbot be logging'),
-                'preferedcontenttypeid' => new external_value(PARAM_TEXT, 'what content type should be displayed by default'),
+                'preferedcontenttypeid' => new external_value(PARAM_INT, 'what content type should be displayed by default'),
+                'preferedcontenttype' => new external_value(PARAM_TEXT, 'what content type should be displayed by default'),
                 'numsearchresults' => new external_value(PARAM_INT, 'number of returned search results'),
                 'numreviewquizzes' => new external_value(PARAM_INT, 'number of quizzes asked in review session'),
                 'openonlogin' => new external_value(PARAM_BOOL, 'on login'),
@@ -68,7 +69,7 @@ class block_chatbot_external extends external_api {
                 'userid' => $userid,
                 'enabled' => true,
                 'logging' => true,
-                'preferedcontenttypeid' => $book_id,
+                'preferedcontenttype' => $book_id,
                 'numsearchresults' => 5,
                 'numreviewquizzes' => 3,
                 'openonlogin' => true,
@@ -80,10 +81,13 @@ class block_chatbot_external extends external_api {
         }
         
         $settings = $DB->get_record('chatbot_usersettings', array('userid'=>$userid));
+        // get content type name
+        $preferedcontenttype_name = $DB->get_field('modules', 'name', array("id" => $settings->preferedcontenttype));
         return array(
             'userid' => $settings->userid,
             'enabled' => $settings->enabled,
             'logging' => $settings->logging,
+            'preferedcontenttype' => $preferedcontenttype_name,
             'preferedcontenttypeid' => $settings->preferedcontenttype,
             'numsearchresults' => $settings->numsearchresults,
             'numreviewquizzes' => $settings->numreviewquizzes,
@@ -93,6 +97,72 @@ class block_chatbot_external extends external_api {
             'openonbranch' => $settings->openonbranch,
             'openonbadge' => $settings->openonbadge
         );
+    }
+
+
+    public static function set_usersettings_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'),
+                'enabled' => new external_value(PARAM_BOOL, 'should chatbot be enabled'),
+                'logging' => new external_value(PARAM_BOOL, 'should chatbot be logging'),
+                'preferedcontenttype' => new external_value(PARAM_TEXT, 'what content type should be displayed by default'),
+                'numsearchresults' => new external_value(PARAM_INT, 'number of returned search results'),
+                'numreviewquizzes' => new external_value(PARAM_INT, 'number of quizzes asked in review session'),
+                'openonlogin' => new external_value(PARAM_BOOL, 'on login'),
+                'openonquiz' => new external_value(PARAM_BOOL, 'on quiz completion'),
+                'openonsection' => new external_value(PARAM_BOOL, 'on section completion'),
+                'openonbranch' => new external_value(PARAM_BOOL, 'on branch completion'),
+                'openonbadge' => new external_value(PARAM_BOOL, 'on badge completion')
+            )
+        );
+    }
+    public static function set_usersettings_returns() {
+        return new external_single_structure(
+            array(
+                "ack" => new external_value(PARAM_BOOL, 'success'),
+                'warnings' => new external_warnings(),
+            )
+        );
+    }
+    public static function set_usersettings($userid, $enabled, $logging, $preferedcontenttype, $numsearchresults, $numreviewquizzes, $openonlogin, 
+                                            $openonquiz, $openonsection, $openonbranch, $openonbadge) {
+        global $DB;
+        $params = self::validate_parameters(self::set_usersettings_parameters(), array(
+            'userid' => $userid,
+            'enabled' => $enabled,
+            'logging' => $logging,
+            'preferedcontenttype' => $preferedcontenttype,
+            'numsearchresults' => $numsearchresults,
+            'numreviewquizzes' => $numreviewquizzes,
+            'openonlogin' => $openonlogin,
+            'openonquiz' => $openonquiz,
+            'openonsection' => $openonsection,
+            'openonbranch' => $openonbranch,
+            'openonbadge' => $openonbadge
+        ));
+        $warnings = array();
+        
+        // get id for prefered content type
+        $preferedcontenttype_id = $DB->get_field("modules", "id", array("name" => $preferedcontenttype));
+        var_dump($preferedcontenttype);
+        var_dump($preferedcontenttype_id);
+        // update settings
+        $settings = $DB->get_record('chatbot_usersettings', array('userid' => $userid));
+        $settings->enabled = $enabled;
+        $settings->logging = $logging;
+        $settings->preferedcontenttype = $preferedcontenttype_id;
+        $settings->numsearchresults = $numsearchresults;
+        $settings->numreviewquizzes = $numreviewquizzes;
+        $settings->openonlogin = $openonlogin;
+        $settings->openonquiz = $openonquiz;
+        $settings->openonsection = $openonsection;
+        $settings->openonbranch = $openonbranch;
+        $settings->openonbadge = $openonbadge;
+        $DB->update_record('chatbot_usersettings', $settings);
+        var_dump($settings);
+        
+        return array("ack" => true);
     }
 
 

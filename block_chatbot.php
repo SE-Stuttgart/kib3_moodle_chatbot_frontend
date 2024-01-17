@@ -49,7 +49,7 @@ class block_chatbot extends block_base {
 		$data = array(
 			"server_name" => block_chatbot_get_server_name(), 
 			"server_port" => block_chatbot_get_server_port(), 
-			"server_url" => $CFG->wwwroot,
+			"wwwroot" => $CFG->wwwroot,
 			// block_chatbot_get_chat_container(),
 			"userid" => $USER->id,
 			'username' => $USER->username,

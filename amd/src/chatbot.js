@@ -1,6 +1,7 @@
 import Selectors from './local/selectors';
 import DonutChart from './local/charts/donut/donut';
 import LineChart from './local/charts/line/line';
+import {fetchUserSetttings, saveUserSetttings, assignUserSettings, readUserSettings} from './local/settings';
 import $ from 'jquery';
 
 
@@ -23,7 +24,19 @@ const registerEventListeners = () => {
         } else if(e.target.closest(Selectors.actions.help)) {
             sendMessage("Hilfe");
         } else if(e.target.closest(Selectors.actions.settings)) {
-            // TODO open settings modal
+            // open settings modal
+            fetchUserSetttings(conn.userid, conn.slidefindertoken, conn.wwwroot).then(settings => {
+                console.log("Settings", settings);
+                // apply user settings to dialog modal
+                assignUserSettings(settings);
+            });
+        } else if(e.target.closest(Selectors.actions.saveSettings)) {
+            e.preventDefault();
+            // convert form output to correct format for sending to DB
+            const settings = readUserSettings();
+            saveUserSetttings(conn.userid, conn.slidefindertoken, conn.wwwroot, settings).then(result => {
+                console.log("RESULT", result);
+            });
         }
     });
     document.addEventListener('keydown', e => {
@@ -234,9 +247,10 @@ const resizeWindow = (size) => {
 };
 
 class ChatbotConnection {
-    constructor(server_name, server_port, userid, courseid, slidefindertoken, wsuserid, timestamp) {
+    constructor(server_name, server_port, wwwroot, userid, courseid, slidefindertoken, wsuserid, timestamp) {
         this.server_name = server_name;
         this.server_port = server_port;
+        this.wwwroot = wwwroot;
         this.userid = userid;
         this.courseid = courseid;
         this.slidefindertoken = slidefindertoken;
@@ -320,7 +334,7 @@ const isInsideIFrame = () => {
 var conn;
 var Plotly;
 
-export const init = (server_name, server_port, server_url, userid, username, courseid, slidefindertoken,
+export const init = (server_name, server_port, wwwroot, userid, username, courseid, slidefindertoken,
                      wsuserid, timestamp, plotly) => {
     if(isInsideIFrame()) {
         console.log("IFrame detected - Chatbot won't be loaded");
@@ -328,7 +342,7 @@ export const init = (server_name, server_port, server_url, userid, username, cou
     }
     console.log("SERVER", server_name);
     console.log("PORT", server_port);
-    console.log("URL", server_url);
+    console.log("WWWROOT", wwwroot);
     console.log("USER", userid, username);
     console.log("COURSE", courseid);
     console.log("SLIDEFINDER TOKEN", slidefindertoken);
@@ -337,7 +351,7 @@ export const init = (server_name, server_port, server_url, userid, username, cou
 
     Plotly = plotly;
     registerEventListeners();
-    conn = new ChatbotConnection(server_name, server_port, userid, courseid, slidefindertoken, wsuserid, timestamp);
+    conn = new ChatbotConnection(server_name, server_port, wwwroot, userid, courseid, slidefindertoken, wsuserid, timestamp);
     conn.openConnection();
 
     // Move container into document root

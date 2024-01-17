@@ -6,6 +6,7 @@ export default {
         toggleWindowState: '[data-action="block_chatbot/toggleWindowState"]',
         toggleWindowSize: '[data-action="block_chatbot/toggleWindowSize"]',
         help: '[data-action="block_chatbot/help"]',
-        settings: '[data-action="block_chatbot/settings"]'
+        settings: '[data-action="block_chatbot/settings"]',
+        saveSettings: '[data-action="block_chatbot/saveSettings"]'
     }
 };
