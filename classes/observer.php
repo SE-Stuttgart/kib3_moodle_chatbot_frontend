@@ -14,10 +14,9 @@ class observer {
         //echo "<script type='text/javascript'>alert('$msg');</script>";
         echo $msg;
     }
-
     public static function send($url, $data){
         $curl = curl_init($url);
-        $json = json_encode($data->get_data());
+        $json = json_encode($data);
         curl_setopt($curl, CURLOPT_POST, true);
         curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json')); 
         curl_setopt($curl, CURLOPT_POSTFIELDS, $json);
@@ -52,7 +51,7 @@ class observer {
         // Check if course associated with update is in whitelist specified in settings.
         if (in_array($event->courseid, explode(",", get_config('block_chatbot', "courseids"))) == true) {
             // If not in whitelist, then return.
-            observer::send("http://" . block_chatbot_get_event_server_name() . ":" . block_chatbot_get_server_port() . "/event", $event);
+            observer::send("http://" . block_chatbot_get_event_server_name() . ":" . block_chatbot_get_server_port() . "/event", $event->get_data());
         }
     }
 }

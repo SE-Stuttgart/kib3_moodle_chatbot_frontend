@@ -65,7 +65,6 @@ export const saveUserSetttings = async (userid, wstoken, wwwroot, settings) => {
         const value = typeof settings[key] === "boolean"? Number(settings[key]) : settings[key];
         url += '&' + key + '=' + value;
     });
-    console.log(url);
     // Send request
     const response = await fetch(url, {
         method: "POST",
@@ -76,6 +75,5 @@ export const saveUserSetttings = async (userid, wstoken, wwwroot, settings) => {
     }
     );
     const msgContent = await response.text();
-    console.log("RESPONSE", msgContent);
     return true;
 };

@@ -23,8 +23,11 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+
 defined('MOODLE_INTERNAL') || die;
 require_once("$CFG->libdir/externallib.php");
+require_once(__DIR__ . '/lib.php');
+require_once(__DIR__ . '/classes/observer.php');
 
 
 // require(__DIR__.'/../../config.php');
@@ -145,8 +148,7 @@ class block_chatbot_external extends external_api {
         
         // get id for prefered content type
         $preferedcontenttype_id = $DB->get_field("modules", "id", array("name" => $preferedcontenttype));
-        var_dump($preferedcontenttype);
-        var_dump($preferedcontenttype_id);
+
         // update settings
         $settings = $DB->get_record('chatbot_usersettings', array('userid' => $userid));
         $settings->enabled = $enabled;
@@ -160,7 +162,12 @@ class block_chatbot_external extends external_api {
         $settings->openonbranch = $openonbranch;
         $settings->openonbadge = $openonbadge;
         $DB->update_record('chatbot_usersettings', $settings);
-        var_dump($settings);
+        
+        // notify chatbot
+        $settings->userid = $userid;
+        $settings->preferedcontenttype = $preferedcontenttype;
+        $settings->preferedcontenttypeid = $preferedcontenttype_id;
+        block_chatbot\observer::send("http://" . block_chatbot_get_event_server_name() . ":" . block_chatbot_get_server_port() . "/usersettings", $settings);
         
         return array("ack" => true);
     }
