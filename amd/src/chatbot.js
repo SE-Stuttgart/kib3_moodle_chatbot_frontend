@@ -24,6 +24,8 @@ const registerEventListeners = () => {
         } else if(e.target.closest(Selectors.actions.help)) {
             sendMessage("Hilfe");
         } else if(e.target.closest(Selectors.actions.settings)) {
+            // minimize chatbot
+            setWindowState(false);
             // open settings modal
             fetchUserSetttings(conn.userid, conn.slidefindertoken, conn.wwwroot).then(settings => {
                 console.log("Settings", settings);

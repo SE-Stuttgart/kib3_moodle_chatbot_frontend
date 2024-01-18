@@ -1,15 +1,16 @@
-<script src=""></script>
+<script src="">
+</script>
 
 <!-- Chatbot window -->
 <div id="block_chatbot-chatwindow" class="block_chatbot-chatwindow">
 
     <!-- Settings Modal -->
     <div class="modal fade" id="block_chatbot_settingsModal" tabindex="-1" role="dialog" aria-labelledby="block_chatbot_settingsModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="block_chatbot_settingsModalLabel">Chatbot Einstellungen</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -87,7 +88,7 @@
                                 </div>
                             </div>
                         </fieldset>
-                        <button type="submit" class="btn btn-primary" data-action="block_chatbot/saveSettings">Speichern</button>
+                        <button type="submit" class="btn btn-primary" data-action="block_chatbot/saveSettings" data-dismiss="modal">Speichern</button>
                     </form> 
                 </div>
             </div>
