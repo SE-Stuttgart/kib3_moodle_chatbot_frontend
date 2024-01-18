@@ -45,7 +45,7 @@
     height: 2.5em;
 }
 .block_chatbot-headerButton:hover {
-    stroke: #399be2;
+    fill: orange;
 }
 
 .block_chatbot-maximizeButton {
