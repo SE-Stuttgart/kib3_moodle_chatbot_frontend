@@ -28,7 +28,7 @@ const registerEventListeners = () => {
             setWindowState(false);
             // open settings modal
             fetchUserSetttings(conn.userid, conn.slidefindertoken, conn.wwwroot).then(settings => {
-                console.log("Settings", settings);
+                // console.log("Settings", settings);
                 // apply user settings to dialog modal
                 assignUserSettings(settings);
             });
@@ -37,7 +37,7 @@ const registerEventListeners = () => {
             // convert form output to correct format for sending to DB
             const settings = readUserSettings();
             saveUserSetttings(conn.userid, conn.slidefindertoken, conn.wwwroot, settings).then(result => {
-                console.log("RESULT", result);
+                // console.log("RESULT", result);
             });
         }
     });
@@ -54,7 +54,7 @@ const registerEventListeners = () => {
 };
 
 const sendMessage = (user_input) => {
-    console.log("SENDING", user_input);
+    // console.log("SENDING", user_input);
     // forwad value of input field to socket & send message
     conn.sendMessage(user_input);
     // show user message in messagelist
@@ -144,16 +144,16 @@ const renderComponent = (utterance) => {
         const values2 = JSON.parse(args[4]);
         var plot = document.createElement("div");
         plot.className = "block_chatbot-plotly-chart";
-        console.log("TITLE", legendTitle1, ",", legendTitle2);
-        console.log("DATA1", values1);
-        console.log("DATA2", values2);
+        // console.log("TITLE", legendTitle1, ",", legendTitle2);
+        // console.log("DATA1", values1);
+        // console.log("DATA2", values2);
         message.append(plot);
         messageBubble.append(message);
         messagelist.append(messageBubble);
         new LineChart(plot, legendTitle1, values1, legendTitle2, values2).render(Plotly);
     } else if(component_type === "QUIZ") {
         const quiz_args = JSON.parse(args[1]);
-        console.log("QUIZ ARGS", quiz_args);
+        // console.log("QUIZ ARGS", quiz_args);
         messageBubble.style.width = `80%`;
         message.style.width = `100%`;
         var iframe = document.createElement("iframe");
@@ -217,7 +217,7 @@ const addSystemMessage = (utterance, shouldScroll = false) => {
 };
 
 const setWindowState = (maximized) => {
-    console.log("Window state", maximized);
+    // console.log("Window state", maximized);
 
     if(maximized) {
         $("#block_chatbot-messagelist").removeClass('block_chatbot-hidden');
@@ -235,7 +235,7 @@ const setWindowState = (maximized) => {
 };
 
 const resizeWindow = (size) => {
-    console.log("Resize to", size);
+    // console.log("Resize to", size);
 
     if(size == "UI_SIZE_DEFAULT") {
         $(".block_chatbot-chatwindowInner").removeClass('block_chatbot-big');
@@ -262,7 +262,7 @@ class ChatbotConnection {
     }
 
     openConnection = () => {
-        console.log(`Connecting to: ws://${this.server_name}:${this.server_port}/ws?token=${this.userid}`);
+        // console.log(`Connecting to: ws://${this.server_name}:${this.server_port}/ws?token=${this.userid}`);
         this.conn = new WebSocket(`ws://${this.server_name}:${this.server_port}/ws?token=${this.userid}`);
 
         this.conn.onopen = () => {
@@ -279,13 +279,13 @@ class ChatbotConnection {
                 timestamp: this.timestamp
             };
 
-            console.log("START MSG", start_dialog_msg);
+            // console.log("START MSG", start_dialog_msg);
             this.conn.send(JSON.stringify(start_dialog_msg));
         };
         this.conn.onmessage = (msg) => {
             // Parse received data
             const data = JSON.parse(msg.data);
-            console.log("Received data", data);
+            // console.log("Received data", data);
             // render each message
             data.forEach(message => {
                 if(message.party === "system") {
@@ -316,7 +316,7 @@ class ChatbotConnection {
             courseid: this.courseid,
             msg: message
         };
-        console.log("Sending message", msg);
+        // console.log("Sending message", msg);
         this.conn.send(JSON.stringify(msg));
     };
 }
@@ -342,14 +342,14 @@ export const init = (server_name, server_port, wwwroot, userid, username, course
         console.log("IFrame detected - Chatbot won't be loaded");
         return;
     }
-    console.log("SERVER", server_name);
-    console.log("PORT", server_port);
-    console.log("WWWROOT", wwwroot);
-    console.log("USER", userid, username);
-    console.log("COURSE", courseid);
-    console.log("SLIDEFINDER TOKEN", slidefindertoken);
-    console.log("WSUERID", wsuserid);
-    console.log("TIMESTAMP", timestamp);
+    // console.log("SERVER", server_name);
+    // console.log("PORT", server_port);
+    // console.log("WWWROOT", wwwroot);
+    // console.log("USER", userid, username);
+    // console.log("COURSE", courseid);
+    // console.log("SLIDEFINDER TOKEN", slidefindertoken);
+    // console.log("WSUERID", wsuserid);
+    // console.log("TIMESTAMP", timestamp);
 
     Plotly = plotly;
     registerEventListeners();
