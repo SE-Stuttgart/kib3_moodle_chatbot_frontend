@@ -207,6 +207,78 @@ function get_all_branch_section_ids($userid, $sectionid) {
 }
 
 
+function is_prefered_usercontenttype($userid, $cmid) {
+	// checks whether the type of the given course module corresponds to the user's prefered content type
+	global $DB;
+	$prefered_type_id = $DB->get_field("chatbot_usersettings", "preferedcontenttype", array("userid" => $userid));
+	$cm_type_id = $DB->get_field("course_modules", "module", array("id" => $cmid));
+	return $prefered_type_id == $cm_type_id;
+}
+
+/**
+ * Checks if two strings share the same prefix as specified by a regular expression read from the configuration:
+ * `local_autocompleteactivities_matchingprefix`.
+ *
+ * The first group of the matches of both strings are used for the comparison.
+ * All text is lowercased and trimmed for comparison.
+ *
+ * @param string $name First comparand
+ * @param string $comparisonname Second comparand
+ *
+ * @return bool True if the prefixes are equal according to the comparison rules.
+ */
+function prefix_match($name, $comparisonname) {
+	// Returns true if name and comparison name share a comon prefix up to the start of a bracket sign,
+	// or are exactly the same, else false.
+	// Prepare strings for regex search and comparison.
+	$cleanname = strtolower($name);
+	$cleancomparison = strtolower($comparisonname);
+
+	// Find prefix matches.
+	$namematches = [];
+	preg_match('/(.*)[(]/U',  $cleanname, $namematches);
+	$comparisonmatches = [];
+	preg_match('/(.*)[(]/U',  $cleancomparison, $comparisonmatches);
+
+	// At least one matching group per string expected, otherwise one of them doesn't have a prefix group.
+	if (count($namematches) < 2 || count($comparisonmatches) < 2) {
+		return false;
+	}
+
+	// Cleanup.
+	$cleanname = trim($namematches[1]);
+	$cleancomparison = trim($comparisonmatches[1]);
+
+	// Compare prefixes.
+	return $cleanname == $cleancomparison;
+}
+
+function get_prefered_usercontenttype_cmid($userid, $cmid) {
+	// checks whether the given course module has an alternative in the user's preferered content style.
+	// if so, return alternative - otherwise, return given cmid again
+	global $DB;
+	// check if module is a valid learning resource, and not assignment / quiz material
+	if(in_array(get_module_type_name($cmid), array("url","book","resource"))) {
+		// try to find same content with different format
+		// -> first, get all course modules from module's section
+		$prefered_type_id = $DB->get_field("chatbot_usersettings", "preferedcontenttype", array("userid" => $userid));
+		$cmid_name = get_course_module_name($cmid);
+		$section_id = $DB->get_field("course_modules", "section", array("id" => $cmid));
+		$section_cmids = $DB->get_field("course_sections", "sequence", array("id" => $section_id));
+		foreach(explode(",", $section_cmids) as $candidate_id) {
+			$candidate_type = $DB->get_field("course_modules", "module", array("id" => $candidate_id));
+			if($candidate_type == $prefered_type_id) {
+				$candidate_name = get_course_module_name($candidate_id);
+				if(prefix_match($cmid_name, $candidate_name)) {
+					// found alternative content type for current course module
+					return $candidate_id;
+				}
+			}
+		}
+	}
+	return $cmid;
+}
+
 
 function get_module_type_name($cmid) {
 	global $DB;
@@ -220,7 +292,7 @@ function get_module_type_name($cmid) {
 				);
 }
 
-function get_course_module_name_and_typename($cmid) {
+function get_course_module_name($cmid) {
 	global $DB;
 	$typename = get_module_type_name($cmid);
 	$cm = $DB->get_record("course_modules", array("id" => $cmid), "instance,section");
@@ -244,6 +316,13 @@ function get_course_module_name_and_typename($cmid) {
 	} else {
 		$cmname = null;
 	}
+	return $cmname;
+}
+
+function get_course_module_name_and_typename($cmid) {
+	global $DB;
+	$typename = get_module_type_name($cmid);
+	$cmname = get_course_module_name($cmid);
 	return [$cmname, $typename];
 }
 
@@ -355,13 +434,18 @@ function is_available($json_conditions, $userid) {
 }
 
 function is_available_course_section($userid, $sectionid, $sectionname, $visible, $json_conditions) {
+	global $DB;
 	if(is_quiz_section($sectionname)) {
-		return get_content_section_id($sectionid, $sectionname);
+		// sometimes, the quiz sections are avialable, but the content sections not yet
+		// -> this is a bug from the course constraints, and the quizes should only be available if the corresponding content can as be seen as well
+		$content_section_id = get_content_section_id($sectionid, $sectionname);
+		$content_section = $DB->get_record("course_sections", array("id" => $content_section_id), "name,visible,availability");
+		return is_available_course_section($userid, $content_section_id, $content_section->name, $content_section->visible, $content_section->availability);
 	}
 	return $visible && is_available($json_conditions, $userid);
 }
 
-function is_available_course_module($userid, $cmid) {
+function is_available_course_module($userid, $cmid, $includetypes = "url,book,resource,h5pactivity,quiz") {
 	global $DB;
 
 	// first, check if the module's section is available 
@@ -381,20 +465,24 @@ function is_available_course_module($userid, $cmid) {
 			"id,name,visible,availability"
 		);
 		if((!is_null($content_section)) && (!is_available_course_section($userid, $content_section->id, $content_section->name, $content_section->visible, $content_section->availability))) {
+			// content section is not available
 			return false;
+		} else {
+			// check that the content section is already completed before suggesting a quiz section
+			return section_is_completed($userid, $content_section->id);
 		}
 	} else {
 		// some content sections are available, even though the quiz section is not.
 		// this fixes it.
-		$quiz_section = $DB->get_record("course_sections",
-			array(
-				"id" => get_quiz_section_id($section->id, $section->name),
-			),
-			"id,name,visible,availability"
-		);
-		if((!is_null(($quiz_section)) && (!is_available_course_section($userid, $quiz_section->id, $quiz_section->name, $quiz_section->visible, $quiz_section->availability)))) {
-			return false;
-		}
+		// $quiz_section = $DB->get_record("course_sections",
+		// 	array(
+		// 		"id" => get_quiz_section_id($section->id, $section->name),
+		// 	),
+		// 	"id,name,visible,availability"
+		// );
+		// if((!is_null(($quiz_section)) && (!is_available_course_section($userid, $quiz_section->id, $quiz_section->name, $quiz_section->visible, $quiz_section->availability)))) {
+		// 	return false;
+		// }
 	}
 
 	// sections are available, check module availablity
@@ -404,6 +492,10 @@ function is_available_course_module($userid, $cmid) {
 		),
 		"visible,availability"
 	);
+	if(!str_contains($include_types, get_module_type_name($cmid))) {
+		// we don't care about labels etc.
+		return $cm->visible;
+	}
 
 	return $cm->visible && is_available($cm->availability, $userid);
 }
@@ -475,4 +567,35 @@ function get_badge_completion_percentage($userid, $cmids) {
 		1.0 - count($todo_modules) / count($cmids),
 		$todo_modules
 	);
+}
+function get_first_available_course_module_in_section($userid, $sectionid, $includetypes, $allowonlyunfinished) {
+	global $DB;
+	
+	# get name + all modules from current section
+	$section = $DB->get_record("course_sections", array(
+		"id" => $sectionid
+	), "name,sequence");
+
+	$current_suggestion = null;
+	foreach(explode(",", $section->sequence) as $cmid) {
+		# loop over all course modules in current section
+		// echo "\nCMID: " . $cmid . " -> completed: ";
+		// echo "\nCOMPLETED: " .  course_module_is_completed($userid, $cmid);
+		// echo "\nTYPE: " . get_module_type_name($cmid) . " -> " . in_array(get_module_type_name($cmid), explode(",", $includetypes));
+		// echo "\nAVAILABLE: " . is_available_course_module($userid, $cmid);
+		if(in_array(get_module_type_name($cmid), explode(",", $includetypes)) && is_available_course_module($userid, $cmid) && (($allowonlyunfinished && !course_module_is_completed($userid, $cmid)) || !$allowonlyunfinished)) {
+			if(is_null($current_suggestion)) {
+				// set suggestion to first candidate
+				$current_suggestion = $cmid;
+			}
+			// if current module is prefered module type, change suggestion to this module
+			// then break and return immediately
+			if(is_prefered_usercontenttype($userid, $cmid)) {
+				$current_suggestion = $cmid;
+				break;
+			}
+		}
+	}
+
+	return $current_suggestion;
 }

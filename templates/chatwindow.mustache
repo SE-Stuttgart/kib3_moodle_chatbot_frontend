@@ -1,4 +1,4 @@
-<script src="">
+<script>
 </script>
 
 <!-- Chatbot window -->
@@ -62,13 +62,13 @@
                         <div class="row mb-1">
                             <label class="col-sm-8 col-form-label" for="block_chatbot_numreviewquizzes">Anzahl Quizzes pro Wiederholungsrunde:</label>
                             <div class="col-sm-3">
-                                <input class="form-control" type="number" id="block_chatbot_numreviewquizzes" value="3">
+                                <input class="form-control" type="number" id="block_chatbot_numreviewquizzes" value="3" min="1" max="25" onchange="this.value = Math.min(Math.abs(this.value), 25)"">
                             </div>
                         </div>
                         <div class="row mb-1">
                             <label class="col-sm-8 col-form-label" for="block_chatbot_numsearchresults">Anzahl Suchergebnisse:</label>
                             <div class="col-sm-3">
-                                <input class="form-control" type="number" id="block_chatbot_numsearchresults" value="3">
+                                <input class="form-control" type="number" id="block_chatbot_numsearchresults" value="3" min="1" max="25" onchange="this.value = Math.min(Math.abs(this.value), 25)">
                             </div>
                         </div>
                         <fieldset class="row mb-1">

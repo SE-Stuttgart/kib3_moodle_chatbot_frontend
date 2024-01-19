@@ -409,25 +409,8 @@ class block_chatbot_external extends external_api {
             'includetypes' => $includetypes, 
             'allowonlyunfinished' => $allowonlyunfinished));
         
-        # get name + all modules from current section
-        $section = $DB->get_record("course_sections", array(
-            "id" => $sectionid
-        ), "name,sequence");
-
-        foreach(explode(",", $section->sequence) as $cmid) {
-            # loop over all course modules in current section
-            // echo "\nCMID: " . $cmid . " -> completed: ";
-            // echo "\nCOMPLETED: " .  course_module_is_completed($userid, $cmid);
-            // echo "\nTYPE: " . get_module_type_name($cmid) . " -> " . in_array(get_module_type_name($cmid), explode(",", $includetypes));
-            // echo "\nAVAILABLE: " . is_available_course_module($userid, $cmid);
-            if(in_array(get_module_type_name($cmid), explode(",", $includetypes)) && is_available_course_module($userid, $cmid) && (($allowonlyunfinished && !course_module_is_completed($userid, $cmid)) || !$allowonlyunfinished)) {
-                return array(
-                    "cmid" => $cmid
-                );
-            }
-        }
-
-        return array("cmid" => null);
+        $current_suggestion = get_first_available_course_module_in_section($userid, $sectionid, $includetypes, $allowonlyunfinished);
+        return array("cmid" => $current_suggestion);
     }
 
 
@@ -472,7 +455,7 @@ class block_chatbot_external extends external_api {
         return new external_function_parameters(
             array(
                 'userid' => new external_value(PARAM_INT, 'user id'), 
-                'courseid' => new external_value(PARAM_INT, 'course id'), 
+                'courseid' => new external_value(PARAM_INT, 'course id'),
             )
         );
     }
@@ -481,7 +464,9 @@ class block_chatbot_external extends external_api {
             new external_single_structure(
                 array(
                     'id' => new external_value(PARAM_INT, 'section id'),
-                    'url' => new external_value(PARAM_RAW, 'url to section')
+                    'url' => new external_value(PARAM_RAW, 'url to section'),
+                    'name' => new external_value(PARAM_TEXT, "name of section"),
+                    'firstcmid' => new external_value(PARAM_INT, "first module in section, respecting user preferences for module type")
                 )
             )
         );
@@ -500,9 +485,10 @@ class block_chatbot_external extends external_api {
         $all_sections = $DB->get_records("course_sections",
                                             array("course" => $courseid),
                                             '',
-                                            "id,name,visible,availability,sequence");
+                                            "id,name,section,visible,availability,sequence");
         foreach($all_sections as $section) {
             if(is_available_course_section($userid, $section->id, $section->name,$section->visible,$section->availability) && !section_is_completed($userid, $section->id)) {
+                // echo "\n{$section->name}";
                 $section_cmids = explode(",", $section->sequence);
                 $all_course_modules_available = true;
                 foreach($section_cmids as $cmid) {
@@ -512,10 +498,15 @@ class block_chatbot_external extends external_api {
                     }
                 }
                 if($all_course_modules_available) {
+                    // get first module from this section (that matches user content type preference)
+                    $current_suggestion = get_first_available_course_module_in_section($userid, $section->id, "url,book,resource,h5pactivity", true);
+
                     array_push($available, 
                         array(
                             "id" => $section->id,
-                            "url" => '<a href="' . $CFG->wwwroot . '/course/view.php?id=' . $courseid . '&section=' . $section->id . '">' .  $section->name . '</a>'
+                            "url" => '<a href="' . $CFG->wwwroot . '/course/view.php?id=' . $courseid . '&section=' . $section->section . '">' .  $section->name . '</a>',
+                            "firstcmid" => $current_suggestion,
+                            "name" => $section->name
                         )
                     );
                 }
@@ -596,10 +587,12 @@ class block_chatbot_external extends external_api {
         // get all course modules from current section
         [$sectionid, $sectionname] = get_section_id_and_name($cmid);
         $sequence = explode(",", $DB->get_field('course_sections', 'sequence', array("id" => $sectionid)));
+        $index_in_sequence = array_search($cmid, $sequence);
+
         $unfinished_modules = array();
-        // var_dump($sequence);
         foreach($sequence as $index => $nextcmid) {
             // walk over all section modules
+            // echo "_ ITER {$nextcmid}";
             $typename = get_module_type_name($nextcmid);
             // echo "\n";
             // echo "\nNEXT CMID {$nextcmid}";
@@ -608,6 +601,7 @@ class block_chatbot_external extends external_api {
                 // only look at modules that are 1) available and 2) whitelisted by type
                 
                 // take provided module completion if course module we look at is the one passed in, otherwise query database
+                // echo "\nCMID {$cmid} - NEXT {$nextcmid} - COMPLETION {$currentcoursemodulecompletion}";
                 if($cmid == $nextcmid && $currentcoursemodulecompletion) {
                     // echo "\nCOMPLETED OVERRIDE {$currentcoursemodulecompletion}";
                     $completed = $currentcoursemodulecompletion;
@@ -615,6 +609,7 @@ class block_chatbot_external extends external_api {
                     $completed = course_module_is_completed($userid, $nextcmid); 
                 }
                 $open_respecting_unfinished = ($allowonlyunfinished && !$completed) || (!$allowonlyunfinished);
+
                 // echo "\nCOMPLETED {$completed}";
                 // echo "\nOPEN {$open_respecting_unfinished}";
                 // echo "\nCMID < 0? {{$cmid} < 0}";
@@ -623,7 +618,8 @@ class block_chatbot_external extends external_api {
                 if((!$completed) && $cmid == $nextcmid) {
                     // module not completed, but it's the currentModule: return, because it still has to be finished
                     // echo "\n 22 --> {$nextcmid} \n";
-                    return array("cmid" => $nextcmid);
+                    $preferedcontenttype_cm = get_prefered_usercontenttype_cmid($userid, $nextcmid);
+                    return array("cmid" => $preferedcontenttype_cm);
                 }
                 if((!$open_respecting_unfinished) && $cmid == $nextcmid) {
                     // echo "\n 33 --> {$nextcmid} \n";
@@ -631,25 +627,33 @@ class block_chatbot_external extends external_api {
                     // get next module from section in sequence (if exists)
                     //  - if that hasen't been completed yet, return it
                     if(count($sequence) > $index + 1) {
+                        // check if next module in sequence is of correct module type, and available
                         $nextcandidateid = $sequence[$index + 1];
-                        $completed = course_module_is_completed($userid, $nextcandidateid);
-                        $open_respecting_unfinished = ($allowonlyunfinished && !$completed) || (!$allowonlyunfinished);
-                        if($open_respecting_unfinished && str_contains($includetypes, get_module_type_name($nextcandidateid))) {
-                            return array("cmid" => $nextcandidateid);
+                        $typename = get_module_type_name($nextcandidateid);
+                        if(str_contains($includetypes, $typename) && is_available_course_module($userid, $nextcandidateid)) {
+                            $completed = course_module_is_completed($userid, $nextcandidateid);
+                            $open_respecting_unfinished = ($allowonlyunfinished && !$completed) || (!$allowonlyunfinished);
+                            if($open_respecting_unfinished && str_contains($includetypes, get_module_type_name($nextcandidateid))) {
+                                $preferedcontenttype_cm = get_prefered_usercontenttype_cmid($userid, $nextcandidateid);
+                                return array("cmid" => $preferedcontenttype_cm);
+                            }
                         }
                     }
                 }
                 if($open_respecting_unfinished) {
                     // echo "\n 44 --> {$nextcmid} \n";
                     // keep track of all unfinished modules in the section
-                    array_push($unfinished_modules, $nextcmid);
+                    if($index > $index_in_sequence) {
+                        array_push($unfinished_modules, $nextcmid);
+                    }
                 }
             }
         }
         if(!empty($unfinished_modules)) {
             // we haven't returned from any of the conditions above, so just return 1st unfinished module
             // echo "\n 55 --> {$nextcmid} \n";
-            return array("cmid" => $unfinished_modules[0]);
+            $preferedcontenttype_cm =  get_prefered_usercontenttype_cmid($userid, $unfinished_modules[0]);
+            return array("cmid" => $preferedcontenttype_cm);
         }
         // echo "\n 66 --> {$nextcmid} \n";
         return array("cmid" => null); // no open modules in current section
@@ -976,8 +980,8 @@ class block_chatbot_external extends external_api {
         if(empty($closest_available_badge_info)) {
             $closest_available_badge_info = array("id" => null,
                                                 "name" => null,
-                                                "completion_percentage" => array(),
-                                                "open_modules" => null);
+                                                "completion_percentage" => 0.0,
+                                                "open_modules" => array());
         }
         return $closest_available_badge_info;
     }
@@ -1050,7 +1054,7 @@ class block_chatbot_external extends external_api {
         ));
         
         $_likesql_filename = $DB->sql_like('{files}.filename', ':filename');
-        var_dump($_likesql_filename);
+        // var_dump($_likesql_filename);
         $result = $DB->get_record_sql("SELECT {context}.id AS context, {files}.filearea AS filearea, {files}.itemid AS itemid,
                                               {files}.itemid AS itemid, {files}.filename AS filename
                                        FROM {course_modules}
@@ -1064,7 +1068,7 @@ class block_chatbot_external extends external_api {
                                         "filename" => "%.h5p"
                                     )
                             );
-        var_dump($result);
+        // var_dump($result);
         return array(
             "host" => $CFG->wwwroot,
             "context" => $result->context,
@@ -1103,22 +1107,26 @@ class block_chatbot_external extends external_api {
             'max_results' => $max_results
         ));
 
+        $quiz_module_type_id = $DB->get_field("modules", "id", array("name" => "h5pactivity"));
         $result = $DB->get_records_sql("SELECT {course_modules}.id AS cmid, {grade_grades}.finalgrade AS grade
                                           FROM {course_modules}
-                                          JOIN {grade_items} ON {grade_items}.iteminstance = {course_modules}.instance
+                                          JOIN {h5pactivity} ON {h5pactivity}.id = {course_modules}.instance
+                                          JOIN {grade_items} ON {grade_items}.iteminstance = {h5pactivity}.id
                                           JOIN {grade_grades} ON {grade_grades}.itemid = {grade_items}.id
-                                          WHERE {grade_items}.courseid = :courseid
-                                          AND {grade_items}.itemmodule = 'h5pactivity'
+                                          WHERE {grade_grades}.userid = :userid
+                                          AND {grade_items}.courseid = :courseid
                                           AND {grade_grades}.finalgrade >= 0
-                                          AND {grade_grades}.userid = :userid
-                                          ORDER BY {grade_grades}.finalgrade ASC,
-                                                   {grade_grades}.timemodified ASC
+                                          AND {grade_items}.itemmodule = 'h5pactivity'
+                                          AND {course_modules}.module = :typeid
+                                          ORDER BY {grade_grades}.timemodified ASC,
+                                                   {grade_grades}.finalgrade ASC
                                           LIMIT $max_results
                                           ",
                                         array(
                                             "userid" => $userid,
                                             "courseid" => $courseid,
-                                            "maxresults" => $max_results
+                                            "maxresults" => $max_results,
+                                            "typeid" => $quiz_module_type_id
                                         )
         );
         return (array)$result;
