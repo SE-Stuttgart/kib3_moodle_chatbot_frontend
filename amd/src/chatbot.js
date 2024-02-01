@@ -5,6 +5,10 @@ import {fetchUserSetttings, saveUserSetttings, assignUserSettings, readUserSetti
 import $ from 'jquery';
 
 
+var conn;
+var Plotly;
+
+
 const registerEventListeners = () => {
     document.addEventListener('click', e => {
         if(e.target.closest(Selectors.actions.sendMessage)) {
@@ -27,7 +31,7 @@ const registerEventListeners = () => {
             // minimize chatbot
             setWindowState(false);
             // open settings modal
-            openSettingsModal(conn);
+            openSettingsModal();
         } else if(e.target.closest(Selectors.actions.saveSettings)) {
             e.preventDefault();
             // convert form output to correct format for sending to DB
@@ -49,13 +53,14 @@ const registerEventListeners = () => {
     });
 };
 
-const openSettingsModal = (conn) => {
+const openSettingsModal = () => {
+    // minimize chatbot to not be in the way of the settings dialog
+    setWindowState(false);
     fetchUserSetttings(conn.userid, conn.slidefindertoken, conn.wwwroot).then(settings => {
-        // console.log("Settings", settings);
         // apply user settings to dialog modal
         assignUserSettings(settings);
     });
-}
+};
 
 const sendMessage = (user_input) => {
     // console.log("SENDING", user_input);
@@ -300,7 +305,9 @@ class ChatbotConnection {
                     } else if(message.content.startsWith("UI_SIZE")) {
                         resizeWindow(message.content);
                     } else if(message.content.startsWith("UI_SETTINGS")) {
-                        openSettingsModal(this.conn);
+                        openSettingsModal();
+                        // show modal
+                        $('#block_chatbot_settingsModal').modal('show');
                     }
                 }
                 else {
@@ -339,8 +346,6 @@ const isInsideIFrame = () => {
     }
 };
 
-var conn;
-var Plotly;
 
 export const init = (server_name, server_port, wwwroot, userid, username, courseid, slidefindertoken,
                      wsuserid, timestamp, plotly) => {
