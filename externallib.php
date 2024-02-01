@@ -57,14 +57,12 @@ class block_chatbot_external extends external_api {
                 'openonsection' => new external_value(PARAM_BOOL, 'on section completion'),
                 'openonbranch' => new external_value(PARAM_BOOL, 'on branch completion'),
                 'openonbadge' => new external_value(PARAM_BOOL, 'on badge completion'),
-                'warnings' => new external_warnings(),
             )
         );
     }
     public static function get_usersettings($userid) {
         global $DB;
         $params = self::validate_parameters(self::get_usersettings_parameters(), array('userid' => $userid));
-        $warnings = array();
         
         if(!$DB->record_exists('chatbot_usersettings', array('userid'=>$userid))) {
             $book_id = $DB->get_record('modules', array('name'=>'book'))->id;
@@ -124,7 +122,6 @@ class block_chatbot_external extends external_api {
         return new external_single_structure(
             array(
                 "ack" => new external_value(PARAM_BOOL, 'success'),
-                'warnings' => new external_warnings(),
             )
         );
     }
@@ -144,7 +141,6 @@ class block_chatbot_external extends external_api {
             'openonbranch' => $openonbranch,
             'openonbadge' => $openonbadge
         ));
-        $warnings = array();
         
         // get id for prefered content type
         $preferedcontenttype_id = $DB->get_field("modules", "id", array("name" => $preferedcontenttype));
@@ -185,7 +181,6 @@ class block_chatbot_external extends external_api {
             array(
                 'id' => new external_value(PARAM_INT, 'section id for given course module id'),
                 'name' => new external_value(PARAM_TEXT, 'section name'),
-                'warnings' => new external_warnings(),
             )
         );
     }
@@ -214,7 +209,6 @@ class block_chatbot_external extends external_api {
         return new external_single_structure(
             array(
                 'completed' => new external_value(PARAM_BOOL, 'true, if section is completed, else false'),
-                'warnings' => new external_warnings(),
             )
         );
     }
@@ -246,7 +240,6 @@ class block_chatbot_external extends external_api {
                         'cmid' => new external_value(PARAM_INT, 'the quiz id (as listed in the course module table)'),
                         'grade' => new external_value(PARAM_FLOAT, 'the quiz grade scored by the given user')
                 ))),
-                'warnings' => new external_warnings(),
             )
         );
     }
@@ -256,7 +249,6 @@ class block_chatbot_external extends external_api {
         
 		// find all sections belonging to the same topic branch
         [$topicletter, $sectionids] = get_all_branch_section_ids($userid, $sectionid);
-        // var_dump($sectionids);
         // check if there is any incomplete section
         foreach($sectionids as $_sectionid) {
             if(!section_is_completed($userid, $_sectionid, explode(",", $includetypes))) {
@@ -286,7 +278,6 @@ class block_chatbot_external extends external_api {
                                      array('userid' => $userid)
                                     )
                                 );
-        // var_dump($candidates);
         // convert into return type and return
         $result = array();
         foreach($candidates as $cmid => $grade) {
@@ -316,7 +307,6 @@ class block_chatbot_external extends external_api {
         return new external_single_structure(
             array(
                 'seen' => new external_value(PARAM_BOOL, 'true, if the given user has seen at least one module in the given course'),
-                'warnings' => new external_warnings(),
             )
         );
     }
@@ -332,7 +322,6 @@ class block_chatbot_external extends external_api {
                             array("userid" => $userid,
                                     "courseid" => $courseid)
                             );
-        // var_dump($result);
         return array(
             'seen' => $result
         );
@@ -357,7 +346,6 @@ class block_chatbot_external extends external_api {
                     'section' => new external_value(PARAM_INT, "id of the course module's section"),
                     'timeaccess' => new external_value(PARAM_INT, "timestamp of the course module's last access"),
                     'completionstate' => new external_value(PARAM_INT, "course module's completionstate"),
-                    'warnings' => new external_warnings(),
                 )
             )
         );
@@ -377,7 +365,6 @@ class block_chatbot_external extends external_api {
             "completionstate" => $completed,
             "userid" => $userid
         ));
-        // var_dump($results);
         return $results;
     }
 
@@ -397,7 +384,6 @@ class block_chatbot_external extends external_api {
         return new external_single_structure(
             array(
                 'cmid' => new external_value(PARAM_INT, 'id of the course module'),
-                'warnings' => new external_warnings(),
             )
         );
     }
@@ -426,7 +412,6 @@ class block_chatbot_external extends external_api {
         return new external_single_structure(
             array(
                 'url' => new external_value(PARAM_RAW, 'embeddable html href link (a) element'),
-                'warnings' => new external_warnings(),
             )
         );
     }
@@ -488,7 +473,6 @@ class block_chatbot_external extends external_api {
                                             "id,name,section,visible,availability,sequence");
         foreach($all_sections as $section) {
             if(is_available_course_section($userid, $section->id, $section->name,$section->visible,$section->availability) && !section_is_completed($userid, $section->id)) {
-                // echo "\n{$section->name}";
                 $section_cmids = explode(",", $section->sequence);
                 $all_course_modules_available = true;
                 foreach($section_cmids as $cmid) {
@@ -529,7 +513,6 @@ class block_chatbot_external extends external_api {
         return new external_single_structure(
             array(
                 'id' => new external_value(PARAM_INT, 'ice cream game id for the given course'),
-                'warnings' => new external_warnings(),
             )
         );
     }
@@ -569,7 +552,6 @@ class block_chatbot_external extends external_api {
         return new external_single_structure(
             array(
                 'cmid' => new external_value(PARAM_INT, 'next course module id'),
-                'warnings' => new external_warnings(),
             )
         );
     }
@@ -592,37 +574,24 @@ class block_chatbot_external extends external_api {
         $unfinished_modules = array();
         foreach($sequence as $index => $nextcmid) {
             // walk over all section modules
-            // echo "_ ITER {$nextcmid}";
             $typename = get_module_type_name($nextcmid);
-            // echo "\n";
-            // echo "\nNEXT CMID {$nextcmid}";
-            // echo "\nTYPE {$typename}";
             if(str_contains($includetypes, $typename) && is_available_course_module($userid, $nextcmid)) {
                 // only look at modules that are 1) available and 2) whitelisted by type
                 
                 // take provided module completion if course module we look at is the one passed in, otherwise query database
-                // echo "\nCMID {$cmid} - NEXT {$nextcmid} - COMPLETION {$currentcoursemodulecompletion}";
                 if($cmid == $nextcmid && $currentcoursemodulecompletion) {
-                    // echo "\nCOMPLETED OVERRIDE {$currentcoursemodulecompletion}";
                     $completed = $currentcoursemodulecompletion;
                 } else {
                     $completed = course_module_is_completed($userid, $nextcmid); 
                 }
                 $open_respecting_unfinished = ($allowonlyunfinished && !$completed) || (!$allowonlyunfinished);
 
-                // echo "\nCOMPLETED {$completed}";
-                // echo "\nOPEN {$open_respecting_unfinished}";
-                // echo "\nCMID < 0? {{$cmid} < 0}";
-                // echo "\n";
-
                 if((!$completed) && $cmid == $nextcmid) {
                     // module not completed, but it's the currentModule: return, because it still has to be finished
-                    // echo "\n 22 --> {$nextcmid} \n";
                     $preferedcontenttype_cm = get_prefered_usercontenttype_cmid($userid, $nextcmid);
                     return array("cmid" => $preferedcontenttype_cm);
                 }
                 if((!$open_respecting_unfinished) && $cmid == $nextcmid) {
-                    // echo "\n 33 --> {$nextcmid} \n";
                     // module is the current module, and it has been completed:
                     // get next module from section in sequence (if exists)
                     //  - if that hasen't been completed yet, return it
@@ -641,7 +610,6 @@ class block_chatbot_external extends external_api {
                     }
                 }
                 if($open_respecting_unfinished) {
-                    // echo "\n 44 --> {$nextcmid} \n";
                     // keep track of all unfinished modules in the section
                     if($index > $index_in_sequence) {
                         array_push($unfinished_modules, $nextcmid);
@@ -651,11 +619,9 @@ class block_chatbot_external extends external_api {
         }
         if(!empty($unfinished_modules)) {
             // we haven't returned from any of the conditions above, so just return 1st unfinished module
-            // echo "\n 55 --> {$nextcmid} \n";
             $preferedcontenttype_cm =  get_prefered_usercontenttype_cmid($userid, $unfinished_modules[0]);
             return array("cmid" => $preferedcontenttype_cm);
         }
-        // echo "\n 66 --> {$nextcmid} \n";
         return array("cmid" => null); // no open modules in current section
     }
 
@@ -676,7 +642,6 @@ class block_chatbot_external extends external_api {
         return new external_single_structure(
             array(
                 'count' => new external_value(PARAM_INT, 'number of viewed course modules in given course during specified time range'),
-                'warnings' => new external_warnings(),
             )
         );
     }
@@ -746,7 +711,6 @@ class block_chatbot_external extends external_api {
             array(
                 'course_completion_percentage' => new external_value(PARAM_FLOAT, 'percentage of course completed by user so far'),
                 'quiz_repetition_percentage' => new external_value(PARAM_FLOAT, 'percentage of quizzes repeated by the user so far'),
-                'warnings' => new external_warnings(),
             )
         );
     }
@@ -785,7 +749,6 @@ class block_chatbot_external extends external_api {
                                                         "source" => "mod/h5pactivity")
                                                 )
                                         );
-        // var_dump($num_repeated_quizzes);
         $percentage_repeated_quizzes = $num_repeated_quizzes / $total_num_quizzes;
         
         $percentage_done = get_user_course_completion_percentage($userid, $courseid, $includetypes);
@@ -823,7 +786,6 @@ class block_chatbot_external extends external_api {
                 'first_week' => new external_value(PARAM_BOOL, "is this the user's first week using the chatbot"),
                 'timecreated' => new external_value(PARAM_INT, 'timestamp for last update of this record'),
                 'course_progress_percentage' => new external_value(PARAM_FLOAT, "last course progress displayed to the user"), 
-                'warnings' => new external_warnings(),
             )
         );
     }
@@ -898,7 +860,6 @@ class block_chatbot_external extends external_api {
                 'open_modules' => new external_multiple_structure(
                     new external_value(PARAM_INT, "course module ids of not yet completed course modules for this badge")
                 ),
-                'warnings' => new external_warnings(),
             )
         );
     }
@@ -1004,7 +965,6 @@ class block_chatbot_external extends external_api {
                 'id' => new external_value(PARAM_INT, 'id of the badge the user is closest to completing, none if badges are disabled or all badges were obtained'),
                 'name' => new external_value(PARAM_TEXT, 'name of the badge'),
                 'url' => new external_value(PARAM_RAW, "Url of badge"),
-                'warnings' => new external_warnings(),
             )
         );
     }
@@ -1054,7 +1014,6 @@ class block_chatbot_external extends external_api {
         ));
         
         $_likesql_filename = $DB->sql_like('{files}.filename', ':filename');
-        // var_dump($_likesql_filename);
         $result = $DB->get_record_sql("SELECT {context}.id AS context, {files}.filearea AS filearea, {files}.itemid AS itemid,
                                               {files}.itemid AS itemid, {files}.filename AS filename
                                        FROM {course_modules}
@@ -1068,7 +1027,6 @@ class block_chatbot_external extends external_api {
                                         "filename" => "%.h5p"
                                     )
                             );
-        // var_dump($result);
         return array(
             "host" => $CFG->wwwroot,
             "context" => $result->context,

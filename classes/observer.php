@@ -27,7 +27,6 @@ class observer {
     }
     
     public static function course_module_completion_viewed(\core\event\base $event) {
-        observer::debug_to_console($event->get_name());
         // update database
         $data = $event->get_data();
         update_recently_viewed($data['userid'], $data['courseid'], $data['contextinstanceid'], $data['timecreated']);
@@ -35,7 +34,6 @@ class observer {
     }
     
     public static function course_module_completion_updated(\core\event\base $event) {
-        observer::debug_to_console($event->get_name());
         // update database
         $data = $event->get_data();
         update_recently_viewed($data['userid'], $data['courseid'], $data['contextinstanceid'], $data['timecreated'], $data['other']['completionstate']);
@@ -46,7 +44,6 @@ class observer {
 
     // public static function course_module_completion_updated(\core\event\course_module_completion_updated $event) {
     public static function forward_event_to_chatbot(\core\event\base $event) {
-        observer::debug_to_console(json_encode($event->get_data()));
         
         // Check if course associated with update is in whitelist specified in settings.
         if (in_array($event->courseid, explode(",", get_config('block_chatbot', "courseids"))) == true) {
