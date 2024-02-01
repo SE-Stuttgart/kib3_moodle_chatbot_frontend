@@ -27,11 +27,7 @@ const registerEventListeners = () => {
             // minimize chatbot
             setWindowState(false);
             // open settings modal
-            fetchUserSetttings(conn.userid, conn.slidefindertoken, conn.wwwroot).then(settings => {
-                // console.log("Settings", settings);
-                // apply user settings to dialog modal
-                assignUserSettings(settings);
-            });
+            openSettingsModal(conn);
         } else if(e.target.closest(Selectors.actions.saveSettings)) {
             e.preventDefault();
             // convert form output to correct format for sending to DB
@@ -52,6 +48,14 @@ const registerEventListeners = () => {
         }
     });
 };
+
+const openSettingsModal = (conn) => {
+    fetchUserSetttings(conn.userid, conn.slidefindertoken, conn.wwwroot).then(settings => {
+        // console.log("Settings", settings);
+        // apply user settings to dialog modal
+        assignUserSettings(settings);
+    });
+}
 
 const sendMessage = (user_input) => {
     // console.log("SENDING", user_input);
@@ -295,6 +299,8 @@ class ChatbotConnection {
                         setWindowState(true);
                     } else if(message.content.startsWith("UI_SIZE")) {
                         resizeWindow(message.content);
+                    } else if(message.content.startsWith("UI_SETTINGS")) {
+                        openSettingsModal(this.conn);
                     }
                 }
                 else {
