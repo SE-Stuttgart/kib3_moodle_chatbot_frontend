@@ -249,6 +249,7 @@ class block_chatbot_external extends external_api {
         
 		// find all sections belonging to the same topic branch
         [$topicletter, $sectionids] = get_all_branch_section_ids($userid, $sectionid);
+        
         // check if there is any incomplete section
         foreach($sectionids as $_sectionid) {
             if(!section_is_completed($userid, $_sectionid, explode(",", $includetypes))) {
@@ -260,6 +261,14 @@ class block_chatbot_external extends external_api {
                     'candidates' => array(),
                 );
             }
+        }
+
+        if(empty($sectionids)) {
+            return array(
+                'completed' => true,
+                'branch' => $topicletter,
+                'candidates' => array()
+            );
         }
 
         // all sections are completed - collect list of review quiz candidates
@@ -374,7 +383,8 @@ class block_chatbot_external extends external_api {
         return new external_function_parameters(
             array(
                 'userid' => new external_value(PARAM_INT, 'user id'), 
-                'sectionid' => new external_value(PARAM_INT, 'section id (where to look for for the first course module)'),
+                'courseid' => new external_value(PARAM_INT, 'course id'),
+                'sectionid' => new external_value(PARAM_INT, 'section id (where to look for for the first course module). if < 0, first module in entire course is returned', VALUE_DEFAULT, -1),
                 'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
                 'allowonlyunfinished' => new external_value(PARAM_BOOL, 'if True, will filter for only course modules that were not completed by the user')
             )
@@ -387,14 +397,21 @@ class block_chatbot_external extends external_api {
             )
         );
     }
-    public static function get_first_available_course_module($userid, $sectionid, $includetypes, $allowonlyunfinished) {
+    public static function get_first_available_course_module($userid, $courseid, $sectionid, $includetypes, $allowonlyunfinished) {
         global $DB;
         $params = self::validate_parameters(self::get_first_available_course_module_parameters(), array(
             'userid' => $userid, 
+            'courseid' => $courseid,
             'sectionid' => $sectionid,
             'includetypes' => $includetypes, 
             'allowonlyunfinished' => $allowonlyunfinished));
         
+        if($sectionid < 0) {
+            $sectionid = $DB->get_field("course_sections", "id", array(
+                "course" => $courseid,
+                "section" => 1
+            ));
+        }
         $current_suggestion = get_first_available_course_module_in_section($userid, $sectionid, $includetypes, $allowonlyunfinished);
         return array("cmid" => $current_suggestion);
     }
@@ -449,6 +466,7 @@ class block_chatbot_external extends external_api {
             new external_single_structure(
                 array(
                     'id' => new external_value(PARAM_INT, 'section id'),
+                    'section' => new external_value(PARAM_INT, 'section index within course'),
                     'url' => new external_value(PARAM_RAW, 'url to section'),
                     'name' => new external_value(PARAM_TEXT, "name of section"),
                     'firstcmid' => new external_value(PARAM_INT, "first module in section, respecting user preferences for module type")
@@ -474,20 +492,21 @@ class block_chatbot_external extends external_api {
         foreach($all_sections as $section) {
             if(is_available_course_section($userid, $section->id, $section->name,$section->visible,$section->availability) && !section_is_completed($userid, $section->id)) {
                 $section_cmids = explode(",", $section->sequence);
-                $all_course_modules_available = true;
+                $some_course_modules_available = false;
                 foreach($section_cmids as $cmid) {
-                    if(!is_available_course_module($userid, $cmid)) {
-                        $all_course_modules_available = false;
+                    if(is_available_course_module($userid, $cmid)) {
+                        $some_course_modules_available = true;
                         break;
                     }
                 }
-                if($all_course_modules_available) {
+                if($some_course_modules_available) {
                     // get first module from this section (that matches user content type preference)
-                    $current_suggestion = get_first_available_course_module_in_section($userid, $section->id, "url,book,resource,h5pactivity", true);
+                    $current_suggestion = get_first_available_course_module_in_section($userid, $section->id, "url,book,resource,h5pactivity,icecreamgame", true);
 
                     array_push($available, 
                         array(
                             "id" => $section->id,
+                            "section" => $section->section,
                             "url" => '<a href="' . $CFG->wwwroot . '/course/view.php?id=' . $courseid . '&section=' . $section->section . '">' .  $section->name . '</a>',
                             "firstcmid" => $current_suggestion,
                             "name" => $section->name

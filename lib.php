@@ -100,7 +100,7 @@ function update_recently_viewed_completion($userid, $courseid, $coursemoduleid, 
 	}
 }
 
-function update_recently_viewed($userid, $courseid, $coursemoduleid, $time) {
+function update_recently_viewed($userid, $courseid, $coursemoduleid, $time, $completionstate) {
 	// keeping tack of course module views in our custom history tables
 	global $DB;
 	// check if we already have an entry
@@ -111,6 +111,7 @@ function update_recently_viewed($userid, $courseid, $coursemoduleid, $time) {
 																	'courseid' => $courseid,
 																	'cmid' => $coursemoduleid));
 		$item->timeaccess = $time;
+		$item->completionstate = $completionstate;
 		$DB->update_record('chatbot_recentlyaccessed', $item);
 	} else {
 		// create a new entry
@@ -118,17 +119,21 @@ function update_recently_viewed($userid, $courseid, $coursemoduleid, $time) {
 		$item->userid = $userid;
 		$item->cmid = $coursemoduleid;
 		$item->courseid = $courseid;
-		$item->completionstate = 0;
+		$item->completionstate = $completionstate;
 		$item->timeaccess = $time;
 		$DB->insert_record('chatbot_recentlyaccessed', $item);
 	}
 }
 
-function get_open_section_module_ids($userid, $sectionid, $include_types=["url", "book", "resource", "quiz", "h5pactivity"]) {
+function get_open_section_module_ids($userid, $sectionid, $include_types=["url", "book", "resource", "quiz", "h5pactivity", "icecreamgame"]) {
 	// Get all the course modules with types whitelisted in $include_types for the specified section that are not marked as completed. 
 	global $DB;
 	// get all section module ids
 	$all_section_module_ids = array_map('intval', explode(",", $DB->get_record("course_sections", array('id' => $sectionid), 'sequence')->sequence)); // array of course module ids
+	if(empty($all_section_module_ids)) {
+		return array();
+	}
+
 	// filter the section modules by the type whitelist
 	// TODO use the moodle sql_ compatibility functions instead of custom execute
 	[$_insql_sectionmoduleids, $_insql_sectionmoduleids_params] = $DB->get_in_or_equal($all_section_module_ids, SQL_PARAMS_NAMED, 'sectionmoduleids');
@@ -160,7 +165,7 @@ function get_open_section_module_ids($userid, $sectionid, $include_types=["url",
 	return $difference;
 }
 
-function section_is_completed($userid, $sectionid, $include_types=["url", "book", "resource", "quiz", "h5pactivity"]) {
+function section_is_completed($userid, $sectionid, $include_types=["url", "book", "resource", "quiz", "h5pactivity", "icecreamgame"]) {
 	// Check if all course modules with types whitelisted in $include types are completed for the given section.
 	$open_module_ids = get_open_section_module_ids($userid, $sectionid, $include_types);
 	// var_dump($open_module_ids);
@@ -445,7 +450,7 @@ function is_available_course_section($userid, $sectionid, $sectionname, $visible
 	return $visible && is_available($json_conditions, $userid);
 }
 
-function is_available_course_module($userid, $cmid, $includetypes = "url,book,resource,h5pactivity,quiz") {
+function is_available_course_module($userid, $cmid, $includetypes = "url,book,resource,h5pactivity,quiz,icecreamgame") {
 	global $DB;
 
 	// first, check if the module's section is available 
@@ -492,7 +497,7 @@ function is_available_course_module($userid, $cmid, $includetypes = "url,book,re
 		),
 		"visible,availability"
 	);
-	if(!str_contains($include_types, get_module_type_name($cmid))) {
+	if(!str_contains($includetypes, get_module_type_name($cmid))) {
 		// we don't care about labels etc.
 		return $cm->visible;
 	}
