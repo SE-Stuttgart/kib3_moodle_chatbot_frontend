@@ -163,9 +163,12 @@
 <!-- Init code -->
 {{^element.frozen}}
 {{#js}}
-let h5p_resizer = document.createElement("script");
-h5p_resizer.setAttribute("src", `${window.location.protocol}//${window.location.host}/h5p/h5plib/v124/joubel/core/js/h5p-resizer.js`);
-document.body.appendChild(h5p_resizer);
+if(!document.getElementById("chatbot_hp5_resizer")) {
+    let chatbot_hp5_resizer = document.createElement("script");
+    chatbot_hp5_resizer.setAttribute("id", "chatbot_hp5_resizer");
+    chatbot_hp5_resizer.setAttribute("src", `${window.location.protocol}//${window.location.host}/h5p/h5plib/v124/joubel/core/js/h5p-resizer.js`);
+    document.body.appendChild(chatbot_hp5_resizer);
+}
 
 host = window.location.host;
 require(['block_chatbot/chatbot', 'https://cdn.plot.ly/plotly-2.27.0.min.js'], function(Chatbot, Plotly) {
