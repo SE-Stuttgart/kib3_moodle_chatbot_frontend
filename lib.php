@@ -604,3 +604,55 @@ function get_first_available_course_module_in_section($userid, $sectionid, $incl
 
 	return $current_suggestion;
 }
+
+
+function sync_course_module_history($courseid) {
+	// This function synchronizes all views and completions of course modules that were done without the chatbot block being active 
+	// with the chatbot user activity tracking table.
+	// This could happen after 
+	// a) adding the chatbot block
+	// b) activating the chatbot plugin for a course in the settings
+	global $DB;
+
+	// First, we add all the completions
+	$DB->execute("INSERT INTO {chatbot_recentlyaccessed}(userid, cmid, courseid, timeaccess, completionstate)
+				  SELECT done.userid, done.coursemoduleid, cm.course, done.timemodified, done.completionstate 
+				  FROM {course_modules_completion} as done
+				  JOIN {course_modules} as cm ON cm.id = done.coursemoduleid
+				  WHERE cm.course = :courseid
+				  	AND NOT EXISTS (
+						SELECT *
+						FROM {chatbot_recentlyaccessed} as RAC
+						WHERE RAC.userid = done.userid
+							AND RAC.cmid = done.coursemoduleid
+					)",
+			array(
+				"courseid" => $courseid
+			)
+	);
+
+	// Then, we add the views that are not covered by the completions yet
+	$DB->execute("INSERT INTO {chatbot_recentlyaccessed}(userid, cmid, courseid, timeaccess, completionstate)
+				  SELECT viewed.userid, viewed.coursemoduleid, cm.course, viewed.timecreated, 0
+				  FROM {course_modules_viewed} as viewed
+				  JOIN {course_modules} as cm ON cm.id = viewed.coursemoduleid
+				  WHERE cm.course = :courseid
+				  	AND NOT EXISTS (
+						SELECT *
+						FROM {chatbot_recentlyaccessed} as RAC
+						WHERE RAC.userid = viewed.userid
+							AND RAC.cmid = viewed.coursemoduleid
+					)",
+			array(
+				"courseid" => $courseid
+			)
+	);
+}
+
+function sync_all_course_module_histories() {
+	global $DB;
+	$active_course_ids = explode(",", $DB->get_field('config_plugins', 'value', array('plugin' => 'block_chatbot', 'name' => 'courseids')));
+	foreach($active_course_ids as $courseid) {
+		sync_course_module_history($courseid);
+	}
+}

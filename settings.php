@@ -5,6 +5,7 @@
  */
 
 defined('MOODLE_INTERNAL') || die;
+require_once(__DIR__ . '/lib.php');
 
 if ($ADMIN->fulltree) {
 	
@@ -48,11 +49,16 @@ if ($ADMIN->fulltree) {
 	foreach ($courses as $course) {
 		$courselist[$course->id] = $course->fullname;
 	}
-	$settings->add(new admin_setting_configmulticheckbox(
+	$courselist_config = new admin_setting_configmulticheckbox(
 		'block_chatbot/courseids',
 		get_string('courses', 'block_chatbot'),
 		get_string('courses_description', 'block_chatbot'),
 		null,
-		$courselist));
-
+		$courselist);
+	$courselist_config->set_updatedcallback(function() {
+		// The chatbot could have been inactive for a selected course: we need to sync the user module activity
+		sync_all_course_module_histories();
+	});
+	$settings->add($courselist_config);
+	
 }

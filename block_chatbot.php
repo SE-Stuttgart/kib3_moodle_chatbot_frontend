@@ -9,13 +9,17 @@ class block_chatbot extends block_base {
         $this->title = get_string('chatbot', 'block_chatbot');
     }
 
+	function instance_create() {
+		// the chatbot was inactive before: we need to sync the user course module activity
+		sync_all_course_module_histories();
+		return true;
+	}
+
+
 	function has_config() {return true;} // required to enable global settings
  
     public function get_content() {
 		global $CFG, $PAGE, $USER, $DB, $COURSE;
-		
-
-
 		
 		$enabled = true;
 		if(!in_array(strval($COURSE->id), explode(",", $DB->get_field('config_plugins', 'value', array('plugin' => 'block_chatbot', 'name' => 'courseids'))))) {
