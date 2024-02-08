@@ -822,24 +822,34 @@ class block_chatbot_external extends external_api {
         // if not, that means that the user is using the chatbot for the first time, 
         // and we should create this entry
         $first_turn_ever = !$DB->record_exists("chatbot_weekly_summary", array("userid" => $userid));
-        // TODO should this also depend on the course id? 
         if($first_turn_ever) {
-            // create first entry
+            // additionally, check that user didn't complete any modules so far.
+            // If they did (e.g. chatbot was not activated for a time), check if they completed any course modules so far
+            $firstweek = !$DB->record_exists_sql("SELECT done.id FROM {course_modules_completion} as done
+                                                  JOIN {course_modules} as cm ON cm.id = done.coursemoduleid
+                                                  WHERE cm.course = :courseid
+                                                  AND done.userid = :userid
+                                                  AND done.completionstate = 1", 
+                array(
+                    "userid" => $userid,
+                    "courseid" => $courseid
+                    )
+            );  
+            $first_turn_ever = $firstweeek;
+                
             $timecreated = (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp();
             $DB->insert_record("chatbot_weekly_summary", (object)array(
                 "userid" => $userid,
                 "timecreated" => $timecreated,
-                "firstweek" => 1
+                "firstweek" => (int)$firstweeek
             ), false);
             
             $percentage_done = get_user_course_completion_percentage($userid, $courseid, $includetypes);
             $DB->insert_record("chatbot_progress_summary", (object)array(
                 "userid" => $userid,
                 "progress" => $percentage_done,
-                "timecreated" => $timecreated
+                "timecreated" => $firstweeek? $timecreated : 0 // trigger course completion so far, if user has already completed modules
             ), false);
-
-            $firstweek = 1;
         } else {
             $last_summary = $DB->get_record("chatbot_weekly_summary", array("userid" => $userid));
             if($updatedb) {
@@ -848,14 +858,14 @@ class block_chatbot_external extends external_api {
                 $last_summary->timecreated = (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp();
                 $DB->update_record("chatbot_weekly_summary", $last_summary);
             }
-            $firstweek = $last_summary->firstweek;
+            $firstweek = (bool)$last_summary->firstweek;
             $timecreated = $last_summary->timecreated;
             $percentage_done = $DB->get_field('chatbot_progress_summary', 'progress', array("userid" => $userid));
         }
 
         return array(
             "first_turn_ever" => $first_turn_ever,
-            "first_week" => (bool)$firstweek,
+            "first_week" => $firstweek,
             "timecreated" => $timecreated,
             "course_progress_percentage" => $percentage_done         
         );
