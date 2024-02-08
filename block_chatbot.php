@@ -2,6 +2,7 @@
 defined('MOODLE_INTERNAL') || die();
 require_once(__DIR__ . '/lib.php');
 
+use core_h5p\local\library\autoloader;
 
 class block_chatbot extends block_base {
     public function init() {
@@ -61,6 +62,11 @@ class block_chatbot extends block_base {
 												  'token'
 			)->token;
 		}
+
+		if(!property_exists($this, 'h5presizerurl')) {
+			$this->h5presizerurl = core_h5p\local\library\autoloader::get_h5p_core_library_url('js/h5p-resizer.js');
+		} 
+
 		// Init javascript
 		$data = array(
 			"server_name" => block_chatbot_get_server_name(), 
@@ -76,13 +82,13 @@ class block_chatbot extends block_base {
 				"firstname" => "KIB3 Webservice",
 				"lastname" => "KIB3 Webservice"
 			)),
-			"timestamp" => (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp()
+			"timestamp" => (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp(),
+			'resizeurl' => $this->h5presizerurl	
 		);
  
 		// Renderer needed to use templates
         $renderer = $PAGE->get_renderer($this->blockname);
 		$text = $renderer->render_from_template('block_chatbot/chatwindow', $data);
-
     	$this->content         =  new stdClass;
     	$this->content->footer = '';
 		$this->content->text = $text;

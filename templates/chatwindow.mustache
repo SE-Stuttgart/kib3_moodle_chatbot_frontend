@@ -1,5 +1,4 @@
-<script>
-</script>
+{{> core_h5p/h5presize }}
 
 <!-- Chatbot window -->
 <div id="block_chatbot-chatwindow" class="block_chatbot-chatwindow">
@@ -163,13 +162,6 @@
 <!-- Init code -->
 {{^element.frozen}}
 {{#js}}
-if(!document.getElementById("chatbot_hp5_resizer")) {
-    let chatbot_hp5_resizer = document.createElement("script");
-    chatbot_hp5_resizer.setAttribute("id", "chatbot_hp5_resizer");
-    chatbot_hp5_resizer.setAttribute("src", `${window.location.protocol}//${window.location.host}/h5p/h5plib/v124/joubel/core/js/h5p-resizer.js`);
-    document.body.appendChild(chatbot_hp5_resizer);
-}
-
 host = window.location.host;
 require(['block_chatbot/chatbot', 'https://cdn.plot.ly/plotly-2.27.0.min.js'], function(Chatbot, Plotly) {
     let conn = Chatbot.init("{{server_name}}", "{{server_port}}", "{{wwwroot}}", "{{userid}}", "{{username}}", "{{courseid}}", "{{slidefindertoken}}", "{{wsuserid}}", "{{timestamp}}", Plotly);
