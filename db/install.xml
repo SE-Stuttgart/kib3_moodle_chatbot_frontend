@@ -45,24 +45,28 @@
         <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
             <FIELD NAME="userid" LENGTH="10" TYPE="int" NOTNULL="true" SEQUENCE="false"/>
+            <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
             <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
             <FIELD NAME="firstweek" TYPE="int" LENGTH="1" NOTNULL="true" COMMNET="True if the chatbot is used by the user for the first week - should change stat display."/>`
         </FIELDS> 
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
             <KEY NAME="fk_user" TYPE="foreign" FIELDS="userid" REFTABLE="users" REFFIELDS="id"/>
+            <KEY NAME="fk_course" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
         </KEYS>
     </TABLE>
    <TABLE NAME="chatbot_progress_summary" COMMENT="Stores the chatbot user events">
         <FIELDS>
             <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
             <FIELD NAME="userid" LENGTH="10" TYPE="int" NOTNULL="true" SEQUENCE="false"/>
+            <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
             <FIELD NAME="progress" TYPE="float" NOTNULL="true"/>
             <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         </FIELDS> 
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
             <KEY NAME="fk_user" TYPE="foreign" FIELDS="userid" REFTABLE="users" REFFIELDS="id"/>
+            <KEY NAME="fk_course" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
         </KEYS>
     </TABLE>
     <TABLE NAME="chatbot_history" COMMENT="Stores the chatbot history">
