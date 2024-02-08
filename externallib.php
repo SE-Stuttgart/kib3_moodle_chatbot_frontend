@@ -835,7 +835,6 @@ class block_chatbot_external extends external_api {
                     "courseid" => $courseid
                     )
             );  
-            $first_turn_ever = $firstweeek;
                 
             $timecreated = (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp();
             $DB->insert_record("chatbot_weekly_summary", (object)array(
