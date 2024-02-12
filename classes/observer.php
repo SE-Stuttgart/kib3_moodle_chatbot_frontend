@@ -29,7 +29,8 @@ class observer {
     public static function course_module_completion_viewed(\core\event\base $event) {
         // update database
         $data = $event->get_data();
-        update_recently_viewed($data['userid'], $data['courseid'], $data['contextinstanceid'], $data['timecreated'], $data['other']['completionstate']);
+        $completionstate = array_key_exists("other", $data) && !is_null($data['other']) && array_key_exists("completionstate", $data['other'])? $data['other']['completionstate'] : 0;
+        update_recently_viewed($data['userid'], $data['courseid'], $data['contextinstanceid'], $data['timecreated'], $completionstate);
         // no need to forward event
     }
     
