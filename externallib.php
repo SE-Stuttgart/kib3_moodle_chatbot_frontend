@@ -343,7 +343,8 @@ class block_chatbot_external extends external_api {
             array(
                 'userid' => new external_value(PARAM_INT, 'user id'), 
                 'courseid' => new external_value(PARAM_INT, 'course id'), 
-                'completed' => new external_value(PARAM_BOOL, 'whether the module status should be viewed or completed'), 
+                'completed' => new external_value(PARAM_BOOL, 'whether the module status should be viewed or completed'),
+                'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
             )
         );
     }
@@ -359,21 +360,34 @@ class block_chatbot_external extends external_api {
             )
         );
     }
-    public static function get_last_viewed_course_modules($userid, $courseid, $completed) {
+    public static function get_last_viewed_course_modules($userid, $courseid, $completed, $includetypes) {
         global $DB;
-        $params = self::validate_parameters(self::get_last_viewed_course_modules_parameters(), array('userid' => $userid, 'courseid' => $courseid, 'completed' => $completed));
+        $params = self::validate_parameters(self::get_last_viewed_course_modules_parameters(), 
+            array('userid' => $userid, 
+                  'courseid' => $courseid,
+                  'completed' => $completed,
+                  'includetypes' => $includetypes
+            )
+        );
         
+        [$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $includetypes), SQL_PARAMS_NAMED, 'types');
         $results = $DB->get_records_sql("SELECT ra.cmid, ra.timeaccess, ra.completionstate, cm.section FROM {chatbot_recentlyaccessed} AS ra
-                              JOIN {course_modules} as cm 
-                                ON cm.id = ra.cmid
+                              JOIN {course_modules} AS cm ON cm.id = ra.cmid
+                              JOIN {modules} ON {modules}.id = cm.module
                               WHERE ra.userid = :userid
                               AND ra.courseid = :courseid
                               AND ra.completionstate = :completionstate
-                              ORDER BY timeaccess DESC", array(
-            "courseid" => $courseid,
-            "completionstate" => $completed,
-            "userid" => $userid
-        ));
+                              AND {modules}.name $_insql_types
+                              ORDER BY timeaccess DESC", 
+            array_merge(
+                array(
+                    "courseid" => $courseid,
+                    "completionstate" => $completed,
+                    "userid" => $userid
+                ),
+                $_insql_types_params
+            )
+        );
         return $results;
     }
 
