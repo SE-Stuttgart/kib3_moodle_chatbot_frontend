@@ -379,7 +379,12 @@ export const init = (server_name, server_port, wwwroot, userid, username, course
     if (localStorage.getItem("chatbot.maximized") === null) {
         localStorage.setItem("chatbot.maximized", "false");
     }
-    setWindowState(localStorage.getItem("chatbot.maximized") === "true");
+    // Current preference is to keep chatbot minimized when switching pages, only opening for
+    // a) first turn
+    // b) badge events
+    // c) quiz events
+    // setWindowState(localStorage.getItem("chatbot.maximized") === "true");
+    setWindowState(false);
     // Set or restore chatbot size
     if (localStorage.getItem("chatbot.size") === null) {
         localStorage.setItem("chatbot.size", "UI_SIZE_DEFAULT");

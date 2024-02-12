@@ -75,8 +75,8 @@ class block_chatbot_external extends external_api {
                 'numreviewquizzes' => 3,
                 'openonlogin' => true,
                 'openonquiz' => true,
-                'openonsection' => true,
-                'openonbranch' => true,
+                'openonsection' => false,
+                'openonbranch' => false,
                 'openonbadge' => true
             ));
         }
