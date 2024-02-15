@@ -373,23 +373,45 @@ class block_chatbot_external extends external_api {
         );
         
         [$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $includetypes), SQL_PARAMS_NAMED, 'types');
-        $results = $DB->get_records_sql("SELECT ra.cmid, ra.timeaccess, ra.completionstate, cm.section FROM {chatbot_recentlyaccessed} AS ra
-                              JOIN {course_modules} AS cm ON cm.id = ra.cmid
-                              JOIN {modules} ON {modules}.id = cm.module
-                              WHERE ra.userid = :userid
-                              AND ra.courseid = :courseid
-                              AND ra.completionstate = :completionstate
-                              AND {modules}.name $_insql_types
-                              ORDER BY timeaccess DESC", 
-            array_merge(
-                array(
-                    "courseid" => $courseid,
-                    "completionstate" => $completed,
-                    "userid" => $userid
-                ),
-                $_insql_types_params
-            )
+        $sql_params = array_merge(
+            array(
+                "courseid" => $courseid,
+                "userid" => $userid
+            ),
+            $_insql_types_params
         );
+        if($completed) {
+            // Include also course modules that are not completion-tracking enabled, but that have been viewed by the user
+            $results = $DB->get_records_sql("SELECT ra.cmid, ra.timeaccess, ra.completionstate, cm.section FROM {chatbot_recentlyaccessed} AS ra
+                                            JOIN {course_modules} AS cm ON cm.id = ra.cmid
+                                            JOIN {modules} ON {modules}.id = cm.module
+                                            WHERE ra.userid = :userid
+                                            AND ra.courseid = :courseid
+                                            AND (
+                                                ra.completionstate = 1
+                                                OR cm.completion = 0
+                                            )
+                                            AND {modules}.name $_insql_types
+                                            ORDER BY timeaccess DESC", 
+                   $sql_params
+            );
+        } else {
+            // Only show modules that are completion-tracking enabled:
+            // If they are in this table, the user has at least already seen them.
+            // If they are not tracking completion, viewing them once should be enough.
+            $results = $DB->get_records_sql("SELECT ra.cmid, ra.timeaccess, ra.completionstate, cm.section FROM {chatbot_recentlyaccessed} AS ra
+                                            JOIN {course_modules} AS cm ON cm.id = ra.cmid
+                                            JOIN {modules} ON {modules}.id = cm.module
+                                            WHERE ra.userid = :userid
+                                            AND ra.courseid = :courseid
+                                            AND ra.completionstate = 0
+                                            AND cm.completion > 0
+                                            AND {modules}.name $_insql_types
+                                            ORDER BY timeaccess DESC", 
+                   $sql_params
+            );
+        }
+
         return $results;
     }
 
