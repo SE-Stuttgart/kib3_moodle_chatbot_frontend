@@ -144,7 +144,8 @@ function get_open_section_module_ids($userid, $sectionid, $include_types=["url",
 												 JOIN {modules} ON cm.module = {modules}.id
 												 WHERE cm.id $_insql_sectionmoduleids
 												 AND {modules}.name $_insql_types
-												 AND cm.visible = 1",
+												 AND cm.visible = 1
+												 AND cm.completion > 0",
 												 array_merge($_insql_sectionmoduleids_params, $_insql_types_params));
 	if(empty($filtered_section_module_ids)) {
 		return array();

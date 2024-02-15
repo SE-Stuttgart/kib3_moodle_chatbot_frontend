@@ -272,6 +272,7 @@ class block_chatbot_external extends external_api {
         }
 
         // all sections are completed - collect list of review quiz candidates
+        // NOTE: cm.availability = NULL filters out the course modules (quizzes) that depend on the completion of a jupyter notebook
         [$_insql_sectionids, $_insql_sectionids_params] = $DB->get_in_or_equal($sectionids, SQL_PARAMS_NAMED, 'sectionids');
         $candidates = $DB->get_records_sql_menu("SELECT cm.id, {grade_grades}.finalgrade / {grade_grades}.rawgrademax 
                                     FROM {course_modules} as cm
@@ -281,6 +282,7 @@ class block_chatbot_external extends external_api {
                                     AND {grade_grades}.userid = :userid
                                     AND {grade_items}.itemmodule = 'h5pactivity'
                                     AND {grade_items}.itemtype = 'mod'
+                                    AND cm.availability IS NULL
                                     ORDER BY {grade_grades}.finalgrade ASC,
                                             {grade_grades}.timemodified ASC",
                                     array_merge($_insql_sectionids_params,
