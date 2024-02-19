@@ -262,6 +262,7 @@ class ChatbotConnection {
         this.server_name = server_name;
         this.server_port = server_port;
         this.wwwroot = wwwroot;
+        this.protocol = wwwroot.startsWith("https://")? "wss" : "ws";
         this.userid = userid;
         this.courseid = courseid;
         this.slidefindertoken = slidefindertoken;
@@ -272,7 +273,7 @@ class ChatbotConnection {
 
     openConnection = () => {
         // console.log(`Connecting to: ws://${this.server_name}:${this.server_port}/ws?token=${this.userid}`);
-        this.conn = new WebSocket(`ws://${this.server_name}:${this.server_port}/ws?token=${this.userid}`);
+        this.conn = new WebSocket(`${this.protocol}://${this.server_name}:${this.server_port}/ws?token=${this.userid}`);
 
         this.conn.onopen = () => {
             // Update Status to Online
