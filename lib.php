@@ -14,11 +14,20 @@ function all($array) {
     }, true);
 }
 
+function startsWith( $haystack, $needle ) {
+	$length = strlen( $needle );
+	return substr( $haystack, 0, $length ) === $needle;
+}
+
 
 /**
  * SETTINGS FUNCTIONS
  *-------------------------------------------------------------------------------------------------*/
 
+function block_chatbot_get_protocol() {
+	global $CFG;
+	return startsWith($CFG->wwwroot, 'https://')? "https" : "http";
+}
 
 /**
  * Get server name.
