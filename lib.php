@@ -27,20 +27,20 @@ function all($array) {
 function block_chatbot_get_server_name() {
 	global $CFG;
 
-	// if (!empty($CFG->block_chatbot_server_name)) {
-	// 	return $CFG->block_chatbot_server_name;
-	// } else {
-	return "127.0.0.1";
-	// }
+	if (!empty($CFG->block_chatbot_server_name)) {
+		return $CFG->block_chatbot_server_name;
+	} else {
+		return "127.0.0.1";
+	}
 }
 
 function block_chatbot_get_event_server_name() {
-	// global $CFG;
-	// if (!empty($CFG->block_chatbot_event_server_name)) {
-	// 	return $CFG->block_chatbot_event_erver_name;
-	// } else {
-	return "chatbot";
-	// }
+	global $CFG;
+	if (!empty($CFG->block_chatbot_event_server_name)) {
+		return $CFG->block_chatbot_event_erver_name;
+	} else {
+		return "chatbot";
+	}
 }
 
 
@@ -134,6 +134,10 @@ function get_open_section_module_ids($userid, $sectionid, $include_types=["url",
 		return array();
 	}
 
+	$courseid = $DB->get_field("course_sections", "course", array(
+		"id" => $sectionid
+	));
+
 	// filter the section modules by the type whitelist
 	// TODO use the moodle sql_ compatibility functions instead of custom execute
 	[$_insql_sectionmoduleids, $_insql_sectionmoduleids_params] = $DB->get_in_or_equal($all_section_module_ids, SQL_PARAMS_NAMED, 'sectionmoduleids');
@@ -144,8 +148,7 @@ function get_open_section_module_ids($userid, $sectionid, $include_types=["url",
 												 JOIN {modules} ON cm.module = {modules}.id
 												 WHERE cm.id $_insql_sectionmoduleids
 												 AND {modules}.name $_insql_types
-												 AND cm.visible = 1
-												 AND cm.completion > 0",
+												 AND cm.visible = 1",
 												 array_merge($_insql_sectionmoduleids_params, $_insql_types_params));
 	if(empty($filtered_section_module_ids)) {
 		return array();
@@ -159,7 +162,20 @@ function get_open_section_module_ids($userid, $sectionid, $include_types=["url",
 												array_merge($_insql_filteredsectionmoduleids_params,
 														    array("userid" => $userid))
 												);
-	$difference = array_values(array_diff($filtered_section_module_ids, $completed_section_module_ids));
+	// also exclude course modules that are not tracked for completion, but were seen once (which is why they have an entry in the chatbot history)
+	$seen_but_not_tracked_section_module_ids = $DB->get_fieldset_sql(
+		"SELECT ra.cmid
+		 FROM {chatbot_recentlyaccessed} as ra
+		 JOIN {course_modules} ON {course_modules}.id = ra.cmid
+		 WHERE ra.userid = :userid
+		 AND ra.courseid = :courseid
+		 AND {course_modules}.completion = 0",
+		array(
+			"userid" => $userid,
+			"courseid" => $courseid
+		)
+	);
+	$difference = array_values(array_diff($filtered_section_module_ids, $completed_section_module_ids, $seen_but_not_tracked_section_module_ids));
 	// var_dump($filtered_section_module_ids);
 	// var_dump($completed_section_module_ids);
 	// var_dump($difference);
@@ -173,7 +189,6 @@ function section_is_completed($userid, $sectionid, $include_types=["url", "book"
 	return count($open_module_ids) == 0;
 }
 
-
 function course_module_is_completed($userid, $cmid) {
 	global $DB;
 	return $DB->record_exists_sql("SELECT * FROM {course_modules_completion}
@@ -184,7 +199,16 @@ function course_module_is_completed($userid, $cmid) {
 									"userid" => $userid,
 									"cmid" => $cmid
 								)
-							);
+							) || // Also count modules as completed that have been viewed already, but are not tracking completion
+			$DB->record_exists_sql("SELECT * FROM {chatbot_recentlyaccessed} as ra
+								    JOIN {course_modules} ON {course_modules}.id = ra.cmid
+									WHERE ra.userid = :userid
+									AND ra.cmid = :cmid
+									AND {course_modules}.completion = 0",
+								array(
+									"userid" => $userid,
+									"cmid" => $cmid
+								));
 }
 
 function get_all_branch_section_ids($userid, $sectionid) {
