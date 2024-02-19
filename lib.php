@@ -37,7 +37,7 @@ function block_chatbot_get_server_name() {
 function block_chatbot_get_event_server_name() {
 	global $CFG;
 	if (!empty($CFG->block_chatbot_event_server_name)) {
-		return $CFG->block_chatbot_event_erver_name;
+		return $CFG->block_chatbot_event_server_name;
 	} else {
 		return "chatbot";
 	}
