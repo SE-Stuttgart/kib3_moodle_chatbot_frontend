@@ -263,6 +263,8 @@ class ChatbotConnection {
         this.server_port = server_port;
         this.wwwroot = wwwroot;
         this.protocol = wwwroot.startsWith("https://")? "wss" : "ws";
+        console.log("wwwroot", this.wwwroot);
+        console.log("startswith", this.wwwroot.startsWith("https://"));
         this.userid = userid;
         this.courseid = courseid;
         this.slidefindertoken = slidefindertoken;
