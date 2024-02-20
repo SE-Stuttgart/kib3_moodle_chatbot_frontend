@@ -23,17 +23,21 @@ class block_chatbot extends block_base {
 		global $CFG, $PAGE, $USER, $DB, $COURSE;
 		
 		$enabled = true;
-		if(!in_array(strval($COURSE->id), explode(",", $DB->get_field('config_plugins', 'value', array('plugin' => 'block_chatbot', 'name' => 'courseids'))))) {
-			// check if the chatbot is enabled for the current course.
-			// if not, don't render it
-			$enabled = false;
-		} else if($DB->record_exists('chatbot_usersettings', array('userid' => $USER->id))) {
-			// check if the user has enabled chatbot.
-			// if not, don't render it
-			$usersettings = $DB->get_record('chatbot_usersettings', array('userid' => $USER->id));
-			if($usersettings->enabled == 0) {
+		try {
+			if(!in_array(strval($COURSE->id), explode(",", $DB->get_field('config_plugins', 'value', array('plugin' => 'block_chatbot', 'name' => 'courseids'))))) {
+				// check if the chatbot is enabled for the current course.
+				// if not, don't render it
 				$enabled = false;
+			} else if($DB->record_exists('chatbot_usersettings', array('userid' => $USER->id))) {
+				// check if the user has enabled chatbot.
+				// if not, don't render it
+				$usersettings = $DB->get_record('chatbot_usersettings', array('userid' => $USER->id));
+				if($usersettings->enabled == 0) {
+					$enabled = false;
+				}
 			}
+		} catch(exception $e) {
+			$enabled = false;
 		}
 		if(!$enabled) {
 			// chatbot is not enabled for this course or user -> don't render
@@ -49,22 +53,26 @@ class block_chatbot extends block_base {
     	}
 
 		// try to get token for slidefinder webservice
-		$slidefinder_token = "";
-		// check if slidefinder plugin is installed first
-		if ($DB->record_exists('external_services_functions', array('functionname' => 'block_slidefinder_get_searched_locations'))) {
+		try {
 			// get id of slidefinder service
-			$slidefinder_service_id = $DB->get_record('external_services_functions', 
+			$slidefinder_service_id = $DB->get_field('external_services_functions', 'externalserviceid',
 													   array('functionname' => 'block_slidefinder_get_searched_locations'),
-												       'externalserviceid'
-			)->externalserviceid;
-			$slidefinder_token = $DB->get_record('external_tokens', 
-												  array('externalserviceid' => $slidefinder_service_id),
-												  'token'
-			)->token;
+												       
+			);
+			// get token
+			$slidefinder_token = $DB->get_field('external_tokens', 'token',
+												array('externalserviceid' => $slidefinder_service_id),
+			);
+		} catch(exception $e) {
+			$slidefinder_token = "";
 		}
 
 		if(!property_exists($this, 'h5presizerurl')) {
-			$this->h5presizerurl = core_h5p\local\library\autoloader::get_h5p_core_library_url('js/h5p-resizer.js');
+			try {
+				$this->h5presizerurl = core_h5p\local\library\autoloader::get_h5p_core_library_url('js/h5p-resizer.js');
+			} catch (exception $e) {
+				$this->h5presizerurl = "";
+			}
 		} 
 
 		// Init javascript
