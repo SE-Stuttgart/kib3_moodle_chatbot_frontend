@@ -632,7 +632,7 @@ class block_chatbot_external extends external_api {
         foreach($sequence as $index => $nextcmid) {
             // walk over all section modules
             $typename = get_module_type_name($nextcmid);
-            if(str_contains($includetypes, $typename) && is_available_course_module($userid, $nextcmid)) {
+            if(strContains($includetypes, $typename) && is_available_course_module($userid, $nextcmid)) {
                 // only look at modules that are 1) available and 2) whitelisted by type
                 
                 // take provided module completion if course module we look at is the one passed in, otherwise query database
@@ -656,10 +656,10 @@ class block_chatbot_external extends external_api {
                         // check if next module in sequence is of correct module type, and available
                         $nextcandidateid = $sequence[$index + 1];
                         $typename = get_module_type_name($nextcandidateid);
-                        if(str_contains($includetypes, $typename) && is_available_course_module($userid, $nextcandidateid)) {
+                        if(strContains($includetypes, $typename) && is_available_course_module($userid, $nextcandidateid)) {
                             $completed = course_module_is_completed($userid, $nextcandidateid);
                             $open_respecting_unfinished = ($allowonlyunfinished && !$completed) || (!$allowonlyunfinished);
-                            if($open_respecting_unfinished && str_contains($includetypes, get_module_type_name($nextcandidateid))) {
+                            if($open_respecting_unfinished && strContains($includetypes, get_module_type_name($nextcandidateid))) {
                                 $preferedcontenttype_cm = get_prefered_usercontenttype_cmid($userid, $nextcandidateid);
                                 return array("cmid" => $preferedcontenttype_cm);
                             }

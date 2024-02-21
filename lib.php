@@ -19,6 +19,10 @@ function startsWith( $haystack, $needle ) {
 	return substr( $haystack, 0, $length ) === $needle;
 }
 
+function strContains($haystack, $needle) {
+	return (strpos($haystack, $needle) !== false);
+}
+
 
 /**
  * SETTINGS FUNCTIONS
@@ -376,7 +380,7 @@ function _clean_name($name) {
 }
 
 function is_quiz_section($sectionname) {
-	return str_contains(strtolower($sectionname), 'quiz');
+	return strContains(strtolower($sectionname), 'quiz');
 }
 
 function get_quiz_section_id($content_section_id, $section_name) {
@@ -531,7 +535,7 @@ function is_available_course_module($userid, $cmid, $includetypes = "url,book,re
 		),
 		"visible,availability"
 	);
-	if(!str_contains($includetypes, get_module_type_name($cmid))) {
+	if(!strContains($includetypes, get_module_type_name($cmid))) {
 		// we don't care about labels etc.
 		return $cm->visible;
 	}
