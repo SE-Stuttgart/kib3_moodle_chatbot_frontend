@@ -21,6 +21,9 @@ class observer {
         curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json')); 
         curl_setopt($curl, CURLOPT_POSTFIELDS, $json);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        // Verification fails on some SSL setups 
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
         $response = curl_exec($curl);
         curl_close($curl);
         // echo $response;
