@@ -1165,7 +1165,7 @@ class block_chatbot_external extends external_api {
                 'userid' => new external_value(PARAM_INT, 'user id'),
                 'courseid' => new external_value(PARAM_INT, 'course id'),
                 'speaker' => new external_value(PARAM_TEXT, 'interlocuter'),
-                'message' => new external_value(PARAM_TEXT, 'utterance'),
+                'message' => new external_value(PARAM_RAW, 'utterance'),
                 'act' => new external_value(PARAM_TEXT, 'recognized / generated dialog act'),
             )
         );
