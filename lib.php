@@ -559,34 +559,62 @@ function get_section_id_and_name($cmid) {
 	);
 }
 
+function count_completed_course_modules($userid, $courseid, $includetypes, $starttime, $endtime) {
+	global $DB;
+
+	[$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $includetypes), SQL_PARAMS_NAMED, 'types');
+	if($endtime <= 0 || $endtime <= $starttime) {
+		// no time interval - return count of all viewed course modules
+		$count = $DB->count_records_sql("SELECT COUNT({course_modules_completion}.id)
+										 FROM {course_modules_completion}
+										 JOIN {course_modules} ON {course_modules}.id = {course_modules_completion}.coursemoduleid
+										 JOIN {modules} ON {modules}.id = {course_modules}.module
+										 WHERE {course_modules_completion}.userid = :userid
+										 AND {course_modules}.course = :courseid
+										 AND {modules}.name $_insql_types",
+										array_merge(array(
+											"userid" => $userid,
+											"courseid" => $courseid,
+										), $_insql_types_params)
+									);
+	} else {
+		// time interval - return count of viewed course modules during given interval only
+		$count = $DB->count_records_sql("SELECT COUNT({course_modules_completion}.id)
+										 FROM {course_modules_completion}
+										 JOIN {course_modules} ON {course_modules}.id = {course_modules_completion}.coursemoduleid
+										 JOIN {modules} ON {modules}.id = {course_modules}.module
+										 WHERE {course_modules_completion}.userid = :userid
+										 AND {course_modules_completion}.timemodified >= :starttime
+										 AND {course_modules_completion}.timemodified <= :endtime
+										 AND {course_modules}.course = :courseid
+										 AND {modules}.name $_insql_types",
+										array_merge(array(
+											"userid" => $userid,
+											"courseid" => $courseid,
+											"starttime" => $starttime,
+											"endtime" => $endtime
+										), $_insql_types_params)
+									);
+	}
+	return $count;
+}
 
 function get_user_course_completion_percentage($userid, $courseid, $includetypes) {
 	global $DB;
-	// calculate current course progress percentage
+	// calculate current course progress percentage (only including 1) whitelisted module types, and 2) only including modules that enable completion tracking)
 	[$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $includetypes), SQL_PARAMS_NAMED, 'types');
 	$total_num_modules = $DB->count_records_sql("SELECT COUNT({course_modules}.id)
 												FROM {course_modules}
 												JOIN {modules} ON {modules}.id = {course_modules}.module
 												WHERE {course_modules}.course = :courseid
+												AND {course_modules}.completion > 0
 												AND {modules}.name $_insql_types",
 										array_merge(
 											array("courseid" => $courseid),
 											$_insql_types_params    
 										)
 	);
-	$done_modules = $DB->count_records_sql("SELECT COUNT({course_modules_viewed}.id)
-											FROM {course_modules_viewed}
-											JOIN {course_modules} ON {course_modules}.id = {course_modules_viewed}.coursemoduleid
-											JOIN {modules} ON {modules}.id = {course_modules}.module
-											WHERE {course_modules_viewed}.userid = :userid
-											AND {course_modules}.course = :courseid
-											AND {modules}.name $_insql_types",
-										array_merge(
-											array("userid" => $userid,
-												"courseid" => $courseid),
-											$_insql_types_params    
-										)
-	);
+	$done_modules = count_completed_course_modules($userid, $courseid, $includetypes, 0, 0);
 	return $done_modules / $total_num_modules;
 }
 

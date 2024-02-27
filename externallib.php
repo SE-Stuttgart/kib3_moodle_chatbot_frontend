@@ -326,12 +326,12 @@ class block_chatbot_external extends external_api {
         $params = self::validate_parameters(self::has_seen_any_course_modules_parameters(), array('userid' => $userid, 'courseid' => $courseid));
         
         $result = $DB->record_exists_sql(
-                                "SELECT {course_modules_viewed}.coursemoduleid FROM {course_modules_viewed}
-                                JOIN {course_modules} ON {course_modules}.id = {course_modules_viewed}.coursemoduleid
-                                WHERE {course_modules_viewed}.userid = :userid
-                                AND {course_modules}.course = :courseid",
+                                "SELECT id
+                                 FROM {chatbot_recentlyaccessed}
+                                 WHERE userid = :userid
+                                 AND courseid = :courseid",
                             array("userid" => $userid,
-                                    "courseid" => $courseid)
+                                  "courseid" => $courseid)
                             );
         return array(
             'seen' => $result
@@ -713,41 +713,7 @@ class block_chatbot_external extends external_api {
             'endtime' => $endtime
         ));
 
-
-        [$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $includetypes), SQL_PARAMS_NAMED, 'types');
-        if($endtime <= 0 || $endtime <= $starttime) {
-            // no time interval - return count of all viewed course modules
-            $count = $DB->count_records_sql("SELECT COUNT({course_modules_viewed}.id)
-                                             FROM {course_modules_viewed}
-                                             JOIN {course_modules} ON {course_modules}.id = {course_modules_viewed}.coursemoduleid
-                                             JOIN {modules} ON {modules}.id = {course_modules}.module
-                                             WHERE {course_modules_viewed}.userid = :userid
-                                             AND {course_modules}.course = :courseid
-                                             AND {modules}.name $_insql_types",
-                                            array_merge(array(
-                                                "userid" => $userid,
-                                                "courseid" => $courseid,
-                                            ), $_insql_types_params)
-                                        );
-        } else {
-            // time interval - return count of viewed course modules during given interval only
-            $count = $DB->count_records_sql("SELECT COUNT({course_modules_viewed}.id)
-                                             FROM {course_modules_viewed}
-                                             JOIN {course_modules} ON {course_modules}.id = cmv.coursemoduleid
-                                             JOIN {modules} ON {modules}.id = {course_modules}.module
-                                             WHERE {course_modules_viewed}.userid = :userid
-                                             AND {course_modules_viewed}.timecreated >= :starttime
-                                             AND {course_modules_viewed}.timecreated <= :endtime
-                                             AND {course_modules}.course = :courseid
-                                             AND {modules}.name $_insql_types",
-                                            array_merge(array(
-                                                "userid" => $userid,
-                                                "courseid" => $courseid,
-                                                "starttime" => $starttime,
-                                                "endtime" => $endtime
-                                            ), $_insql_types_params)
-                                        );
-        }
+        $count = count_completed_course_modules($userid, $courseid, $includetypes, $starttime, $endtime);
         return array("count" => $count);
     }
 
@@ -863,11 +829,9 @@ class block_chatbot_external extends external_api {
         if($first_turn_ever) {
             // additionally, check that user didn't complete any modules so far.
             // If they did (e.g. chatbot was not activated for a time), check if they completed any course modules so far
-            $firstweek = !$DB->record_exists_sql("SELECT done.id FROM {course_modules_completion} as done
-                                                  JOIN {course_modules} as cm ON cm.id = done.coursemoduleid
-                                                  WHERE cm.course = :courseid
-                                                  AND done.userid = :userid
-                                                  AND done.completionstate = 1", 
+            $firstweek = !$DB->record_exists_sql("SELECT id FROM {chatbot_recentlyaccessed}
+                                                  WHERE courseid = :courseid
+                                                  AND userid = :userid", 
                 array(
                     "userid" => $userid,
                     "courseid" => $courseid
