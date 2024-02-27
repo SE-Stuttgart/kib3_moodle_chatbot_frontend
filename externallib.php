@@ -629,6 +629,7 @@ class block_chatbot_external extends external_api {
         $index_in_sequence = array_search($cmid, $sequence);
 
         $unfinished_modules = array();
+        $unfinished_quizzes_with_reqs = array();
         foreach($sequence as $index => $nextcmid) {
             // walk over all section modules
             $typename = get_module_type_name($nextcmid);
@@ -661,7 +662,11 @@ class block_chatbot_external extends external_api {
                             $open_respecting_unfinished = ($allowonlyunfinished && !$completed) || (!$allowonlyunfinished);
                             if($open_respecting_unfinished && strContains($includetypes, get_module_type_name($nextcandidateid))) {
                                 $preferedcontenttype_cm = get_prefered_usercontenttype_cmid($userid, $nextcandidateid);
-                                return array("cmid" => $preferedcontenttype_cm);
+                                if(is_quiz_with_requirements($nextcandidateid)) {
+                                    array_push($unfinished_quizzes_with_reqs, $nextcandidateid);
+                                } else {
+                                    return array("cmid" => $preferedcontenttype_cm);
+                                }
                             }
                         }
                     }
@@ -669,11 +674,18 @@ class block_chatbot_external extends external_api {
                 if($open_respecting_unfinished) {
                     // keep track of all unfinished modules in the section
                     if($index > $index_in_sequence) {
-                        array_push($unfinished_modules, $nextcmid);
+                        // also, check that quizzes with requirements (jupyter notebook quizzes) are offered last, only after all other quizzes in this section
+                        if(is_quiz_with_requirements($nextcmid)) {
+                            array_push($unfinished_quizzes_with_reqs, $nextcmid);
+                        } else {
+                            // no requirements -> not a jupyer notebook quiz -> offer first
+                            array_push($unfinished_modules, $nextcmid);
+                        }
                     }
                 }
             }
         }
+        $unfinished_modules = array_merge($unfinished_modules, $unfinished_quizzes_with_reqs);
         if(!empty($unfinished_modules)) {
             // we haven't returned from any of the conditions above, so just return 1st unfinished module
             $preferedcontenttype_cm =  get_prefered_usercontenttype_cmid($userid, $unfinished_modules[0]);
@@ -1096,7 +1108,9 @@ class block_chatbot_external extends external_api {
             'courseid' => $courseid,
             'max_results' => $max_results
         ));
-
+        
+        // course module availability = NULL: only jupyter notebook quizzes have requirements, we don't want to review those because
+        // it doesn't make sense without having seen the notebook again
         $quiz_module_type_id = $DB->get_field("modules", "id", array("name" => "h5pactivity"));
         $result = $DB->get_records_sql("SELECT {course_modules}.id AS cmid, {grade_grades}.finalgrade AS grade
                                           FROM {course_modules}
@@ -1104,6 +1118,7 @@ class block_chatbot_external extends external_api {
                                           JOIN {grade_items} ON {grade_items}.iteminstance = {h5pactivity}.id
                                           JOIN {grade_grades} ON {grade_grades}.itemid = {grade_items}.id
                                           WHERE {grade_grades}.userid = :userid
+                                          AND {course_modules}.availability IS NULL
                                           AND {grade_items}.courseid = :courseid
                                           AND {grade_grades}.finalgrade >= 0
                                           AND {grade_items}.itemmodule = 'h5pactivity'

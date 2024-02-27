@@ -639,15 +639,28 @@ function get_badge_completion_percentage($userid, $cmids) {
 		$todo_modules
 	);
 }
+
+function is_quiz_with_requirements($cmid) {
+	// Returns true if cmid is a quiz & it has requirements for availability => here: it is a quiz about a jupyer notebook/
+	// We only want to recommend a jupyter notebook quiz once all other content of the section has been completed.
+	global $DB;
+	if(get_module_type_name($cmid) == "h5pactivity") {
+		return !$DB->record_exists_sql("SELECT id FROM {course_modules} WHERE id = :cmid AND availability is NULL",
+										array("cmid" => $cmid)
+				);
+	}
+	return false;
+}
+
 function get_first_available_course_module_in_section($userid, $sectionid, $includetypes, $allowonlyunfinished) {
 	global $DB;
-	
+
 	# get name + all modules from current section
 	$section = $DB->get_record("course_sections", array(
 		"id" => $sectionid
 	), "name,sequence");
-
 	$current_suggestion = null;
+	$first_quiz_with_requirements = null;
 	foreach(explode(",", $section->sequence) as $cmid) {
 		# loop over all course modules in current section
 		// echo "\nCMID: " . $cmid . " -> completed: ";
@@ -655,7 +668,11 @@ function get_first_available_course_module_in_section($userid, $sectionid, $incl
 		// echo "\nTYPE: " . get_module_type_name($cmid) . " -> " . in_array(get_module_type_name($cmid), explode(",", $includetypes));
 		// echo "\nAVAILABLE: " . is_available_course_module($userid, $cmid);
 		if(in_array(get_module_type_name($cmid), explode(",", $includetypes)) && is_available_course_module($userid, $cmid) && (($allowonlyunfinished && !course_module_is_completed($userid, $cmid)) || !$allowonlyunfinished)) {
-			if(is_null($current_suggestion)) {
+			$is_quiz_with_reqs = is_quiz_with_requirements($cmid);
+			if($is_quiz_with_reqs) {
+				$first_quiz_with_requirements = $cmid;
+			}
+			elseif(is_null($current_suggestion)) {
 				// set suggestion to first candidate
 				$current_suggestion = $cmid;
 			}
@@ -667,8 +684,7 @@ function get_first_available_course_module_in_section($userid, $sectionid, $incl
 			}
 		}
 	}
-
-	return $current_suggestion;
+	return $current_suggestion == null? $first_quiz_with_requirements : $current_suggestion;
 }
 
 
