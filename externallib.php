@@ -673,14 +673,13 @@ class block_chatbot_external extends external_api {
                 }
                 if($open_respecting_unfinished) {
                     // keep track of all unfinished modules in the section
-                    if($index > $index_in_sequence) {
+                    if(is_quiz_with_requirements($nextcmid)) {
                         // also, check that quizzes with requirements (jupyter notebook quizzes) are offered last, only after all other quizzes in this section
-                        if(is_quiz_with_requirements($nextcmid)) {
-                            array_push($unfinished_quizzes_with_reqs, $nextcmid);
-                        } else {
-                            // no requirements -> not a jupyer notebook quiz -> offer first
-                            array_push($unfinished_modules, $nextcmid);
-                        }
+                        array_push($unfinished_quizzes_with_reqs, $nextcmid);
+                    }
+                    elseif($index > $index_in_sequence) {
+                        // no requirements -> not a jupyer notebook quiz -> offer first
+                        array_push($unfinished_modules, $nextcmid);
                     }
                 }
             }
