@@ -15,10 +15,25 @@ $observers = array(
         'schedule'    => 'instant',
     ),
     array(
-        'eventname'   => '*',
-        'callback'    => '\block_chatbot\observer::forward_event_to_chatbot',
+        'eventname'   => '\core\event\user_loggedin',
+        'callback'    => '\block_chatbot\observer::generic_event_fired',
         'schedule'    => 'instant',
     ),
+    array(
+        'eventname'   => '\core\event\badge_awarded',
+        'callback'    => '\block_chatbot\observer::generic_event_fired',
+        'schedule'    => 'instant',
+    ),
+    array(
+        'eventname'   => '\mod_h5pactivity\event\statement_received',
+        'callback'    => '\block_chatbot\observer::generic_event_fired',
+        'schedule'    => 'instant',
+    ),
+    // array(
+    //     'eventname'   => '*',
+    //     'callback'    => '\block_chatbot\observer::forward_event_to_chatbot',
+    //     'schedule'    => 'instant',
+    // ),
 );
 
 

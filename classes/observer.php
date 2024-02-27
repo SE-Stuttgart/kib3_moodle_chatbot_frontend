@@ -30,11 +30,19 @@ class observer {
     }
     
     public static function course_module_completion_viewed(\core\event\base $event) {
+        global $DB;
+        
         // update database
         $data = $event->get_data();
         $completionstate = array_key_exists("other", $data) && !is_null($data['other']) && array_key_exists("completionstate", $data['other'])? $data['other']['completionstate'] : 0;
         update_recently_viewed($data['userid'], $data['courseid'], $data['contextinstanceid'], $data['timecreated'], $completionstate);
-        // no need to forward event
+        
+        // forward event in case that completion/views are not being tracked - otherwise, we will miss section comletion events
+        if($DB->get_field("course_modules", "completion", array("id" => $data['contextinstanceid'])) == 0) {
+            $proxy_event_data = $data;
+            $proxy_event_data['eventname'] = "\\core\\event\\course_module_completion_updated";
+            observer::forward_event_to_chatbot($data['courseid'], $proxy_event_data);
+        }
     }
     
     public static function course_module_completion_updated(\core\event\base $event) {
@@ -42,17 +50,18 @@ class observer {
         $data = $event->get_data();
         update_recently_viewed($data['userid'], $data['courseid'], $data['contextinstanceid'], $data['timecreated'], $data['other']['completionstate']);
         // forward event
-        observer::forward_event_to_chatbot($event);
+        observer::forward_event_to_chatbot($event->courseid, $data);
     }
 
+    public static function generic_event_fired(\core\event\base $event) {
+        observer::forward_event_to_chatbot($event->courseid, $event->get_data());
+    }
 
-    // public static function course_module_completion_updated(\core\event\course_module_completion_updated $event) {
-    public static function forward_event_to_chatbot(\core\event\base $event) {
-        
+    public static function forward_event_to_chatbot($courseid, $eventdata) {
         // Check if course associated with update is in whitelist specified in settings.
-        if (in_array($event->courseid, explode(",", get_config('block_chatbot', "courseids"))) == true) {
+        if (in_array($courseid, explode(",", get_config('block_chatbot', "courseids"))) == true) {
             // If not in whitelist, then return.
-            observer::send(block_chatbot_get_protocol() . "://" . block_chatbot_get_event_server_name() . ":" . block_chatbot_get_server_port() . "/event", $event->get_data());
+            observer::send(block_chatbot_get_protocol() . "://" . block_chatbot_get_event_server_name() . ":" . block_chatbot_get_server_port() . "/event", $eventdata);
         }
     }
 }
