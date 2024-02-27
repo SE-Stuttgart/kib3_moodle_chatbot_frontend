@@ -1,16 +1,17 @@
 export const fetchUserSetttings = async (userid, wstoken, wwwroot) => {
     // Fetch settings
-    const url = wwwroot +
-        '/webservice/rest/server.php?wstoken=' +
-        wstoken +
-        '&moodlewsrestformat=json&wsfunction=block_chatbot_get_usersettings&userid=' +
-        userid;
+    const url = wwwroot + '/webservice/rest/server.php';
+    const urlencoded = new URLSearchParams();
+    urlencoded.append("wstoken", wstoken);
+    urlencoded.append("moodlewsrestformat",  "json");
+    urlencoded.append("wsfunction", "block_chatbot_get_usersettings");
+    urlencoded.append("userid", userid);
     const response = await fetch(url, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                // 'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/x-www-form-urlencoded',
             },
+            body: urlencoded
         }
     );
     // Parse settings
