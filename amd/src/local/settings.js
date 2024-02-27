@@ -56,22 +56,21 @@ export const readUserSettings = () => {
 
 export const saveUserSetttings = async (userid, wstoken, wwwroot, settings) => {
     // Construct request
-    let url = wwwroot +
-        '/webservice/rest/server.php?wstoken=' +
-        wstoken +
-        '&moodlewsrestformat=json&wsfunction=block_chatbot_set_usersettings&userid=' +
-        userid;
-    Object.keys(settings).forEach(key => {
-        const value = typeof settings[key] === "boolean"? Number(settings[key]) : settings[key];
-        url += '&' + key + '=' + value;
-    });
-    // Send request
+    let url = wwwroot + '/webservice/rest/server.php';
+    const urlencoded = new URLSearchParams();
+    urlencoded.append("wstoken", wstoken);
+    urlencoded.append("moodlewsrestformat",  "json");
+    urlencoded.append("wsfunction", "block_chatbot_set_usersettings");
+    urlencoded.append("userid", userid);
+    Object.keys(settings).forEach(key =>
+        urlencoded.append(key, typeof settings[key] === "boolean"? Number(settings[key]) : settings[key])
+    );
     const response = await fetch(url, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json",
-            // 'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/x-www-form-urlencoded',
         },
+        body: urlencoded
     }
     );
     const msgContent = await response.text();
