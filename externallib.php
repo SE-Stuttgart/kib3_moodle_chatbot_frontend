@@ -684,7 +684,7 @@ class block_chatbot_external extends external_api {
 
 
 
-    public static function count_viewed_course_modules_parameters() {
+    public static function count_completed_course_modules_parameters() {
         return new external_function_parameters(
             array(
                 'userid' => new external_value(PARAM_INT, 'user id'),
@@ -695,17 +695,17 @@ class block_chatbot_external extends external_api {
             )
         );
     }
-    public static function count_viewed_course_modules_returns() {
+    public static function count_completed_course_modules_returns() {
         return new external_single_structure(
             array(
                 'count' => new external_value(PARAM_INT, 'number of viewed course modules in given course during specified time range'),
             )
         );
     }
-    public static function count_viewed_course_modules($userid, $courseid, $includetypes, $starttime, $endtime) {
+    public static function count_completed_course_modules($userid, $courseid, $includetypes, $starttime, $endtime) {
         global $DB;
 
-        $params = self::validate_parameters(self::count_viewed_course_modules_parameters(), array(
+        $params = self::validate_parameters(self::count_completed_course_modules_parameters(), array(
             'userid' => $userid,
             'courseid' => $courseid,
             'includetypes' => $includetypes,
