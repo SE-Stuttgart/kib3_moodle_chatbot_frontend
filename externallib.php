@@ -1111,7 +1111,10 @@ class block_chatbot_external extends external_api {
         // course module availability = NULL: only jupyter notebook quizzes have requirements, we don't want to review those because
         // it doesn't make sense without having seen the notebook again
         $quiz_module_type_id = $DB->get_field("modules", "id", array("name" => "h5pactivity"));
-        $result = $DB->get_records_sql("SELECT {course_modules}.id AS cmid, {grade_grades}.finalgrade AS grade
+
+        // we draw the oldest quizzes, then the worst quizzes, then combine both results
+        // --> If a quiz is old and bad, it will appear twice in the combined list, making it more likely to be drawn
+        $oldest_quizzes = $DB->get_records_sql("SELECT {course_modules}.id AS cmid, {grade_grades}.finalgrade AS grade
                                           FROM {course_modules}
                                           JOIN {h5pactivity} ON {h5pactivity}.id = {course_modules}.instance
                                           JOIN {grade_items} ON {grade_items}.iteminstance = {h5pactivity}.id
@@ -1122,18 +1125,49 @@ class block_chatbot_external extends external_api {
                                           AND {grade_grades}.finalgrade >= 0
                                           AND {grade_items}.itemmodule = 'h5pactivity'
                                           AND {course_modules}.module = :typeid
-                                          ORDER BY {grade_grades}.timemodified ASC,
-                                                   {grade_grades}.finalgrade ASC
+                                          ORDER BY {grade_grades}.timemodified ASC
                                           LIMIT $max_results
                                           ",
                                         array(
                                             "userid" => $userid,
                                             "courseid" => $courseid,
-                                            "maxresults" => $max_results,
+                                            "maxresults" => $max_results * 2,
                                             "typeid" => $quiz_module_type_id
                                         )
         );
-        return (array)$result;
+        $worst_quizzes = $DB->get_records_sql("SELECT {course_modules}.id AS cmid, {grade_grades}.finalgrade AS grade
+                                          FROM {course_modules}
+                                          JOIN {h5pactivity} ON {h5pactivity}.id = {course_modules}.instance
+                                          JOIN {grade_items} ON {grade_items}.iteminstance = {h5pactivity}.id
+                                          JOIN {grade_grades} ON {grade_grades}.itemid = {grade_items}.id
+                                          WHERE {grade_grades}.userid = :userid
+                                          AND {course_modules}.availability IS NULL
+                                          AND {grade_items}.courseid = :courseid
+                                          AND {grade_grades}.finalgrade >= 0
+                                          AND {grade_items}.itemmodule = 'h5pactivity'
+                                          AND {course_modules}.module = :typeid
+                                          ORDER BY {grade_grades}.finalgrade ASC
+                                          LIMIT $max_results
+                                          ",
+                                        array(
+                                            "userid" => $userid,
+                                            "courseid" => $courseid,
+                                            "maxresults" => $max_results * 2,
+                                            "typeid" => $quiz_module_type_id
+                                        )
+        );
+        $worst_oldest_quizzes = array_merge($oldest_quizzes, $worst_quizzes);
+
+        // draw from the combined candidate list
+        $result = array();
+        while(count($result) < min(count($oldest_quizzes), count($worst_quizzes), $max_results)) {
+            $candidate = random_int(0, count($worst_oldest_quizzes) - 1);
+            $cmid = $worst_oldest_quizzes[$candidate]->cmid;
+            if(!array_key_exists($cmid, $result)) {
+                $result[$cmid] = (array)$worst_oldest_quizzes[$candidate];
+            }
+        }
+        return array_values($result);
     }
 
 
