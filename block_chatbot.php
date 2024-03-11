@@ -22,19 +22,13 @@ class block_chatbot extends block_base {
     public function get_content() {
 		global $CFG, $PAGE, $USER, $DB, $COURSE;
 		
+		// check if plugin is enabled for current course -> if not, return nothing (performance)
 		$enabled = true;
 		try {
 			if(!in_array(strval($COURSE->id), explode(",", $DB->get_field('config_plugins', 'value', array('plugin' => 'block_chatbot', 'name' => 'courseids'))))) {
 				// check if the chatbot is enabled for the current course.
 				// if not, don't render it
 				$enabled = false;
-			} else if($DB->record_exists('chatbot_usersettings', array('userid' => $USER->id))) {
-				// check if the user has enabled chatbot.
-				// if not, don't render it
-				$usersettings = $DB->get_record('chatbot_usersettings', array('userid' => $USER->id));
-				if($usersettings->enabled == 0) {
-					$enabled = false;
-				}
 			}
 		} catch(exception $e) {
 			$enabled = false;
@@ -51,6 +45,20 @@ class block_chatbot extends block_base {
 			// cache
 	    	return $this->content;
     	}
+
+		// check if plugin is enabled for current user -> if not, return only settings button (performance)
+		try {
+			if($DB->record_exists('chatbot_usersettings', array('userid' => $USER->id))) {
+				// check if the user has enabled chatbot.
+				// if not, don't render it
+				$usersettings = $DB->get_record('chatbot_usersettings', array('userid' => $USER->id));
+				if($usersettings->enabled == 0) {
+					$enabled = false;
+				}
+			}
+		} catch(exception $e) {
+			$enabled = false;
+		}
 
 		// try to get token for slidefinder webservice
 		try {
@@ -73,10 +81,11 @@ class block_chatbot extends block_base {
 			} catch (exception $e) {
 				$this->h5presizerurl = "";
 			}
-		} 
+		}
 
 		// Init javascript
 		$data = array(
+			"enabled" => $enabled,
 			"server_name" => block_chatbot_get_server_name(), 
 			"server_port" => block_chatbot_get_server_port(), 
 			"wwwroot" => $CFG->wwwroot,

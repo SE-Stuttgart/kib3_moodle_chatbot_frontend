@@ -37,7 +37,9 @@ const registerEventListeners = () => {
             // convert form output to correct format for sending to DB
             const settings = readUserSettings();
             saveUserSetttings(conn.userid, conn.slidefindertoken, conn.wwwroot, settings).then(result => {
-                // console.log("RESULT", result);
+                // we need to reload the page, because changing the "enabled" state requires reloading the template
+                window.location = self.location;
+                location.reload(true);
             });
         }
     });
@@ -348,7 +350,7 @@ const isInsideIFrame = () => {
 };
 
 
-export const init = (server_name, server_port, wwwroot, userid, username, courseid, slidefindertoken,
+export const init = (enabled, server_name, server_port, wwwroot, userid, username, courseid, slidefindertoken,
                      wsuserid, timestamp, plotly) => {
     if(isInsideIFrame()) {
         console.log("IFrame detected - Chatbot won't be loaded");
@@ -366,41 +368,43 @@ export const init = (server_name, server_port, wwwroot, userid, username, course
     Plotly = plotly;
     registerEventListeners();
     conn = new ChatbotConnection(server_name, server_port, wwwroot, userid, courseid, slidefindertoken, wsuserid, timestamp);
-    conn.openConnection();
+    if(enabled) {
+        conn.openConnection();
 
-    // Move container into document root
-    const chatwindow = $("#block_chatbot-chatwindow");
-    chatwindow.detach();
-    $(document.body).append(chatwindow);
+        // Move container into document root
+        const chatwindow = $("#block_chatbot-chatwindow");
+        chatwindow.detach();
+        $(document.body).append(chatwindow);
 
-    // Restore chat history
-    restore_chat_history();
+        // Restore chat history
+        restore_chat_history();
 
-    // Set or restore minimized state
-    if (localStorage.getItem("chatbot.maximized") === null) {
-        localStorage.setItem("chatbot.maximized", "false");
-    }
-    // Current preference is to keep chatbot minimized when switching pages, only opening for
-    // a) first turn
-    // b) badge events
-    // c) quiz events
-    // setWindowState(localStorage.getItem("chatbot.maximized") === "true");
-    setWindowState(false);
-    // Set or restore chatbot size
-    if (localStorage.getItem("chatbot.size") === null) {
-        localStorage.setItem("chatbot.size", "UI_SIZE_DEFAULT");
-    }
-    resizeWindow(localStorage.getItem("chatbot.size"));
-
-    // Minimize chatbot when clicking outside
-    document.addEventListener('click', function(event) {
-        var chatbot = document.getElementById('block_chatbot-chatwindow');
-        // Check if the clicked element is outside the "chatbot" div
-        if ((event.target !== chatbot && !chatbot.contains(event.target)) && !event.target.className.includes('block_chatbot')) {
-            // Check if the clicked element is not inside the "chatbot" div
-            setWindowState(false);
+        // Set or restore minimized state
+        if (localStorage.getItem("chatbot.maximized") === null) {
+            localStorage.setItem("chatbot.maximized", "false");
         }
-    });
+        // Current preference is to keep chatbot minimized when switching pages, only opening for
+        // a) first turn
+        // b) badge events
+        // c) quiz events
+        // setWindowState(localStorage.getItem("chatbot.maximized") === "true");
+        setWindowState(false);
+        // Set or restore chatbot size
+        if (localStorage.getItem("chatbot.size") === null) {
+            localStorage.setItem("chatbot.size", "UI_SIZE_DEFAULT");
+        }
+        resizeWindow(localStorage.getItem("chatbot.size"));
 
+        // Minimize chatbot when clicking outside
+        document.addEventListener('click', function(event) {
+            var chatbot = document.getElementById('block_chatbot-chatwindow');
+            // Check if the clicked element is outside the "chatbot" div
+            if ((event.target !== chatbot && !chatbot.contains(event.target)) &&
+                !event.target.className.includes('block_chatbot')) {
+                // Check if the clicked element is not inside the "chatbot" div
+                setWindowState(false);
+            }
+        });
+    }
     return conn;
 };
