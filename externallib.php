@@ -459,35 +459,35 @@ class block_chatbot_external extends external_api {
         return new external_function_parameters(
             array(
                 'cmid' => new external_value(PARAM_INT, 'course module id'), 
-                'alternativedisplaytext' => new external_value(PARAM_TEXT, 'alternative display text for html a element')
             )
         );
     }
     public static function get_course_module_content_link_returns() {
         return new external_single_structure(
             array(
-                'url' => new external_value(PARAM_RAW, 'embeddable html href link (a) element'),
+                'url' => new external_value(PARAM_RAW, 'web address'),
+                'name' => new external_value(PARAM_TEXT, 'display text'),
+                'typename' => new external_value(PARAM_TEXT, 'module type name, e.g. book, resource, ...')
             )
         );
     }
-    public static function get_course_module_content_link($cmid, $alternativedisplaytext) {
+    public static function get_course_module_content_link($cmid) {
         global $DB;
         global $CFG;
 
         $params = self::validate_parameters(self::get_course_module_content_link_parameters(), array(
-            'cmid' => $cmid,
-            'alternativedisplaytext' => $alternativedisplaytext
+            'cmid' => $cmid
         ));
         
         // get course module name and type. name can be used as default display text.
         [$display_name, $type_name] = get_course_module_name_and_typename($cmid);
-        if(!empty($alternativedisplaytext)) {
-            // overwrite display text
-            $display_name = $alternativedisplaytext;
-        }
+        
         // construct and return link
-        $url = '<a href="' . $CFG->wwwroot . '/mod/' . $type_name . '/view.php?id=' . $cmid . '">' . $display_name . '</a>';
-        return array("url" => $url);
+        $url = $CFG->wwwroot . '/mod/' . $type_name . '/view.php?id=' . $cmid;
+        return array(
+            "url" => $url,
+            "name" => $display_name,
+            "typename" => $type_name);
     }
 
 

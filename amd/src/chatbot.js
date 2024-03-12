@@ -365,6 +365,16 @@ export const init = (enabled, server_name, server_port, wwwroot, userid, usernam
     // console.log("WSUERID", wsuserid);
     // console.log("TIMESTAMP", timestamp);
 
+    // Move settings modal into document root
+    const settingsModal = $("#block_chatbot_settingsModal");
+    settingsModal.detach();
+    $(document.body).append(settingsModal);
+
+    // Move resource modal into document root
+    const resourceModal = $("#block_chatbot_coursemoduleview");
+    resourceModal.detach();
+    $(document.body).append(resourceModal);
+
     Plotly = plotly;
     registerEventListeners();
     conn = new ChatbotConnection(server_name, server_port, wwwroot, userid, courseid, slidefindertoken, wsuserid, timestamp);
@@ -403,8 +413,16 @@ export const init = (enabled, server_name, server_port, wwwroot, userid, usernam
                 !event.target.className.includes('block_chatbot')) {
                 // Check if the clicked element is not inside the "chatbot" div
                 setWindowState(false);
+            } else {
+                // Element is inside the chatbot
+                if(event.target.className === 'block-chatbot-content-link') {
+                    // Get the data from the clicked button
+                    // Set the data in the modal body
+                    $('#block_chatbot_coursemoduleview_iframe').prop("src", event.target.dataset.src);
+                }
             }
         });
+
     }
     return conn;
 };

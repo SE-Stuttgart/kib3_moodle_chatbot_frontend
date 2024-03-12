@@ -11,6 +11,17 @@
     </button>
 </div>
 
+<!-- Course module modal view -->
+<div class="modal fade" id="block_chatbot_coursemoduleview" tabindex="-1" role="dialog" aria-labelledby="block_chatbot_coursemodulview" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <iframe id="block_chatbot_coursemoduleview_iframe" src="">
+                </iframe>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Settings Modal -->
 <div class="modal fade" id="block_chatbot_settingsModal" tabindex="-1" role="dialog" aria-labelledby="block_chatbot_settingsModalLabel" aria-hidden="true">
@@ -178,5 +189,7 @@ host = window.location.host;
 require(['block_chatbot/chatbot', 'https://cdn.plot.ly/plotly-2.27.0.min.js'], function(Chatbot, Plotly) {
     let conn = Chatbot.init("{{enabled}}", "{{server_name}}", "{{server_port}}", "{{wwwroot}}", "{{userid}}", "{{username}}", "{{courseid}}", "{{slidefindertoken}}", "{{wsuserid}}", "{{timestamp}}", Plotly);
 });
+
+
 {{/js}}
 {{/element.frozen}}
