@@ -405,6 +405,11 @@ export const init = (enabled, server_name, server_port, wwwroot, userid, usernam
         }
         resizeWindow(localStorage.getItem("chatbot.size"));
 
+        // Minimize chatbot when course module modal
+        $("#block_chatbot_coursemoduleview").on('show.bs.modal', function () {
+            setWindowState(false);
+        });
+
         // Minimize chatbot when clicking outside
         document.addEventListener('click', function(event) {
             var chatbot = document.getElementById('block_chatbot-chatwindow');
@@ -417,7 +422,8 @@ export const init = (enabled, server_name, server_port, wwwroot, userid, usernam
                 // Element is inside the chatbot
                 if(event.target.className === 'block-chatbot-content-link') {
                     // Get the data from the clicked button
-                    // Set the data in the modal body
+                    // Set the data in the modal body (iframe source and modal title)
+                    $('#block_chatbot_coursemoduleview_title').text(event.target.dataset.displaytext);
                     $('#block_chatbot_coursemoduleview_iframe').prop("src", event.target.dataset.src);
                 }
             }
