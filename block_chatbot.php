@@ -83,9 +83,32 @@ class block_chatbot extends block_base {
 			}
 		}
 
+		// Check if user settings exist. If not, create them.
+		if(!$DB->record_exists('chatbot_usersettings', array('userid'=>$USER->id))) {
+			$firstturn = true;
+			$book_id = $DB->get_record('modules', array('name'=>'book'))->id;
+            $DB->insert_record('chatbot_usersettings', array(
+                'userid' => $USER->id,
+                'enabled' => true,
+                'logging' => false,
+				'firstturn' => true,
+                'preferedcontenttype' => $book_id,
+                'numsearchresults' => 5,
+                'numreviewquizzes' => 3,
+                'openonlogin' => true,
+                'openonquiz' => true,
+                'openonsection' => false,
+                'openonbranch' => false,
+                'openonbadge' => true
+            ));
+		} else {
+			$firstturn = $DB->get_field("chatbot_usersettings", "firstturn", array('userid' => $USER->id));
+		}
+
 		// Init javascript
 		$data = array(
 			"enabled" => $enabled,
+			"firstturn" => $firstturn,
 			"server_name" => block_chatbot_get_server_name(), 
 			"server_port" => block_chatbot_get_server_port(), 
 			"wwwroot" => $CFG->wwwroot,

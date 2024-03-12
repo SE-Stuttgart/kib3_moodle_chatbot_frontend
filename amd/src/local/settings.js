@@ -57,6 +57,8 @@ export const readUserSettings = () => {
 
 export const saveUserSetttings = async (userid, wstoken, wwwroot, settings) => {
     // Construct request
+    settings.firstturn = false;
+
     let url = wwwroot + '/webservice/rest/server.php';
     const urlencoded = new URLSearchParams();
     urlencoded.append("wstoken", wstoken);

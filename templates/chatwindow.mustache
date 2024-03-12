@@ -13,7 +13,7 @@
 
 <!-- Course module modal view -->
 <div class="modal moodle-has-zindex embed_cm_modal" id="block_chatbot_coursemoduleview" tabindex="-1" role="dialog" aria-labelledby="block_chatbot_coursemodulview" aria-hidden="true" data-region="modal-container">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg" data-region="modal" tabindex="0" style="max-width: 1100px;">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg" data-region="modal" tabindex="0" style="min-width: 90vw; min-height: 90vh;">
         <div class="modal-content">
             <div class="modal-header " data-region="header">
                 <h5 id="block_chatbot_coursemoduleview_title" class="modal-title" data-region="title"></h5>
@@ -21,7 +21,7 @@
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
-            <div class="modal-body resourceobject" data-region="body" style="min-height: 741px;" width="100%" height="741">
+            <div class="modal-body resourceobject" data-region="body" width="100%" height="100%">
                 <iframe id="block_chatbot_coursemoduleview_iframe" src="" width="100%" height="100%">
                 </iframe>
             </div>
@@ -175,19 +175,36 @@
                     </svg>
                 </button>
             </div>
-            <div id="block_chatbot-messagelist" class="block_chatbot-messagelist"></div>
-            <div class="block_chatbot-inputContainer">
-                <input class="block_chatbot-text_input" id="block_chatbot-userUtterance" data-action="block_chatbot/textInput" placeholder="Bitte hier Fragen etc. eingeben"/>
-                <button class="block_chatbot-text_send" data-action="block_chatbot/sendMessage">
-                    <svg width="100%" height="100%" viewBox="0 0 1476 1080" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-                        <g transform="matrix(1,0,0,1,-481.72,-1034.63)">
-                            <g transform="matrix(0.264968,0.964257,-2.90486,0.798226,3459.05,-407.579)">
-                                <path d="M1144.86,1031C1013.4,1048.92 634.031,1124.93 634.031,1065.52C634.031,998.539 999.161,625.501 1181.73,625.501C1364.29,625.501 1729.42,998.539 1729.42,1065.52C1729.42,1124.93 1350.05,1048.92 1218.59,1031C1220.52,1029.44 1221.59,1027.74 1221.59,1025.95L1221.59,878.361C1221.59,871.057 1203.73,865.128 1181.73,865.128C1159.72,865.128 1141.86,871.057 1141.86,878.361L1141.86,1025.95C1141.86,1027.74 1142.93,1029.44 1144.86,1031Z" style="fill:white;"/>
+
+            <!-- Consense window -->    
+            {{#firstturn}}
+                <h5 style="padding-left: 1rem; padding-top: 1rem;" class="modal-title">Datenschutzerklärung</h5>
+                <div class="modal-body">
+                    Ich stimme zu, dass Unterhaltungen mit dem Moodle Kibi-Assistenten aufgezeichnet werden.
+                    Die aufgezeichneten Daten werden innerhalb der Moodle-Datenbank gespeichert und nur zur Fehlersuche der Entwickler oder zur freiwilligen Spende zwecks Kursevaluation am Ende des Kurses benutzt.
+                    Diese Einwilligung kann jederzeit in den Einstellungen wiederufen werden.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-action="block_chatbot/agreeConsent">Zustimmen</button>
+                    <button type="button" class="btn btn-secondary" data-action="block_chatbot/rejectConsent">Ablehnen</button>
+                </div>
+            {{/firstturn }}
+
+            {{^firstturn}}
+                <div id="block_chatbot-messagelist" class="block_chatbot-messagelist"></div>
+                <div class="block_chatbot-inputContainer">
+                    <input class="block_chatbot-text_input" id="block_chatbot-userUtterance" data-action="block_chatbot/textInput" placeholder="Bitte hier Fragen etc. eingeben"/>
+                    <button class="block_chatbot-text_send" data-action="block_chatbot/sendMessage">
+                        <svg width="100%" height="100%" viewBox="0 0 1476 1080" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+                            <g transform="matrix(1,0,0,1,-481.72,-1034.63)">
+                                <g transform="matrix(0.264968,0.964257,-2.90486,0.798226,3459.05,-407.579)">
+                                    <path d="M1144.86,1031C1013.4,1048.92 634.031,1124.93 634.031,1065.52C634.031,998.539 999.161,625.501 1181.73,625.501C1364.29,625.501 1729.42,998.539 1729.42,1065.52C1729.42,1124.93 1350.05,1048.92 1218.59,1031C1220.52,1029.44 1221.59,1027.74 1221.59,1025.95L1221.59,878.361C1221.59,871.057 1203.73,865.128 1181.73,865.128C1159.72,865.128 1141.86,871.057 1141.86,878.361L1141.86,1025.95C1141.86,1027.74 1142.93,1029.44 1144.86,1031Z" style="fill:white;"/>
+                                </g>
                             </g>
-                        </g>
-                    </svg>
-                </button>
-            </div>
+                        </svg>
+                    </button>
+                </div>
+            {{/firstturn}}
         </div>
     <div>
 {{/enabled}}
@@ -197,7 +214,7 @@
 {{#js}}
 host = window.location.host;
 require(['block_chatbot/chatbot', 'https://cdn.plot.ly/plotly-2.27.0.min.js'], function(Chatbot, Plotly) {
-    let conn = Chatbot.init("{{enabled}}", "{{server_name}}", "{{server_port}}", "{{wwwroot}}", "{{userid}}", "{{username}}", "{{courseid}}", "{{slidefindertoken}}", "{{wsuserid}}", "{{timestamp}}", Plotly);
+    let conn = Chatbot.init("{{enabled}}", "{{firstturn}}", "{{server_name}}", "{{server_port}}", "{{wwwroot}}", "{{userid}}", "{{username}}", "{{courseid}}", "{{slidefindertoken}}", "{{wsuserid}}", "{{timestamp}}", Plotly);
 });
 
 

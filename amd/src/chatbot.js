@@ -41,6 +41,10 @@ const registerEventListeners = () => {
                 window.location = self.location;
                 location.reload(true);
             });
+        } else if(e.target.closest(Selectors.actions.agreeConsent)) {
+            sendConsent(conn.userid, conn.slidefindertoken, conn.wwwroot, true);
+        } else if(e.target.closest(Selectors.actions.rejectConsent)) {
+            sendConsent(conn.userid, conn.slidefindertoken, conn.wwwroot, false);
         }
     });
     document.addEventListener('keydown', e => {
@@ -350,12 +354,30 @@ const isInsideIFrame = () => {
 };
 
 
-export const init = (enabled, server_name, server_port, wwwroot, userid, username, courseid, slidefindertoken,
+const sendConsent = async (userid, wstoken, wwwroot, consent) => {
+    // fetch initial settings
+    var settings = await fetchUserSetttings(userid, wstoken, wwwroot);
+    // Add consent and firstturn signal
+    settings.logging = consent;
+    delete settings.preferedcontenttypeid;
+
+    const msgContent = await saveUserSetttings(userid, wstoken, wwwroot, settings);
+
+    // we need to reload the page, because changing the "consent" state requires reloading the template
+    window.location = self.location;
+    location.reload(true);
+
+    return true;
+};
+
+export const init = (enabled, firstturn, server_name, server_port, wwwroot, userid, username, courseid, slidefindertoken,
                      wsuserid, timestamp, plotly) => {
     if(isInsideIFrame()) {
         console.log("IFrame detected - Chatbot won't be loaded");
         return;
     }
+    // console.log("ENABLED", enabled);
+    // console.log("FIRSTTURN", firstturn);
     // console.log("SERVER", server_name);
     // console.log("PORT", server_port);
     // console.log("WWWROOT", wwwroot);
@@ -379,36 +401,44 @@ export const init = (enabled, server_name, server_port, wwwroot, userid, usernam
     registerEventListeners();
     conn = new ChatbotConnection(server_name, server_port, wwwroot, userid, courseid, slidefindertoken, wsuserid, timestamp);
     if(enabled) {
-        conn.openConnection();
 
         // Move container into document root
         const chatwindow = $("#block_chatbot-chatwindow");
         chatwindow.detach();
         $(document.body).append(chatwindow);
 
-        // Restore chat history
-        restore_chat_history();
-
         // Set or restore minimized state
-        if (localStorage.getItem("chatbot.maximized") === null) {
-            localStorage.setItem("chatbot.maximized", "false");
-        }
+        // if (localStorage.getItem("chatbot.maximized") === null) {
+        //     localStorage.setItem("chatbot.maximized", "false");
+        // }
         // Current preference is to keep chatbot minimized when switching pages, only opening for
         // a) first turn
         // b) badge events
         // c) quiz events
         // setWindowState(localStorage.getItem("chatbot.maximized") === "true");
         setWindowState(false);
+
         // Set or restore chatbot size
         if (localStorage.getItem("chatbot.size") === null) {
             localStorage.setItem("chatbot.size", "UI_SIZE_DEFAULT");
         }
         resizeWindow(localStorage.getItem("chatbot.size"));
 
-        // Minimize chatbot when course module modal
-        $("#block_chatbot_coursemoduleview").on('show.bs.modal', function () {
-            setWindowState(false);
-        });
+        if(firstturn === "1") {
+            // Show consent on first turn
+            setWindowState(true);
+        } else {
+            // Minimize chatbot when course module modal
+            $("#block_chatbot_coursemoduleview").on('show.bs.modal', function () {
+                setWindowState(false);
+            });
+
+            // Restore chat history
+            restore_chat_history();
+
+            // Connect
+            conn.openConnection();
+        }
 
         // Minimize chatbot when clicking outside
         document.addEventListener('click', function(event) {

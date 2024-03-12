@@ -7,6 +7,8 @@ export default {
         toggleWindowSize: '[data-action="block_chatbot/toggleWindowSize"]',
         help: '[data-action="block_chatbot/help"]',
         settings: '[data-action="block_chatbot/settings"]',
-        saveSettings: '[data-action="block_chatbot/saveSettings"]'
+        saveSettings: '[data-action="block_chatbot/saveSettings"]',
+        agreeConsent: '[data-action="block_chatbot/agreeConsent"]',
+        rejectConsent: '[data-action="block_chatbot/rejectConsent"]'
     }
 };

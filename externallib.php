@@ -48,6 +48,7 @@ class block_chatbot_external extends external_api {
                 'userid' => new external_value(PARAM_INT, 'user id'),
                 'enabled' => new external_value(PARAM_BOOL, 'should chatbot be enabled'),
                 'logging' => new external_value(PARAM_BOOL, 'should chatbot be logging'),
+                'firstturn' => new external_value(PARAM_BOOL, 'is this the first turn ever?'),
                 'preferedcontenttypeid' => new external_value(PARAM_INT, 'what content type should be displayed by default'),
                 'preferedcontenttype' => new external_value(PARAM_TEXT, 'what content type should be displayed by default'),
                 'numsearchresults' => new external_value(PARAM_INT, 'number of returned search results'),
@@ -63,24 +64,7 @@ class block_chatbot_external extends external_api {
     public static function get_usersettings($userid) {
         global $DB;
         $params = self::validate_parameters(self::get_usersettings_parameters(), array('userid' => $userid));
-        
-        if(!$DB->record_exists('chatbot_usersettings', array('userid'=>$userid))) {
-            $book_id = $DB->get_record('modules', array('name'=>'book'))->id;
-            $DB->insert_record('chatbot_usersettings', array(
-                'userid' => $userid,
-                'enabled' => true,
-                'logging' => true,
-                'preferedcontenttype' => $book_id,
-                'numsearchresults' => 5,
-                'numreviewquizzes' => 3,
-                'openonlogin' => true,
-                'openonquiz' => true,
-                'openonsection' => false,
-                'openonbranch' => false,
-                'openonbadge' => true
-            ));
-        }
-        
+      
         $settings = $DB->get_record('chatbot_usersettings', array('userid'=>$userid));
         // get content type name
         $preferedcontenttype_name = $DB->get_field('modules', 'name', array("id" => $settings->preferedcontenttype));
@@ -88,6 +72,7 @@ class block_chatbot_external extends external_api {
             'userid' => $settings->userid,
             'enabled' => $settings->enabled,
             'logging' => $settings->logging,
+            'firstturn' => $settings->firstturn,
             'preferedcontenttype' => $preferedcontenttype_name,
             'preferedcontenttypeid' => $settings->preferedcontenttype,
             'numsearchresults' => $settings->numsearchresults,
@@ -107,6 +92,7 @@ class block_chatbot_external extends external_api {
                 'userid' => new external_value(PARAM_INT, 'user id'),
                 'enabled' => new external_value(PARAM_BOOL, 'should chatbot be enabled'),
                 'logging' => new external_value(PARAM_BOOL, 'should chatbot be logging'),
+                'firstturn' => new external_value(PARAM_BOOL, 'first turn ever?'),
                 'preferedcontenttype' => new external_value(PARAM_TEXT, 'what content type should be displayed by default'),
                 'numsearchresults' => new external_value(PARAM_INT, 'number of returned search results'),
                 'numreviewquizzes' => new external_value(PARAM_INT, 'number of quizzes asked in review session'),
@@ -125,13 +111,14 @@ class block_chatbot_external extends external_api {
             )
         );
     }
-    public static function set_usersettings($userid, $enabled, $logging, $preferedcontenttype, $numsearchresults, $numreviewquizzes, $openonlogin, 
+    public static function set_usersettings($userid, $enabled, $logging, $firstturn, $preferedcontenttype, $numsearchresults, $numreviewquizzes, $openonlogin, 
                                             $openonquiz, $openonsection, $openonbranch, $openonbadge) {
         global $DB;
         $params = self::validate_parameters(self::set_usersettings_parameters(), array(
             'userid' => $userid,
             'enabled' => $enabled,
             'logging' => $logging,
+            'firstturn' => $firstturn,
             'preferedcontenttype' => $preferedcontenttype,
             'numsearchresults' => $numsearchresults,
             'numreviewquizzes' => $numreviewquizzes,
@@ -148,6 +135,7 @@ class block_chatbot_external extends external_api {
         // update settings
         $settings = $DB->get_record('chatbot_usersettings', array('userid' => $userid));
         $settings->enabled = $enabled;
+        $settings->firstturn = $firstturn;
         $settings->logging = $logging;
         $settings->preferedcontenttype = $preferedcontenttype_id;
         $settings->numsearchresults = $numsearchresults;
