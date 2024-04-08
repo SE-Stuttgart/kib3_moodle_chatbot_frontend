@@ -18,9 +18,9 @@ but other themes can use the element with id page.';
 
 //Settings
 $string['server_name'] = 'Server name';
-$string['server_name_desc'] = 'The name used to connect with the chatbot server. Examples: localhost, www.moodle.com.';
-$string['event_server_name'] = 'The name used to connect with the chatbot server. Examples: localhost, www.moodle.com.';
-$string['event_server_name_desc'] = 'The name used to connect with the chatbot server event endpoint. Examples: localhost, www.moodle.com.';
+$string['server_name_desc'] = 'The IP address or URL pointint to the server running the chatbot backend. Examples: 127.0.0.1, yourmoodle.com';
+$string['event_server_name'] = 'Event Server Name';
+$string['event_server_name_desc'] = 'In case you use the KIB3 Moodle Docker package, this is the name of the conainer running the chatbot backend (default: chatbot). Otherwise, this is the same as the server name.';
 
 $string['server_port'] = 'Server port';
 $string['server_port_desc'] = 'The port used to connect with the chatbot server.';
