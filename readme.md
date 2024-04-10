@@ -25,6 +25,35 @@
 6. Leave `Chat Container` at the default value (if you run into problems with your theme later, you might want to change this setting).
 7. **Enable the Moodle Assistant for all Courses that you want it to appear in.**
 
+## Adding the Webservices
+
+1. Navigate to the administration settings, then navigate to `Server`.
+2. In the section `Web services`, click `overview`.
+3. Ensure that `Enable Web Services` status is `Yes`.
+4. Ensure that `Enable protocols` status includes `rest`.
+5. Click `Create a specific user` with the following attributes: `Username`: `kib3_webservice`, choose a password, `First name`: `KIB3 Webservice`, `Last name`: `KIB3 Webservice`, choose an email address and create the user.
+
+![webservice user](https://github.com/SE-Stuttgart/kib3_moodle_chatbot_frontend/assets/48446789/8ab816ee-834b-4281-8d29-071b2645f254)
+
+6. Navigate to the administration settings, then navigate to `Users` and in the section `Permissions`, click `Define roles`.
+7. Click `Add a new role`.
+8. Select archetype: `MANAGER` and continue.
+9. Set `Short name` to `kib3webservice` and `Custom full name` to `KIB3 Webservice`. Give a description.
+10. Scroll down to the permissions, and allow `moodle/webservice:createtoken` and `webservice/rest:use`
+11. Assign this role to the newly created user `kib3_webservice`.
+12. Navigate back to the webservices overview page.
+13. Click `Select a service`. Underneath `Custom services`, click `Add`.
+14. Change `Name` and `Short Name` to `kib3_webservices`. Make sure to tick `Enabled` and `Authorised users only` and save.
+![external service settings](https://github.com/SE-Stuttgart/kib3_moodle_chatbot_frontend/assets/48446789/ac899c06-e680-4119-8203-d3c919938c4e)
+15. Navigate back to the webservices overview page, then click `Add functions`.
+16. Under the section `Custom services`, click the `Functions` link in the row for `kib3_webservices`.
+17. Click `Add functions`, and add all functions starting with `block_chatbot_`, `block_slidefinder_`, `mod_icecreamgame_` (only if you installed the [Icecreamgame Plugin](https://github.com/SE-Stuttgart/kib3_moodleplugin_icecreamgame) ) and finally the 2 functions `mod_glossary_get_entries_by_search` and `mod_glossary_get_glossaries_by_courses`.
+18. Navigate back to the webservices overview page, then click `Create a token for a user`.
+19. Select the `KIB3 Webservice` user and the `kib3_webservices` `Service`, then save changes.
+![create webservice user token](https://github.com/SE-Stuttgart/kib3_moodle_chatbot_frontend/assets/48446789/99a2e513-ca7c-49bb-b3e8-8d84b1754d8b)
+
+
+    
 ## Adding the Block to Moodle
 
 1. Go to the frontpage of your Moodle site. 
