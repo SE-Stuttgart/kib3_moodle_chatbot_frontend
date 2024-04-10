@@ -14,28 +14,28 @@ if ($ADMIN->fulltree) {
 	 */
 	
 	// Server Name
-	$name = 'block_chatbot_server_name';
+	$name = 'block_chatbot/server_name';
 	$title = get_string('server_name', 'block_chatbot');
 	$description = get_string('server_name_desc', 'block_chatbot');
 	$default = "127.0.0.1";
 	$settings->add(new admin_setting_configtext($name, $title, $description, $default, PARAM_HOST));
 
 	// Event Server Name
-	$name = 'block_chatbot_event_server_name';
+	$name = 'block_chatbot/event_server_name';
 	$title = get_string('event_server_name', 'block_chatbot');
 	$description = get_string('event_server_name_desc', 'block_chatbot');
 	$default = "chatbot";
 	$settings->add(new admin_setting_configtext($name, $title, $description, $default, PARAM_HOST));
 
 	// Server Port
-	$name = 'block_chatbot_server_port';
+	$name = 'block_chatbot/server_port';
 	$title = get_string('server_port', 'block_chatbot');
 	$description = get_string('server_port_desc', 'block_chatbot');
 	$default = 44123;
 	$settings->add(new admin_setting_configtext($name, $title, $description, $default, PARAM_INT));
 	
 	// Chat Container
-	$name = 'block_chatbot_container';
+	$name = 'block_chatbot/container';
 	$title = get_string('chat_container', 'block_chatbot');
 	$description = get_string('chat_container_desc', 'block_chatbot');
 	$default = 'Body';

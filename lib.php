@@ -38,22 +38,19 @@ function block_chatbot_get_protocol() {
  * @return string
  */
 function block_chatbot_get_server_name() {
-	global $CFG;
-
-	if (!empty($CFG->block_chatbot_server_name)) {
-		return $CFG->block_chatbot_server_name;
-	} else {
-		return "127.0.0.1";
+	$server_name = get_config("block_chatbot", "server_name");
+	if (empty($server_name)) {
+		$server_name = "127.0.0.1";
 	}
+	return $server_name;
 }
 
 function block_chatbot_get_event_server_name() {
-	global $CFG;
-	if (!empty($CFG->block_chatbot_event_server_name)) {
-		return $CFG->block_chatbot_event_server_name;
-	} else {
-		return "chatbot";
+	$event_server_name = get_config("block_chatbot", "event_server_name");
+	if (empty($event_server_name)) {
+		$event_server_name = "chatbot";
 	}
+	return $event_server_name;
 }
 
 
@@ -62,13 +59,11 @@ function block_chatbot_get_event_server_name() {
  * @return string
  */
 function block_chatbot_get_server_port() {
-	global $CFG;
-
-	if (!empty($CFG->block_chatbot_server_port)) {
-		return $CFG->block_chatbot_server_port;
-	} else {
-	    return 44122;
+	$server_port = get_config("block_chatbot", "server_port");
+	if (empty($server_port)) {
+		$server_port = 44122;
 	}
+	return $server_port;
 }
 
 
