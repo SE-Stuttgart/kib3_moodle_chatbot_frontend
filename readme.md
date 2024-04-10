@@ -32,7 +32,7 @@
 3. Click "+ Add a block"
 4. Select `Chatbot`
 5. Once the block has been added, click the settings icon, and then `Configure`.
-6. Look for setting `Where this block appears`, choose `Show throughout the entire site`. Don't worry, the assistant **will only show up in courses selected in configuration step 7.**
+6. Look for setting `Where this block appears`, choose `Any Page`. Don't worry, the assistant **will only show up in courses selected in configuration step 7.**
 
 ![block settings](https://github.com/SE-Stuttgart/kib3_moodle_chatbot_frontend/assets/48446789/79d748f8-5293-4bc9-b33a-d8cf56cc1c58)
 
