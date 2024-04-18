@@ -1,5 +1,9 @@
 # KIB3 Moodle Assistant Frontend
 
+-----
+### German Version: [Here](https://github.com/SE-Stuttgart/kib3_moodle_chatbot_frontend/blob/master/readme_de.md)
+----
+
 **NOTE: In the current version, this plugin is only designed to work with the KIB3 Moodle Courses.**
 
  <img src="https://github.com/SE-Stuttgart/kib3_moodle_chatbot_frontend/assets/48446789/ab9fb75a-9e14-4bcc-9204-d0c50ea231ec" width="500px"/>
