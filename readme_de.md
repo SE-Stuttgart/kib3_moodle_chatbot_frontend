@@ -6,7 +6,7 @@
 
 ## Installation 
 
-0. **Installieren Sie zuerst das [Backend für den Chatbot](https://github.com/SE-Stuttgart/kib3_moodle_chatbot_backend)**
+0. **Installieren Sie zuerst das [Backend für den Chatbot](https://github.com/SE-Stuttgart/moodle-block_booksearch)**
 1. Klonen Sie anschließend das aktuelle Repository.
 2. Speichern Sie den (ggf. entpackten) Code im Verzeichnis `./blocks/chatbot` (relativ zum obersten Verzeichnis Ihres Moodles),  
 d.h. die Dateien und Verzeichnisse, die nach dem Klonen bzw. Auspacken im Verzeichnis `kib3_moodle_chatbot_backend` oder `kib3_moodle_chatbot_backend-master` liegen, sollten in Moodle im Verzeichnis `./blocks/chatbot/` liegen. 
