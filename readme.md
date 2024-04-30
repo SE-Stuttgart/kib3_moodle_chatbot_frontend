@@ -16,7 +16,7 @@
    I.e., the folder `./blocks/chatbot/` should contain the version information: `version.php`
 3. Open your Moodle administration page in your web browser, this should trigger the plugin installation.
 
-**NOTE: for full assistant functionallity, we recommend also installing [this plugin](https://github.com/SE-Stuttgart/moodle-block_slidefinder) which allows searching through PDF content in the course using the assistant.**
+**NOTE: for full assistant functionallity, we recommend also installing [this plugin](https://github.com/SE-Stuttgart/moodle-block_booksearch) which allows searching through PDF content in the course using the assistant.**
 
 ## Configuring the Moodle Assistant
 
