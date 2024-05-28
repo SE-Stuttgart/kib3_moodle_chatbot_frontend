@@ -36,15 +36,15 @@ const registerEventListeners = () => {
             e.preventDefault();
             // convert form output to correct format for sending to DB
             const settings = readUserSettings();
-            saveUserSetttings(conn.userid, conn.slidefindertoken, conn.wwwroot, settings).then(result => {
+            saveUserSetttings(conn.userid, conn.booksearchtoken, conn.wwwroot, settings).then(result => {
                 // we need to reload the page, because changing the "enabled" state requires reloading the template
                 window.location = self.location;
                 location.reload(true);
             });
         } else if(e.target.closest(Selectors.actions.agreeConsent)) {
-            sendConsent(conn.userid, conn.slidefindertoken, conn.wwwroot, true);
+            sendConsent(conn.userid, conn.booksearchtoken, conn.wwwroot, true);
         } else if(e.target.closest(Selectors.actions.rejectConsent)) {
-            sendConsent(conn.userid, conn.slidefindertoken, conn.wwwroot, false);
+            sendConsent(conn.userid, conn.booksearchtoken, conn.wwwroot, false);
         }
     });
     document.addEventListener('keydown', e => {
@@ -62,7 +62,7 @@ const registerEventListeners = () => {
 const openSettingsModal = () => {
     // minimize chatbot to not be in the way of the settings dialog
     setWindowState(false);
-    fetchUserSetttings(conn.userid, conn.slidefindertoken, conn.wwwroot).then(settings => {
+    fetchUserSetttings(conn.userid, conn.booksearchtoken, conn.wwwroot).then(settings => {
         // apply user settings to dialog modal
         assignUserSettings(settings);
     });
@@ -264,14 +264,14 @@ const resizeWindow = (size) => {
 };
 
 class ChatbotConnection {
-    constructor(server_name, server_port, wwwroot, userid, courseid, slidefindertoken, wsuserid, timestamp) {
+    constructor(server_name, server_port, wwwroot, userid, courseid, booksearchtoken, wsuserid, timestamp) {
         this.server_name = server_name;
         this.server_port = server_port;
         this.wwwroot = wwwroot;
         this.protocol = wwwroot.startsWith("https://")? "wss" : "ws";
         this.userid = userid;
         this.courseid = courseid;
-        this.slidefindertoken = slidefindertoken;
+        this.booksearchtoken = booksearchtoken;
         this.wsuserid = wsuserid;
         this.timestamp = timestamp;
         this.conn = null;
@@ -290,7 +290,7 @@ class ChatbotConnection {
                 domain: 0,
                 topic: 'start_dialog',
                 courseid: this.courseid,
-                slidefindertoken: this.slidefindertoken,
+                booksearchtoken: this.booksearchtoken,
                 wsuserid: this.wsuserid,
                 timestamp: this.timestamp
             };
@@ -370,7 +370,7 @@ const sendConsent = async (userid, wstoken, wwwroot, consent) => {
     return true;
 };
 
-export const init = (enabled, firstturn, server_name, server_port, wwwroot, userid, username, courseid, slidefindertoken,
+export const init = (enabled, firstturn, server_name, server_port, wwwroot, userid, username, courseid, booksearchtoken,
                      wsuserid, timestamp, plotly) => {
     if(isInsideIFrame()) {
         console.log("IFrame detected - Chatbot won't be loaded");
@@ -383,7 +383,7 @@ export const init = (enabled, firstturn, server_name, server_port, wwwroot, user
     // console.log("WWWROOT", wwwroot);
     // console.log("USER", userid, username);
     // console.log("COURSE", courseid);
-    // console.log("SLIDEFINDER TOKEN", slidefindertoken);
+    // console.log("BOOKSEARCH TOKEN", booksearchtoken);
     // console.log("WSUERID", wsuserid);
     // console.log("TIMESTAMP", timestamp);
 
@@ -399,7 +399,7 @@ export const init = (enabled, firstturn, server_name, server_port, wwwroot, user
 
     Plotly = plotly;
     registerEventListeners();
-    conn = new ChatbotConnection(server_name, server_port, wwwroot, userid, courseid, slidefindertoken, wsuserid, timestamp);
+    conn = new ChatbotConnection(server_name, server_port, wwwroot, userid, courseid, booksearchtoken, wsuserid, timestamp);
     if(enabled) {
 
         // Move container into document root

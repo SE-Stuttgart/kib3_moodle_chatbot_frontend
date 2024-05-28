@@ -60,19 +60,19 @@ class block_chatbot extends block_base {
 			$enabled = false;
 		}
 
-		// try to get token for slidefinder webservice
+		// try to get token for booksearch webservice
 		try {
-			// get id of slidefinder service
-			$slidefinder_service_id = $DB->get_field('external_services_functions', 'externalserviceid',
-													   array('functionname' => 'block_slidefinder_get_searched_locations'),
+			// get id of booksearch service
+			$booksearch_service_id = $DB->get_field('external_services_functions', 'externalserviceid',
+													   array('functionname' => 'block_booksearch_get_searched_locations'),
 												       
 			);
 			// get token
-			$slidefinder_token = $DB->get_field('external_tokens', 'token',
-												array('externalserviceid' => $slidefinder_service_id),
+			$booksearch_token = $DB->get_field('external_tokens', 'token',
+												array('externalserviceid' => $booksearch_service_id),
 			);
 		} catch(exception $e) {
-			$slidefinder_token = "";
+			$booksearch_token = "";
 		}
 
 		if(!property_exists($this, 'h5presizerurl')) {
@@ -116,7 +116,7 @@ class block_chatbot extends block_base {
 			"userid" => $USER->id,
 			'username' => $USER->username,
 			"courseid" => $COURSE->id,
-			"slidefindertoken" => $slidefinder_token,
+			"booksearchtoken" => $booksearch_token,
 			"wsuserid" => $DB->get_field("user", "id", array(
 				"username" => "kib3_webservice",
 				"firstname" => "KIB3 Webservice",

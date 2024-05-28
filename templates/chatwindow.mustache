@@ -216,7 +216,7 @@
 {{#js}}
 host = window.location.host;
 require(['block_chatbot/chatbot', 'https://cdn.plot.ly/plotly-2.27.0.min.js'], function(Chatbot, Plotly) {
-    let conn = Chatbot.init("{{enabled}}", "{{firstturn}}", "{{server_name}}", "{{server_port}}", "{{wwwroot}}", "{{userid}}", "{{username}}", "{{courseid}}", "{{slidefindertoken}}", "{{wsuserid}}", "{{timestamp}}", Plotly);
+    let conn = Chatbot.init("{{enabled}}", "{{firstturn}}", "{{server_name}}", "{{server_port}}", "{{wwwroot}}", "{{userid}}", "{{username}}", "{{courseid}}", "{{booksearchtoken}}", "{{wsuserid}}", "{{timestamp}}", Plotly);
 });
 
 

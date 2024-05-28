@@ -53,7 +53,7 @@
 ![external service settings](https://github.com/SE-Stuttgart/kib3_moodle_chatbot_frontend/assets/48446789/ac899c06-e680-4119-8203-d3c919938c4e)
 15. Navigate back to the webservices overview page, then click `Add functions`.
 16. Under the section `Custom services`, click the `Functions` link in the row for `kib3_webservices`.
-17. Click `Add functions`, and add all functions starting with `block_chatbot_`, `block_slidefinder_`, `mod_icecreamgame_` (only if you installed the [Icecreamgame Plugin](https://github.com/SE-Stuttgart/kib3_moodleplugin_icecreamgame) ) and finally the 2 functions `mod_glossary_get_entries_by_search` and `mod_glossary_get_glossaries_by_courses`.
+17. Click `Add functions`, and add all functions starting with `block_chatbot_`, `block_booksearch_`, `mod_icecreamgame_` (only if you installed the [Icecreamgame Plugin](https://github.com/SE-Stuttgart/kib3_moodleplugin_icecreamgame) ) and finally the 2 functions `mod_glossary_get_entries_by_search` and `mod_glossary_get_glossaries_by_courses`.
 18. Navigate back to the webservices overview page, then click `Create a token for a user`.
 19. Select the `KIB3 Webservice` user and the `kib3_webservices` `Service`, then save changes.
 ![create webservice user token](https://github.com/SE-Stuttgart/kib3_moodle_chatbot_frontend/assets/48446789/99a2e513-ca7c-49bb-b3e8-8d84b1754d8b)
