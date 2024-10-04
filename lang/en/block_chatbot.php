@@ -27,3 +27,6 @@ $string['server_port_desc'] = 'The port used to connect with the chatbot server.
 
 $string['courses'] = 'Available Courses';
 $string['courses_description'] = 'Select all the courses the autocompletion should be enabled for';
+
+// Tasks
+$string['task_sync_course_module_completions'] = 'Synchronize Course Module Completions between Chatbot and Moodle';
