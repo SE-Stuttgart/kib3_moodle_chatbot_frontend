@@ -203,54 +203,52 @@ class block_chatbot_external extends external_api {
     public static function get_starter_module($courseid) {
         global $DB;
         $params = self::validate_parameters(self::get_starter_module_parameters(), array('courseid' => $courseid));
-     
+        $courseid = $params['courseid'];
+         
         // check first if we have a first-module tagged course module. if so, return it.
-        // $cmid = $DB->get_field_sql("SELECT cm.id
-        //                             FROM {course_modules} as cm
-        //                             JOIN {tag_instance} as ti ON ti.itemid = cm.id
-        //                             JOIN {tag} as t ON t.id = ti.tagid
-        //                             WHERE cm.course = :courseid
-        //                             AND t.rawname = 'first-module'",
-        //                             array('courseid' => $courseid)
-        //                         );
-        // if($cmid != false) {
-        //     return array(
-        //         'cmid' => $cmid
-        //     );
-        // }
-
-        // if not, check if we have a course-overview tagged course module. if so, return it.
-        // $cmid = $DB->get_field_sql("SELECT cm.id
-        //                             FROM {course_modules} as cm
-        //                             JOIN {tag_instance} as ti ON ti.itemid = cm.id
-        //                             JOIN {tag} as t ON t.id = ti.tagid
-        //                             WHERE cm.course = :courseid
-        //                             AND t.rawname = 'course-overview'",
-        //                             array('courseid' => $courseid)
-        //                         );
-        // if($cmid != false) {
-        //     return array(
-        //         'cmid' => $cmid
-        //     );
-        // }
-
-        var_dump("HERE");
-
-        // if not, check if we have a section that contains course modules tagged with topic:first-section. if so, return the first one.
-        $cmid = $DB->get_fieldset_sql("SELECT cm.id
-                                        FROM {course_modules} as cm
-                                        JOIN {course_sections} as cs ON cm.section = cs.id
-                                        JOIN {tag_instance} as ti ON ti.itemid = cs.id
-                                        JOIN {tag} as t ON t.id = ti.tagid
-                                        WHERE cm.course = :courseid
-                                        AND t.rawname = :topicname",
-                                        array('courseid' => $courseid,
-                                                      'topicname' => 'topic:first-section')
-        );
-        var_dump($cmid);
+        $cmid = $DB->get_field_sql("SELECT cm.id
+                        FROM {course_modules} as cm
+                        JOIN {tag_instance} as ti ON ti.itemid = cm.id
+                        JOIN {tag} as t ON t.id = ti.tagid
+                        WHERE cm.course = :courseid
+                        AND t.rawname = 'first-module'",
+                        array('courseid' => $courseid)
+                    );
         if($cmid != false) {
             return array(
-                'cmid' => $cmid
+            'cmid' => $cmid
+            );
+        }
+
+        // if not, check if we have a course-overview tagged course module. if so, return it.
+        $cmid = $DB->get_field_sql("SELECT cm.id
+                        FROM {course_modules} as cm
+                        JOIN {tag_instance} as ti ON ti.itemid = cm.id
+                        JOIN {tag} as t ON t.id = ti.tagid
+                        WHERE cm.course = :courseid
+                        AND t.rawname = 'course-overview'",
+                        array('courseid' => $courseid)
+                    );
+        if($cmid != false) {
+            return array(
+            'cmid' => $cmid
+            );
+        }
+
+        // if not, check if we have a section that contains course modules tagged with topic:first-section. if so, return the first one.
+        $cmid = $DB->get_field_sql("SELECT cm.id
+                FROM {course_modules} as cm
+                JOIN {course_sections} as cs ON cm.section = cs.id
+                JOIN {tag_instance} as ti ON ti.itemid = cm.id
+                JOIN {tag} as t ON t.id = ti.tagid
+                WHERE cm.course = :courseid
+                AND t.rawname = :topic",
+                array('courseid' => $courseid,
+                          'topic' => 'topic:first-section'),
+        );
+        if($cmid != false) {
+            return array(
+            'cmid' => $cmid
             );
         }
         
