@@ -528,40 +528,40 @@ class block_chatbot_external extends external_api {
     // }
 
 
-    // public static function get_course_module_content_link_parameters() {
-    //     return new external_function_parameters(
-    //         array(
-    //             'cmid' => new external_value(PARAM_INT, 'course module id'), 
-    //         )
-    //     );
-    // }
-    // public static function get_course_module_content_link_returns() {
-    //     return new external_single_structure(
-    //         array(
-    //             'url' => new external_value(PARAM_RAW, 'web address'),
-    //             'name' => new external_value(PARAM_TEXT, 'display text'),
-    //             'typename' => new external_value(PARAM_TEXT, 'module type name, e.g. book, resource, ...')
-    //         )
-    //     );
-    // }
-    // public static function get_course_module_content_link($cmid) {
-    //     global $DB;
-    //     global $CFG;
-
-    //     $params = self::validate_parameters(self::get_course_module_content_link_parameters(), array(
-    //         'cmid' => $cmid
-    //     ));
+    public static function get_course_module_content_link_parameters() {
+        return new external_function_parameters(
+            array(
+                'cmid' => new external_value(PARAM_INT, 'course module id'), 
+            )
+        );
+    }
+    public static function get_course_module_content_link_returns() {
+        return new external_single_structure(
+            array(
+                'url' => new external_value(PARAM_RAW, 'web address'),
+                'name' => new external_value(PARAM_TEXT, 'display text'),
+                'typename' => new external_value(PARAM_TEXT, 'module type name, e.g. book, resource, ...')
+            )
+        );
+    }
+    public static function get_course_module_content_link($cmid) {
+        global $DB;
+        global $CFG;
+        $params = self::validate_parameters(self::get_course_module_content_link_parameters(), array(
+            'cmid' => $cmid
+        ));
         
-    //     // get course module name and type. name can be used as default display text.
-    //     [$display_name, $type_name] = get_course_module_name_and_typename($cmid);
+        // get course module name and type. name can be used as default display text.
+        [$display_name, $type_name] = get_course_module_name_and_typename($params['cmid']);
         
-    //     // construct and return link
-    //     $url = $CFG->wwwroot . '/mod/' . $type_name . '/view.php?id=' . $cmid;
-    //     return array(
-    //         "url" => $url,
-    //         "name" => $display_name,
-    //         "typename" => $type_name);
-    // }
+        // construct and return link
+        $url = $CFG->wwwroot . '/mod/' . $type_name . '/view.php?id=' . $params['cmid'];
+        return array(
+            "url" => $url,
+            "name" => $display_name,
+            "typename" => $type_name
+        );
+    }
 
 
     // public static function get_available_new_course_sections_parameters() {
@@ -879,87 +879,86 @@ class block_chatbot_external extends external_api {
 
 
 
-    // public static function get_last_user_weekly_summary_parameters() {
-    //     return new external_function_parameters(
-    //         array(
-    //             'userid' => new external_value(PARAM_INT, 'user id'),
-    //             'courseid' => new external_value(PARAM_INT, 'course id'),
-    //             'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
-    //             'updatedb' => new external_value(PARAM_BOOL, 'whether to update the timecreated timestamp and firstweek = false')
-    //         )
-    //     );
-    // }
-    // public static function get_last_user_weekly_summary_returns() {
-    //     return new external_single_structure(
-    //         array(
-    //             'first_turn_ever' => new external_value(PARAM_BOOL, 'true, if the user is using the chatbot for the first time'),
-    //             'first_week' => new external_value(PARAM_BOOL, "is this the user's first week using the chatbot"),
-    //             'timecreated' => new external_value(PARAM_INT, 'timestamp for last update of this record'),
-    //             'course_progress_percentage' => new external_value(PARAM_FLOAT, "last course progress displayed to the user"), 
-    //         )
-    //     );
-    // }
-    // public static function get_last_user_weekly_summary($userid, $courseid, $includetypes, $updatedb) {
-    //     global $DB;
+    public static function get_last_user_weekly_summary_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'),
+                'courseid' => new external_value(PARAM_INT, 'course id'),
+                'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
+                'updatedb' => new external_value(PARAM_BOOL, 'whether to update the timecreated timestamp and firstweek = false')
+            )
+        );
+    }
+    public static function get_last_user_weekly_summary_returns() {
+        return new external_single_structure(
+            array(
+                'first_turn_ever' => new external_value(PARAM_BOOL, 'true, if the user is using the chatbot for the first time'),
+                'first_week' => new external_value(PARAM_BOOL, "is this the user's first week using the chatbot"),
+                'timecreated' => new external_value(PARAM_INT, 'timestamp for last update of this record'),
+                'course_progress_percentage' => new external_value(PARAM_FLOAT, "last course progress displayed to the user"), 
+            )
+        );
+    }
+    public static function get_last_user_weekly_summary($userid, $courseid, $includetypes, $updatedb) {
+        global $DB;
+        $params = self::validate_parameters(self::get_last_user_weekly_summary_parameters(), array(
+            'userid' => $userid,
+            'courseid' => $courseid,
+            'includetypes' => $includetypes,
+            'updatedb' => $updatedb
+        ));
 
-    //     $params = self::validate_parameters(self::get_last_user_weekly_summary_parameters(), array(
-    //         'userid' => $userid,
-    //         'courseid' => $courseid,
-    //         'includetypes' => $includetypes,
-    //         'updatedb' => $updatedb
-    //     ));
-
-    //     // check if we have a summary entry for the current user
-    //     // if not, that means that the user is using the chatbot for the first time, 
-    //     // and we should create this entry
-    //     $first_turn_ever = !$DB->record_exists("chatbot_weekly_summary", array("userid" => $userid, "courseid" => $courseid));
-    //     if($first_turn_ever) {
-    //         // additionally, check that user didn't complete any modules so far.
-    //         // If they did (e.g. chatbot was not activated for a time), check if they completed any course modules so far
-    //         $firstweek = !$DB->record_exists_sql("SELECT id FROM {chatbot_recentlyaccessed}
-    //                                               WHERE courseid = :courseid
-    //                                               AND userid = :userid", 
-    //             array(
-    //                 "userid" => $userid,
-    //                 "courseid" => $courseid
-    //                 )
-    //         );  
-                
-    //         $timecreated = (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp();
-    //         $DB->insert_record("chatbot_weekly_summary", (object)array(
-    //             "userid" => $userid,
-    //             "courseid" => $courseid,
-    //             "timecreated" => $timecreated,
-    //             "firstweek" => (int)$firstweeek
-    //         ), false);
+        // check if we have a summary entry for the current user
+        // if not, that means that the user is using the chatbot for the first time, 
+        // and we should create this entry
+        $first_turn_ever = !$DB->record_exists("chatbot_weekly_summary", array("userid" => $params['userid'], "courseid" => $params['courseid']));
+        if($first_turn_ever) {
+            // additionally, check that user didn't complete any modules so far.
+            // If they did (e.g. chatbot was not activated for a time), check if they completed any course modules so far
+            $firstweek = !$DB->record_exists_sql("SELECT id FROM {chatbot_recentlyaccessed}
+                              WHERE courseid = :courseid
+                              AND userid = :userid", 
+            array(
+                "userid" => $params['userid'],
+                "courseid" => $params['courseid']
+                )
+            );  
             
-    //         $percentage_done = get_user_course_completion_percentage($userid, $courseid, $includetypes);
-    //         $DB->insert_record("chatbot_progress_summary", (object)array(
-    //             "userid" => $userid,
-    //             "courseid" => $courseid,
-    //             "progress" => $percentage_done,
-    //             "timecreated" => $firstweeek? $timecreated : 0 // trigger course completion so far, if user has already completed modules
-    //         ), false);
-    //     } else {
-    //         $last_summary = $DB->get_record("chatbot_weekly_summary", array("userid" => $userid, "courseid" => $courseid));
-    //         if($updatedb) {
-    //             // update record to current time and > first week
-    //             $last_summary->firstweek = false;
-    //             $last_summary->timecreated = (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp();
-    //             $DB->update_record("chatbot_weekly_summary", $last_summary);
-    //         }
-    //         $firstweek = (bool)$last_summary->firstweek;
-    //         $timecreated = $last_summary->timecreated;
-    //         $percentage_done = $DB->get_field('chatbot_progress_summary', 'progress', array("userid" => $userid, "courseid" => $courseid));
-    //     }
+            $timecreated = (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp();
+            $DB->insert_record("chatbot_weekly_summary", (object)array(
+            "userid" => $params['userid'],
+            "courseid" => $params['courseid'],
+            "timecreated" => $timecreated,
+            "firstweek" => (int)$firstweek
+            ), false);
+            
+            $percentage_done = get_user_course_completion_percentage($params['userid'], $params['courseid'], $params['includetypes']);
+            $DB->insert_record("chatbot_progress_summary", (object)array(
+            "userid" => $params['userid'],
+            "courseid" => $params['courseid'],
+            "progress" => $percentage_done,
+            "timecreated" => $firstweek ? $timecreated : 0 // trigger course completion so far, if user has already completed modules
+            ), false);
+        } else {
+            $last_summary = $DB->get_record("chatbot_weekly_summary", array("userid" => $params['userid'], "courseid" => $params['courseid']));
+            if($params['updatedb']) {
+            // update record to current time and > first week
+            $last_summary->firstweek = false;
+            $last_summary->timecreated = (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp();
+            $DB->update_record("chatbot_weekly_summary", $last_summary);
+            }
+            $firstweek = (bool)$last_summary->firstweek;
+            $timecreated = $last_summary->timecreated;
+            $percentage_done = $DB->get_field('chatbot_progress_summary', 'progress', array("userid" => $params['userid'], "courseid" => $params['courseid']));
+        }
 
-    //     return array(
-    //         "first_turn_ever" => $first_turn_ever,
-    //         "first_week" => $firstweek,
-    //         "timecreated" => $timecreated,
-    //         "course_progress_percentage" => $percentage_done         
-    //     );
-    // }
+        return array(
+            "first_turn_ever" => $first_turn_ever,
+            "first_week" => $firstweek,
+            "timecreated" => $timecreated,
+            "course_progress_percentage" => $percentage_done         
+        );
+    }
 
 
     // public static function get_closest_badge_parameters() {

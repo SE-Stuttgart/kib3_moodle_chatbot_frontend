@@ -82,29 +82,49 @@ function block_chatbot_get_chat_container() {
 }
 
 
-
-// dictionary cache for course module typess and ids.
-// they should not change during the session, so we can cache them (they will be accessed frequently).
-$typename_to_id_cache = array();
-$id_to_typename_cache = array();
-
 function get_id_by_typename($typename) {
-    global $DB, $typename_to_id_cache, $id_to_typename_cache;
-    if (!in_array($typename, $typename_to_id_cache)) {
-        $module_id = $DB->get_field('modules', 'id', array('name' => $typename));
-        $id_to_typename_cache[$module_id] = $typename;
-        $typename_to_id_cache[$typename] = $module_id;
-    }
-    return $typename_to_id_cache[$typename];
-}
+    global $DB;
 
+	// Initialize the cache
+	$typename_to_id_cache = cache::make('block_chatbot', 'typename_to_id_cache');
+	$id_to_typename_cache = cache::make('block_chatbot', 'id_to_typename_cache');
+
+	// get the value from the cache
+	$id = $typename_to_id_cache->get($typename);
+
+	// Check if the value exists in the cache
+	if (!$id) {
+		// Fetch the value from the database
+		$id = $DB->get_field('modules', 'id', array('name' => $typename));
+		
+		// Store the value in the cache
+		$id_to_typename_cache->set($id, $typename);
+		$typename_to_id_cache->set($typename, $id);
+	}
+
+	return $id;
+}
 function get_typename_by_id($module_id) {
-    global $DB, $typename_to_id_cache, $id_to_typename_cache;
-    if (!in_array($module_id, $id_to_typename_cache)) {
+    global $DB;
+
+    // Initialize the cache
+    $typename_to_id_cache = cache::make('block_chatbot', 'typename_to_id_cache');
+	$id_to_typename_cache = cache::make('block_chatbot', 'id_to_typename_cache');
+
+	// get the value from the cache
+	$typename = $id_to_typename_cache->get($module_id);
+
+    // Check if the value exists in the cache
+    if (!$typename) {
+        // Fetch the value from the database
         $typename = $DB->get_field('modules', 'name', array('id' => $module_id));
-        $id_to_typename_cache[$module_id] = $typename;
-        $typename_to_id_cache[$typename] = $module_id;
+        
+        // Store the value in the cache
+        $id_to_typename_cache->set($module_id, $typename);
+		$typename_to_id_cache->set($typename, $module_id);
     }
+
+    return $typename;
 }
 
 
