@@ -65,8 +65,8 @@ class block_chatbot_external extends external_api {
     public static function get_usersettings($userid) {
         global $DB;
         $params = self::validate_parameters(self::get_usersettings_parameters(), array('userid' => $userid));
-      
-        $settings = $DB->get_record('chatbot_usersettings', array('userid'=>$userid));
+          
+        $settings = $DB->get_record('chatbot_usersettings', array('userid' => $params['userid']));
         // get content type name
         $preferedcontenttype_name = $DB->get_field('modules', 'name', array("id" => $settings->preferedcontenttype));
         return array(
@@ -131,26 +131,26 @@ class block_chatbot_external extends external_api {
         ));
         
         // get id for prefered content type
-        $preferedcontenttype_id = $DB->get_field("modules", "id", array("name" => $preferedcontenttype));
+        $preferedcontenttype_id = $DB->get_field("modules", "id", array("name" => $params['preferedcontenttype']));
 
         // update settings
-        $settings = $DB->get_record('chatbot_usersettings', array('userid' => $userid));
-        $settings->enabled = $enabled;
-        $settings->firstturn = $firstturn;
-        $settings->logging = $logging;
+        $settings = $DB->get_record('chatbot_usersettings', array('userid' => $params['userid']));
+        $settings->enabled = $params['enabled'];
+        $settings->firstturn = $params['firstturn'];
+        $settings->logging = $params['logging'];
         $settings->preferedcontenttype = $preferedcontenttype_id;
-        $settings->numsearchresults = $numsearchresults;
-        $settings->numreviewquizzes = $numreviewquizzes;
-        $settings->openonlogin = $openonlogin;
-        $settings->openonquiz = $openonquiz;
-        $settings->openonsection = $openonsection;
-        $settings->openonbranch = $openonbranch;
-        $settings->openonbadge = $openonbadge;
+        $settings->numsearchresults = $params['numsearchresults'];
+        $settings->numreviewquizzes = $params['numreviewquizzes'];
+        $settings->openonlogin = $params['openonlogin'];
+        $settings->openonquiz = $params['openonquiz'];
+        $settings->openonsection = $params['openonsection'];
+        $settings->openonbranch = $params['openonbranch'];
+        $settings->openonbadge = $params['openonbadge'];
         $DB->update_record('chatbot_usersettings', $settings);
         
         // notify chatbot
-        $settings->userid = $userid;
-        $settings->preferedcontenttype = $preferedcontenttype;
+        $settings->userid = $params['userid'];
+        $settings->preferedcontenttype = $params['preferedcontenttype'];
         $settings->preferedcontenttypeid = $preferedcontenttype_id;
         block_chatbot\observer::send("http://" . block_chatbot_get_event_server_name() . ":" . block_chatbot_get_server_port() . "/usersettings", $settings);
         
@@ -176,7 +176,7 @@ class block_chatbot_external extends external_api {
     public static function get_topic_id_and_name($cmid) {
         global $DB;
         $params = self::validate_parameters(self::get_topic_id_and_name_parameters(), array('cmid' => $cmid));
-        [$id, $name] = get_topic_id_and_name($cmid);
+        [$id, $name] = get_topic_id_and_name($params['cmid']);
         return array(
             'id' => $id, 
             'name' => $name
