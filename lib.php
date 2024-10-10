@@ -82,31 +82,62 @@ function block_chatbot_get_chat_container() {
 }
 
 
-function update_recently_viewed_completion($userid, $courseid, $coursemoduleid, $time, $completionstate) {
-	// keeping tack of course module completions in our custom history tables
-	global $DB;
 
-	// check if we already have an entry
-	if($DB->record_exists('chatbot_recentlyaccessed', array('userid' => $userid, 
-													 		'courseid' => $courseid,
-															'cmid' => $coursemoduleid))) {
-		$item = $DB->get_record('chatbot_recentlyaccessed', array('userid' => $userid, 
-																	'courseid' => $courseid,
-																	'cmid' => $coursemoduleid));
-		$item->completionstate = $completionstate;
-		$item->timeaccess = $time;
-		$DB->update_record('chatbot_recentlyaccessed', $item);
-	} else {
-		// create a new entry
-		$item = new stdClass;
-		$item->userid = $userid;
-		$item->cmid = $coursemoduleid;
-		$item->courseid = $courseid;
-		$item->completionstate = $completionstate;
-		$item->timeaccess = $time;
-		$DB->insert_record('chatbot_recentlyaccessed', $item);	
-	}
+// dictionary cache for course module typess and ids.
+// they should not change during the session, so we can cache them (they will be accessed frequently).
+$typename_to_id_cache = array();
+$id_to_typename_cache = array();
+
+function get_id_by_typename($typename) {
+    global $DB, $typename_to_id_cache, $id_to_typename_cache;
+    if (!in_array($typename, $typename_to_id_cache)) {
+        $module_id = $DB->get_field('modules', 'id', array('name' => $typename));
+        $id_to_typename_cache[$module_id] = $typename;
+        $typename_to_id_cache[$typename] = $module_id;
+    }
+    return $typename_to_id_cache[$typename];
 }
+
+function get_typename_by_id($module_id) {
+    global $DB, $typename_to_id_cache, $id_to_typename_cache;
+    if (!in_array($module_id, $id_to_typename_cache)) {
+        $typename = $DB->get_field('modules', 'name', array('id' => $module_id));
+        $id_to_typename_cache[$module_id] = $typename;
+        $typename_to_id_cache[$typename] = $module_id;
+    }
+}
+
+
+function course_modules_by_topic($topic, $courseid, $includetypes = ["url", "book", "resource", "quiz", "h5pactivity", "icecreamgame"]) {
+    // returns all course modules for the topic or topic prefix (e.g., "A", "A1-1", "A2", ...) with
+	// - course module id
+	// - module type id
+	// - instance id
+	// - section id
+    global $DB;
+
+    $type_ids = array_map('get_id_by_typename', $includetypes);
+    [$_insql_types, $_insql_types_params] = $DB->get_in_or_equal($type_ids, SQL_PARAMS_NAMED, 'types');
+
+	$topic_like = $DB->sql_like('tag.rawname', ':topic');
+    $course_modules = $DB->get_records_sql("SELECT cm.id as cmid, cm.module as module, cm.instance as instance, cm.section
+                                       FROM {course_modules} as cm
+									   JOIN {tag} as tag ON tag.rawname LIKE :topic
+									   JOIN {tag_instance} as ti ON ti.tagid = tag.id
+                                       WHERE cm.course = :courseid
+                                       AND cm.module $_insql_types
+                                       AND $topic_like ",
+                                       array_merge(
+											array(
+												"courseid" => $courseid,
+												"topic" => $topic . "%"
+                                       		),
+											$_insql_types_params
+										)
+    );
+	return $course_modules;
+}
+
 
 function update_recently_viewed($userid, $courseid, $coursemoduleid, $time, $completionstate) {
 	// keeping tack of course module views in our custom history tables
@@ -133,31 +164,15 @@ function update_recently_viewed($userid, $courseid, $coursemoduleid, $time, $com
 	}
 }
 
-function get_open_section_module_ids($userid, $sectionid, $include_types=["url", "book", "resource", "quiz", "h5pactivity", "icecreamgame"]) {
+function _extract_id_from_record($record) {
+	return $record->id;
+}
+
+function get_open_section_module_ids($userid, $courseid, $topic, $include_types=["url", "book", "resource", "quiz", "h5pactivity", "icecreamgame"]) {
 	// Get all the course modules with types whitelisted in $include_types for the specified section that are not marked as completed. 
 	global $DB;
-	// get all section module ids
-	$all_section_module_ids = array_map('intval', explode(",", $DB->get_record("course_sections", array('id' => $sectionid), 'sequence')->sequence)); // array of course module ids
-	if(empty($all_section_module_ids)) {
-		return array();
-	}
-
-	$courseid = $DB->get_field("course_sections", "course", array(
-		"id" => $sectionid
-	));
-
-	// filter the section modules by the type whitelist
-	// TODO use the moodle sql_ compatibility functions instead of custom execute
-	[$_insql_sectionmoduleids, $_insql_sectionmoduleids_params] = $DB->get_in_or_equal($all_section_module_ids, SQL_PARAMS_NAMED, 'sectionmoduleids');
-	[$_insql_types, $_insql_types_params] = $DB->get_in_or_equal($include_types, SQL_PARAMS_NAMED, 'types');
-
-	$filtered_section_module_ids = $DB->get_fieldset_sql("SELECT cm.id 
-												 FROM {course_modules} AS cm
-												 JOIN {modules} ON cm.module = {modules}.id
-												 WHERE cm.id $_insql_sectionmoduleids
-												 AND {modules}.name $_insql_types
-												 AND cm.visible = 1",
-												 array_merge($_insql_sectionmoduleids_params, $_insql_types_params));
+	// get all topic modules
+	$filtered_section_module_ids = array_map('_extract_id_from_record', course_modules_by_topic($topic, $courseid, $include_types));
 	if(empty($filtered_section_module_ids)) {
 		return array();
 	}
@@ -219,29 +234,58 @@ function course_module_is_completed($userid, $cmid) {
 								));
 }
 
-function get_all_branch_section_ids($userid, $sectionid) {
+function get_all_branch_section_ids($userid, $courseid, $sectionid) {
 	// Return all section ids that are part of the same branch as the given section.
 	global $DB;
 
-	// Figure out current branch
-	$sectionname = $DB->get_field('course_sections', 'name', array('id' => $sectionid));
-	// var_dump($sectionname);
-	if(preg_match('/Thema ([A-Z])\d(-\d+)?:/', $sectionname, $matches)) {
-		// Extract topic letter
-		// $matches[0] contains the entire matched string
-		// $matches[1] contains the value of the first capture group
-		$topicletter = $matches[1]; // e.g., A, B, ...
-		// var_dump($topicletter);
+	// Figure out current branch:
+	// check topics for course modules in current section
+	$cm_ids = $DB->get_fieldset_sql("SELECT id
+									 FROM {course_modules}
+									 WHERE section = :sectionid
+									 AND course = :courseid",
+					array("sectionid" => $sectionid,
+								  "courseid" => $courseid)
+	);
+	[$_insql_cmids, $_insql_cmids_params] = $DB->get_in_or_equal($cm_ids, SQL_PARAMS_NAMED, 'cmids');
+	// TODO only extract topic letter to keep current functionality
+	// TODO update course id in function call
+	$topic_names = $DB->get_field_sql("SELECT DISTINCT t.name
+											FROM {tag} as t
+											JOIN {tag_instance} as ti ON ti.tagid = t.id
+											WHERE ti.itemid $_insql_cmids",
+											$_insql_cmids_params
+	);
 
-		// find all sections belonging to the same topic branch
-		$_likesql_topicletter = $DB->sql_like('name', ':topicletter');
-		$result = $DB->get_fieldset_sql("SELECT id FROM {course_sections} WHERE $_likesql_topicletter",
-									 array("topicletter" => "%Thema " . $topicletter . "%"));
-		// var_dump($result);
-		return [$topicletter, $result];
+	// get all tags matching the topic pattern
+	$topic_branch = array();
+	$sectionids = array();
+	foreach($topic_names as $topic_name) {
+		if(preg_match('/topic:([a-z])\d+(-\d+)?[a-z]:/', $topic_name, $matches)) {
+			// Extract topic letter
+			// $matches[0] contains the entire matched string
+			// $matches[1] contains the value of the first capture group
+			$topicletter = $matches[1]; // e.g., A, B, ...
+			if(!in_array($topicletter, $topic_branch)) {
+				array_push($topic_branch, $topicletter);
+
+				// get all section ids that are part of the same branch
+				$_likesql_topicletter = $DB->sql_like('name', ':topicletter');
+				$topic_section_ids = $DB->get_fieldset_sql("SELECT DISTINCT cm.section
+									FROM {course_modules} as cm
+									JOIN {tag_instance} as ti ON ti.itemid = cm.id
+									JOIN {tag} as t ON t.id = ti.tagid
+									WHERE $_likesql_topicletter
+									AND cm.course = :courseid",
+						array_merge(array("courseid" => $courseid,
+										  "topicletter" => "topic:" . $topicletter . "%")
+								)
+				);
+				$sectionids[$topicletter] = array_merge($sectionids, $topic_section_ids);
+			}
+		}
 	}
-
-	return [null, []];
+	return $sectionids;
 }
 
 
@@ -320,14 +364,10 @@ function get_prefered_usercontenttype_cmid($userid, $cmid) {
 
 function get_module_type_name($cmid) {
 	global $DB;
-	return $DB->get_field_sql("SELECT {modules}.name 
-							   FROM {modules}
-							   JOIN {course_modules} ON {course_modules}.module = {modules}.id
-							   WHERE {course_modules}.id = :cmid",
-							array(
-								"cmid" => $cmid
-							)
-				);
+	return get_typename_by_id(
+		$DB->get_field("course_modules", "module",
+					 		  array("id" => $cmid))
+	);
 }
 
 function get_course_module_name($cmid) {
@@ -364,47 +404,45 @@ function get_course_module_name_and_typename($cmid) {
 	return [$cmname, $typename];
 }
 
-function _clean_name($name) {
-	# handle some special cases where names were not entered consistently in the ZQ content
-	if($name == "Thema C1-1: Das Koordinatensystem - Was ist wo?") {
-		return "Thema C1-1: Das Koordinatensystem";
-	} else if($name == "Quizzes zum Thema C1-1: Das Koordinatensystem") {
-		return "Quizzes zum Thema C1-1: Das Koordinatensystem - Was ist wo?";
-	}
-	return $name;
-}
-
-function is_quiz_section($sectionname) {
-	return strContains(strtolower($sectionname), 'quiz');
-}
-
-function get_quiz_section_id($content_section_id, $section_name) {
+function is_quiz_section($sectionid) {
+	// return true, if at least one module in this section is a quiz / h5pactivity
 	global $DB;
-	if(is_quiz_section($section_name)) {
-		return $content_section_id;
-	} 
-	# find related quiz section
-	$_likesql_quiz_section_name = $DB->sql_like("name", ":sectionname");
-	$result = $DB->get_field_sql("SELECT id FROM {course_sections} WHERE $_likesql_quiz_section_name",
-								 array(
-									"sectionname" => "Quizzes zum " . _clean_name($section_name)
-								)
-							);
-	return $result;
+	$course_module_types = $DB->get_fieldset_sql("SELECT module
+												  FROM {course_modules}
+												  WHERE section = :sectionid",
+												array("sectionid" => $sectionid)
+	);
+	foreach($course_module_types as $type) {
+		if(in_array(get_typename_by_id($type), array("quiz", "h5pactivity"))) {
+			return true;
+		}
+	}
+	return false;
 }
 
-function get_content_section_id($quiz_section_id, $section_name) {
+function get_content_section_ids($quiz_section_tag) {
 	global $DB;
-	if(!is_quiz_section($section_name)) {
-		return $quiz_section_id;
+	if(!is_quiz_section($quiz_section_tag)) {
+		return $quiz_section_tag;
 	}
-	$_likesql_content_section_name = $DB->sql_like("name", ":sectionname");
-	$result = $DB->get_field_sql("SELECT id FROM {course_sections} WHERE $_likesql_content_section_name",
-								 array(
-									"sectionname" => str_replace('Quizzes zum ', "", _clean_name($section_name))
-								)
-							);
-	return $result;
+
+	// todo finish this function
+	// get all sections with course modules that match the given tag
+	$section_ids = $DB->get_fieldset_sql("SELECT DISTINCT cm.section
+										  FROM {course_modules} as cm
+										  JOIN {tag_instance} as ti ON ti.itemid = cm.id
+										  JOIN {tag} as t ON t.id = ti.tagid
+										  WHERE t.id = :tagid",
+										array("tagid" => $quiz_section_tag)
+	);
+	// go through all sections, and collect the sections that do not contain a quiz
+	$content_section_ids = array();
+	foreach($section_ids as $section_id) {
+		if(!is_quiz_section($section_id)) {
+			array_push($content_section_ids, $section_id);
+		}
+	}
+	return $content_section_ids;
 }
 
 
@@ -471,16 +509,48 @@ function is_available($json_conditions, $userid) {
 	return _recursive_availability($data, $userid);
 }
 
-function is_available_course_section($userid, $sectionid, $sectionname, $visible, $json_conditions) {
+
+function is_available_course_section($userid, $topic_name) {
 	global $DB;
-	if(is_quiz_section($sectionname)) {
-		// sometimes, the quiz sections are avialable, but the content sections not yet
-		// -> this is a bug from the course constraints, and the quizes should only be available if the corresponding content can as be seen as well
-		$content_section_id = get_content_section_id($sectionid, $sectionname);
-		$content_section = $DB->get_record("course_sections", array("id" => $content_section_id), "name,visible,availability");
-		return is_available_course_section($userid, $content_section_id, $content_section->name, $content_section->visible, $content_section->availability);
+
+	// for given topic id
+	// 1. get section ids
+	$infos = $DB->get_records_sql("SELECT cm.section as section, cm.module as module, cm.availability as cm_available, cm.visible as cm_visible, cs.availability as cs_available, cs.visible as cs_visible
+									 	  FROM {course_modules} as cm
+										  JOIN {course_section} as cs
+										  JOIN {tag_instance} as ti ON ti.itemid = cm.id
+										  JOIN {tag} as t ON t.id = ti.tagid
+										  WHERE t.rawname = :topic_name",
+							array("topic_name" => $topic_name)
+						);
+	// sort infos by section id
+	$infos_by_section = array();
+	foreach($infos as $info) {
+		if(!array_key_exists($info->section, $infos_by_section)) {
+			$infos_by_section[$info->section] = array();
+		}
+		array_push($infos_by_section[$info->section], $info);
 	}
-	return $visible && is_available($json_conditions, $userid);
+
+	// 2. check that all sections are available
+	$found_non_quiz_cm = false;
+	foreach($infos_by_section as $sectionid => $section_infos) {
+		if($section_infos[0]->cs_visible == false || !is_available($section_infos[0]->cs_available, $userid)) {
+			return false;
+		}
+		foreach($section_infos as $info) {
+			if(get_typename_by_id($info->module) != "quiz" && get_typename_by_id($info->module) != "h5pactivity") {
+				// current course module is not a quiz, check if it is available
+				if($info->cm_visible == true && is_available($info->cm_available, $userid)) {
+					$found_non_quiz_cm = true;
+					break;
+				}
+			}
+		}
+	}
+						
+	// 3. check if at least 1 module is available that is not a quiz
+	return $found_non_quiz_cm;
 }
 
 function is_available_course_module($userid, $cmid, $includetypes = "url,book,resource,h5pactivity,quiz,icecreamgame") {
@@ -493,34 +563,17 @@ function is_available_course_module($userid, $cmid, $includetypes = "url,book,re
 									WHERE cm.id = :cmid", array(
 		"cmid" => $cmid 
 	));
-	if(is_quiz_section($section->name)) {
-		// some quiz sections are available, even though the content section is not.
-		// this fixes it.
-		$content_section = $DB->get_record("course_sections",
-			array(
-				"id" => get_content_section_id($section->id, $section->name),
-			),
-			"id,name,visible,availability"
-		);
-		if((!is_null($content_section)) && (!is_available_course_section($userid, $content_section->id, $content_section->name, $content_section->visible, $content_section->availability))) {
-			// content section is not available
-			return false;
-		} else {
-			// check that the content section is already completed before suggesting a quiz section
-			return section_is_completed($userid, $content_section->id);
-		}
-	} else {
-		// some content sections are available, even though the quiz section is not.
-		// this fixes it.
-		// $quiz_section = $DB->get_record("course_sections",
-		// 	array(
-		// 		"id" => get_quiz_section_id($section->id, $section->name),
-		// 	),
-		// 	"id,name,visible,availability"
-		// );
-		// if((!is_null(($quiz_section)) && (!is_available_course_section($userid, $quiz_section->id, $quiz_section->name, $quiz_section->visible, $quiz_section->availability)))) {
-		// 	return false;
-		// }
+	$_like_topic_name = $DB->sql_like('tag.rawname', ':topicname');
+	$cm_topic_tag_id = $DB->get_field_sql("SELECT ti.tagid
+											FROM {tag_instance} as ti
+											JOIN {tag} as t ON t.id = ti.tagid
+											WHERE ti.itemid = :cmid
+											AND $_like_topic_name",
+											array("cmid" => $cmid,
+												  "topicname" => "topic:%")
+	);
+	if(!is_available_course_section($userid, $cm_topic_tag_id)) {
+		return false;
 	}
 
 	// sections are available, check module availablity
@@ -538,19 +591,18 @@ function is_available_course_module($userid, $cmid, $includetypes = "url,book,re
 	return $cm->visible && is_available($cm->availability, $userid);
 }
 
-function get_section_id_and_name($cmid) {
+function get_topic_id_and_name($cmid) {
 	global $DB;
-	$result = $DB->get_records_sql_menu("SELECT {course_sections}.id, {course_sections}.name 
-								FROM {course_sections}
-								JOIN {course_modules} ON {course_sections}.id = {course_modules}.section
-								WHERE {course_modules}.id = :cmid
+	$result = $DB->get_record_sql("SELECT {tag}.id, {tag}.rawname
+								FROM {tag}
+								JOIN {tag_instance} ON {tag_instance}.tagid = {tag}.id
+								WHERE {tag_instance}.itemid = :cmid
 								LIMIT 1",
 								array("cmid" => $cmid)
 							);
-	$sectionid = array_keys($result)[0];
 	return array(
-		$sectionid, 
-		$result[$sectionid]
+		$result->id,
+		$result->rawname
 	);
 }
 
