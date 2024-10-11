@@ -379,114 +379,114 @@ class block_chatbot_external extends external_api {
 
 
 
-    // public static function has_seen_any_course_modules_parameters() {
-    //     return new external_function_parameters(
-    //         array(
-    //             'userid' => new external_value(PARAM_INT, 'user id'),
-    //             'courseid' => new external_value(PARAM_INT, 'course id')
-    //         )
-    //     );
-    // }
-    // public static function has_seen_any_course_modules_returns() {
-    //     return new external_single_structure(
-    //         array(
-    //             'seen' => new external_value(PARAM_BOOL, 'true, if the given user has seen at least one module in the given course'),
-    //         )
-    //     );
-    // }
-    // public static function has_seen_any_course_modules($userid, $courseid) {
-    //     global $DB;
-    //     $params = self::validate_parameters(self::has_seen_any_course_modules_parameters(), array('userid' => $userid, 'courseid' => $courseid));
+    public static function has_seen_any_course_modules_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'),
+                'courseid' => new external_value(PARAM_INT, 'course id')
+            )
+        );
+    }
+    public static function has_seen_any_course_modules_returns() {
+        return new external_single_structure(
+            array(
+                'seen' => new external_value(PARAM_BOOL, 'true, if the given user has seen at least one module in the given course'),
+            )
+        );
+    }
+    public static function has_seen_any_course_modules($userid, $courseid) {
+        global $DB;
+        $params = self::validate_parameters(self::has_seen_any_course_modules_parameters(), array('userid' => $userid, 'courseid' => $courseid));
         
-    //     $result = $DB->record_exists_sql(
-    //                             "SELECT id
-    //                              FROM {chatbot_recentlyaccessed}
-    //                              WHERE userid = :userid
-    //                              AND courseid = :courseid",
-    //                         array("userid" => $userid,
-    //                               "courseid" => $courseid)
-    //                         );
-    //     return array(
-    //         'seen' => $result
-    //     );
-    // }
+        $result = $DB->record_exists_sql(
+                    "SELECT id
+                     FROM {chatbot_recentlyaccessed}
+                     WHERE userid = :userid
+                     AND courseid = :courseid",
+                    array("userid" => $params['userid'],
+                      "courseid" => $params['courseid'])
+                    );
+        return array(
+            'seen' => $result
+        );
+    }
 
 
 
-    // public static function get_last_viewed_course_modules_parameters() {
-    //     return new external_function_parameters(
-    //         array(
-    //             'userid' => new external_value(PARAM_INT, 'user id'), 
-    //             'courseid' => new external_value(PARAM_INT, 'course id'), 
-    //             'completed' => new external_value(PARAM_BOOL, 'whether the module status should be viewed or completed'),
-    //             'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
-    //         )
-    //     );
-    // }
-    // public static function get_last_viewed_course_modules_returns() {
-    //     return new external_multiple_structure(
-    //         new external_single_structure(
-    //             array(
-    //                 'cmid' => new external_value(PARAM_INT, 'id of the course module'),
-    //                 'section' => new external_value(PARAM_INT, "id of the course module's section"),
-    //                 'timeaccess' => new external_value(PARAM_INT, "timestamp of the course module's last access"),
-    //                 'completionstate' => new external_value(PARAM_INT, "course module's completionstate"),
-    //             )
-    //         )
-    //     );
-    // }
-    // public static function get_last_viewed_course_modules($userid, $courseid, $completed, $includetypes) {
-    //     global $DB;
-    //     $params = self::validate_parameters(self::get_last_viewed_course_modules_parameters(), 
-    //         array('userid' => $userid, 
-    //               'courseid' => $courseid,
-    //               'completed' => $completed,
-    //               'includetypes' => $includetypes
-    //         )
-    //     );
+    public static function get_last_viewed_course_modules_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'), 
+                'courseid' => new external_value(PARAM_INT, 'course id'), 
+                'completed' => new external_value(PARAM_BOOL, 'whether the module status should be viewed or completed'),
+                'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
+            )
+        );
+    }
+    public static function get_last_viewed_course_modules_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'cmid' => new external_value(PARAM_INT, 'id of the course module'),
+                    'section' => new external_value(PARAM_INT, "id of the course module's section"),
+                    'timeaccess' => new external_value(PARAM_INT, "timestamp of the course module's last access"),
+                    'completionstate' => new external_value(PARAM_INT, "course module's completionstate"),
+                )
+            )
+        );
+    }
+    public static function get_last_viewed_course_modules($userid, $courseid, $completed, $includetypes) {
+        global $DB;
+        $params = self::validate_parameters(self::get_last_viewed_course_modules_parameters(), 
+            array('userid' => $userid, 
+              'courseid' => $courseid,
+              'completed' => $completed,
+              'includetypes' => $includetypes
+            )
+        );
         
-    //     [$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $includetypes), SQL_PARAMS_NAMED, 'types');
-    //     $sql_params = array_merge(
-    //         array(
-    //             "courseid" => $courseid,
-    //             "userid" => $userid
-    //         ),
-    //         $_insql_types_params
-    //     );
-    //     if($completed) {
-    //         // Include also course modules that are not completion-tracking enabled, but that have been viewed by the user
-    //         $results = $DB->get_records_sql("SELECT ra.cmid, ra.timeaccess, ra.completionstate, cm.section FROM {chatbot_recentlyaccessed} AS ra
-    //                                         JOIN {course_modules} AS cm ON cm.id = ra.cmid
-    //                                         JOIN {modules} ON {modules}.id = cm.module
-    //                                         WHERE ra.userid = :userid
-    //                                         AND ra.courseid = :courseid
-    //                                         AND (
-    //                                             ra.completionstate = 1
-    //                                             OR cm.completion = 0
-    //                                         )
-    //                                         AND {modules}.name $_insql_types
-    //                                         ORDER BY timeaccess DESC", 
-    //                $sql_params
-    //         );
-    //     } else {
-    //         // Only show modules that are completion-tracking enabled:
-    //         // If they are in this table, the user has at least already seen them.
-    //         // If they are not tracking completion, viewing them once should be enough.
-    //         $results = $DB->get_records_sql("SELECT ra.cmid, ra.timeaccess, ra.completionstate, cm.section FROM {chatbot_recentlyaccessed} AS ra
-    //                                         JOIN {course_modules} AS cm ON cm.id = ra.cmid
-    //                                         JOIN {modules} ON {modules}.id = cm.module
-    //                                         WHERE ra.userid = :userid
-    //                                         AND ra.courseid = :courseid
-    //                                         AND ra.completionstate = 0
-    //                                         AND cm.completion > 0
-    //                                         AND {modules}.name $_insql_types
-    //                                         ORDER BY timeaccess DESC", 
-    //                $sql_params
-    //         );
-    //     }
+        [$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $params['includetypes']), SQL_PARAMS_NAMED, 'types');
+        $sql_params = array_merge(
+            array(
+            "courseid" => $params['courseid'],
+            "userid" => $params['userid']
+            ),
+            $_insql_types_params
+        );
+        if($params['completed']) {
+            // Include also course modules that are not completion-tracking enabled, but that have been viewed by the user
+            $results = $DB->get_records_sql("SELECT ra.cmid, ra.timeaccess, ra.completionstate, cm.section FROM {chatbot_recentlyaccessed} AS ra
+                            JOIN {course_modules} AS cm ON cm.id = ra.cmid
+                            JOIN {modules} ON {modules}.id = cm.module
+                            WHERE ra.userid = :userid
+                            AND ra.courseid = :courseid
+                            AND (
+                            ra.completionstate = 1
+                            OR cm.completion = 0
+                            )
+                            AND {modules}.name $_insql_types
+                            ORDER BY timeaccess DESC", 
+               $sql_params
+            );
+        } else {
+            // Only show modules that are completion-tracking enabled:
+            // If they are in this table, the user has at least already seen them.
+            // If they are not tracking completion, viewing them once should be enough.
+            $results = $DB->get_records_sql("SELECT ra.cmid, ra.timeaccess, ra.completionstate, cm.section FROM {chatbot_recentlyaccessed} AS ra
+                            JOIN {course_modules} AS cm ON cm.id = ra.cmid
+                            JOIN {modules} ON {modules}.id = cm.module
+                            WHERE ra.userid = :userid
+                            AND ra.courseid = :courseid
+                            AND ra.completionstate = 0
+                            AND cm.completion > 0
+                            AND {modules}.name $_insql_types
+                            ORDER BY timeaccess DESC", 
+               $sql_params
+            );
+        }
 
-    //     return $results;
-    // }
+        return $results;
+    }
 
 
 
