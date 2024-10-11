@@ -668,21 +668,35 @@ function count_completed_course_modules($userid, $courseid, $includetypes, $star
 
 function get_user_course_completion_percentage($userid, $courseid, $includetypes) {
 	global $DB;
-	// calculate current course progress percentage (only including 1) whitelisted module types, and 2) only including modules that enable completion tracking)
+	// calculate current course progress percentage, only including 
+	// 1) whitelisted module types, and
+	// 2) only including modules that enable completion tracking, and 
+	// 3) only including modules that are tagged with a topic tag
 	[$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $includetypes), SQL_PARAMS_NAMED, 'types');
+	$_topic_like = $DB->sql_like('t.rawname', ':topic');
 	$total_num_modules = $DB->count_records_sql("SELECT COUNT({course_modules}.id)
 												FROM {course_modules}
 												JOIN {modules} ON {modules}.id = {course_modules}.module
+												JOIN {tag_instance} as ti ON ti.itemid = {course_modules}.id
+												JOIN {tag} as t ON t.id = ti.tagid
 												WHERE {course_modules}.course = :courseid
 												AND {course_modules}.completion > 0
-												AND {modules}.name $_insql_types",
+												AND {modules}.name $_insql_types
+												AND $_topic_like",
 										array_merge(
-											array("courseid" => $courseid),
+											array(
+												  "courseid" => $courseid,
+												  "topic" => "topic:%"
+											),
 											$_insql_types_params    
 										)
 	);
 	$done_modules = count_completed_course_modules($userid, $courseid, $includetypes, 0, 0);
-	return $done_modules / $total_num_modules;
+	if($total_num_modules == 0) {
+		return 0;
+	} else {
+		return $done_modules / $total_num_modules;
+	}
 }
 
 

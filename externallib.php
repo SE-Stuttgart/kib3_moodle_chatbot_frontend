@@ -771,110 +771,114 @@ class block_chatbot_external extends external_api {
 
 
 
-    // public static function count_completed_course_modules_parameters() {
-    //     return new external_function_parameters(
-    //         array(
-    //             'userid' => new external_value(PARAM_INT, 'user id'),
-    //             'courseid' => new external_value(PARAM_INT, 'course id'),
-    //             'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
-    //             'starttime' => new external_value(PARAM_INT, 'start point of interval)'),
-    //             'endtime' => new external_value(PARAM_INT, 'end point of interval (or 0, if there should be no time limit)')
-    //         )
-    //     );
-    // }
-    // public static function count_completed_course_modules_returns() {
-    //     return new external_single_structure(
-    //         array(
-    //             'count' => new external_value(PARAM_INT, 'number of viewed course modules in given course during specified time range'),
-    //         )
-    //     );
-    // }
-    // public static function count_completed_course_modules($userid, $courseid, $includetypes, $starttime, $endtime) {
-    //     global $DB;
+    public static function count_completed_course_modules_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'),
+                'courseid' => new external_value(PARAM_INT, 'course id'),
+                'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
+                'starttime' => new external_value(PARAM_INT, 'start point of interval)'),
+                'endtime' => new external_value(PARAM_INT, 'end point of interval (or 0, if there should be no time limit)')
+            )
+        );
+    }
+    public static function count_completed_course_modules_returns() {
+        return new external_single_structure(
+            array(
+                'count' => new external_value(PARAM_INT, 'number of viewed course modules in given course during specified time range'),
+            )
+        );
+    }
+    public static function count_completed_course_modules($userid, $courseid, $includetypes, $starttime, $endtime) {
+        global $DB;
 
-    //     $params = self::validate_parameters(self::count_completed_course_modules_parameters(), array(
-    //         'userid' => $userid,
-    //         'courseid' => $courseid,
-    //         'includetypes' => $includetypes,
-    //         'starttime' => $starttime,
-    //         'endtime' => $endtime
-    //     ));
+        $params = self::validate_parameters(self::count_completed_course_modules_parameters(), array(
+            'userid' => $userid,
+            'courseid' => $courseid,
+            'includetypes' => $includetypes,
+            'starttime' => $starttime,
+            'endtime' => $endtime
+        ));
 
-    //     $count = count_completed_course_modules($userid, $courseid, $includetypes, $starttime, $endtime);
-    //     return array("count" => $count);
-    // }
+        $count = count_completed_course_modules($params['userid'], $params['courseid'], $params['includetypes'], $params['starttime'], $params['endtime']);
+        return array("count" => $count);
+    }
 
 
 
-    // public static function get_user_statistics_parameters() {
-    //     return new external_function_parameters(
-    //         array(
-    //             'userid' => new external_value(PARAM_INT, 'user id'),
-    //             'courseid' => new external_value(PARAM_INT, 'course id'),
-    //             'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
-    //             'updatedb' => new external_value(PARAM_BOOL, 'whether to update the progress column in the database with the newly calculated values')
-    //         )
-    //     );
-    // }
-    // public static function get_user_statistics_returns() {
-    //     return new external_single_structure(
-    //         array(
-    //             'course_completion_percentage' => new external_value(PARAM_FLOAT, 'percentage of course completed by user so far'),
-    //             'quiz_repetition_percentage' => new external_value(PARAM_FLOAT, 'percentage of quizzes repeated by the user so far'),
-    //         )
-    //     );
-    // }
-    // public static function get_user_statistics($userid, $courseid, $includetypes, $updatedb) {
-    //     global $DB;
+    public static function get_user_statistics_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'),
+                'courseid' => new external_value(PARAM_INT, 'course id'),
+                'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
+                'updatedb' => new external_value(PARAM_BOOL, 'whether to update the progress column in the database with the newly calculated values')
+            )
+        );
+    }
+    public static function get_user_statistics_returns() {
+        return new external_single_structure(
+            array(
+                'course_completion_percentage' => new external_value(PARAM_FLOAT, 'percentage of course completed by user so far'),
+                'quiz_repetition_percentage' => new external_value(PARAM_FLOAT, 'percentage of quizzes repeated by the user so far'),
+            )
+        );
+    }
+    public static function get_user_statistics($userid, $courseid, $includetypes, $updatedb) {
+        global $DB;
 
-    //     $params = self::validate_parameters(self::get_user_statistics_parameters(), array(
-    //         'userid' => $userid,
-    //         'courseid' => $courseid,
-    //         'includetypes' => $includetypes,
-    //         'updatedb' => $updatedb
-    //     ));
+        $params = self::validate_parameters(self::get_user_statistics_parameters(), array(
+            'userid' => $userid,
+            'courseid' => $courseid,
+            'includetypes' => $includetypes,
+            'updatedb' => $updatedb
+        ));
 
-    //     // calculate current progress percentage for quizzes
-    //     [$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $includetypes), SQL_PARAMS_NAMED, 'types');
-    //     $total_num_quizzes = $DB->count_records_sql("SELECT COUNT(id)
-    //                                                  FROM {grade_items}
-    //                                                  WHERE courseid = :courseid
-    //                                                  AND itemmodule $_insql_types",
-    //                                             array_merge(
-    //                                                 array("courseid" => $courseid),
-    //                                                 $_insql_types_params    
-    //                                             ));
-    //     $num_repeated_quizzes = count($DB->get_fieldset_sql("SELECT {grade_grades_history}.id
-    //                                                     FROM {grade_grades_history}
-    //                                                     JOIN {grade_items} ON {grade_items}.id = {grade_grades_history}.itemid
-    //                                                     WHERE {grade_grades_history}.userid = :userid
-    //                                                     AND {grade_items}.courseid = :courseid
-    //                                                     AND {grade_grades_history}.finalgrade IS NOT NULL
-    //                                                     AND {grade_grades_history}.source = :source
-    //                                                     GROUP BY {grade_grades_history}.itemid
-    //                                                     HAVING COUNT({grade_grades_history}.id) > 1
-    //                                                 ",
-    //                                             array("userid" => $userid,
-    //                                                     "courseid" => $courseid,
-    //                                                     "source" => "mod/h5pactivity")
-    //                                             )
-    //                                     );
-    //     $percentage_repeated_quizzes = $num_repeated_quizzes / $total_num_quizzes;
+        // calculate current progress percentage for quizzes
+        [$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $params['includetypes']), SQL_PARAMS_NAMED, 'types');
+        $total_num_quizzes = $DB->count_records_sql("SELECT COUNT(id)
+                                 FROM {grade_items}
+                                 WHERE courseid = :courseid
+                                 AND itemmodule $_insql_types",
+                            array_merge(
+                                array("courseid" => $params['courseid']),
+                                $_insql_types_params    
+                            ));
+        $num_repeated_quizzes = count($DB->get_fieldset_sql("SELECT {grade_grades_history}.id
+                                FROM {grade_grades_history}
+                                JOIN {grade_items} ON {grade_items}.id = {grade_grades_history}.itemid
+                                WHERE {grade_grades_history}.userid = :userid
+                                AND {grade_items}.courseid = :courseid
+                                AND {grade_grades_history}.finalgrade IS NOT NULL
+                                AND {grade_grades_history}.source = :source
+                                GROUP BY {grade_grades_history}.itemid
+                                HAVING COUNT({grade_grades_history}.id) > 1
+                                ",
+                            array("userid" => $params['userid'],
+                                "courseid" => $params['courseid'],
+                                "source" => "mod/h5pactivity")
+                            )
+                        );
+
+        $percentage_repeated_quizzes = 0.0;
+        if($total_num_quizzes > 0) {
+            $percentage_repeated_quizzes = $num_repeated_quizzes / $total_num_quizzes;
+        }
         
-    //     $percentage_done = get_user_course_completion_percentage($userid, $courseid, $includetypes);
-    //     if($updatedb) {
-    //         // update database with newly calculated values
-    //         $progress_summary_record = $DB->get_record("chatbot_progress_summary", array("userid" => $userid, "courseid" => $courseid));
-    //         $progress_summary_record->progress = $percentage_done;
-    //         $progress_summary_record->timecreated = (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp();
-    //         $DB->update_record("chatbot_progress_summary", $progress_summary_record);
-    //     }
+        $percentage_done = get_user_course_completion_percentage($params['userid'], $params['courseid'], $params['includetypes']);
+        if($params['updatedb']) {
+            // update database with newly calculated values
+            $progress_summary_record = $DB->get_record("chatbot_progress_summary", array("userid" => $params['userid'], "courseid" => $params['courseid']));
+            $progress_summary_record->progress = $percentage_done;
+            $progress_summary_record->timecreated = (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp();
+            $DB->update_record("chatbot_progress_summary", $progress_summary_record);
+        }
 
-    //     return array(
-    //         "course_completion_percentage" => $percentage_done,
-    //         "quiz_repetition_percentage" => $percentage_repeated_quizzes
-    //     );
-    // }
+        return array(
+            "course_completion_percentage" => $percentage_done,
+            "quiz_repetition_percentage" => $percentage_repeated_quizzes
+        );
+    }
 
 
 
