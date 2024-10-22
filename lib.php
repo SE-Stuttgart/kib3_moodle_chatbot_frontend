@@ -698,7 +698,11 @@ function get_user_course_completion_percentage($userid, $courseid, $includetypes
 										)
 	);
 	$done_modules = count_completed_course_modules($userid, $courseid, $includetypes, 0, 0);
-	return $done_modules / $total_num_modules;
+	if($total_num_modules == 0) {
+		return 0;
+	} else {
+		return $done_modules / $total_num_modules;
+	}
 }
 
 

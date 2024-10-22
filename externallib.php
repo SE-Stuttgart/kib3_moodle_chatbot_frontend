@@ -820,7 +820,11 @@ class block_chatbot_external extends external_api {
                                 "source" => "mod/h5pactivity")
                             )
                         );
-        $percentage_repeated_quizzes = $num_repeated_quizzes / $total_num_quizzes;
+
+        $percentage_repeated_quizzes = 0.0;
+        if($total_num_quizzes > 0) {
+            $percentage_repeated_quizzes = $num_repeated_quizzes / $total_num_quizzes;
+        }
         
         $percentage_done = get_user_course_completion_percentage($params['userid'], $params['courseid'], $params['includetypes']);
         if($params['updatedb']) {
