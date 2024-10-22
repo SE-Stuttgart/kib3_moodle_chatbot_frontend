@@ -282,101 +282,90 @@ class block_chatbot_external extends external_api {
     // }
 
 
-    // public static function get_branch_quizes_if_complete_parameters() {
-    //     return new external_function_parameters(
-    //         array(
-    //             'userid' => new external_value(PARAM_INT, 'user id'),
-    //             'courseid' => new external_value(PARAM_INT, 'course id'),
-    //             'sectionid' => new external_value(PARAM_INT, 'course module id from the branch to be checked'),
-    //             'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity')
-    //         )
-    //     );
-    // }
-    // public static function get_branch_quizes_if_complete_returns() {
-    //     return new external_single_structure(
-    //         array(
-    //             'completed' => new external_value(PARAM_BOOL, 'true, if branch is completed, else false'),
-    //             'branch' => new external_value(PARAM_TEXT, 'the letter of the topic branch'),
-    //             'candidates' => new external_multiple_structure(
-    //                 new external_single_structure(
-    //                     array(
-    //                     'cmid' => new external_value(PARAM_INT, 'the quiz id (as listed in the course module table)'),
-    //                     'grade' => new external_value(PARAM_FLOAT, 'the quiz grade scored by the given user')
-    //             ))),
-    //         )
-    //     );
-    // }
+    public static function get_branch_quizes_if_complete_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'),
+                'courseid' => new external_value(PARAM_INT, 'course id'),
+                'topicname' => new external_value(PARAM_TEXT, 'topicname from the branch to be checked'),
+                'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity')
+            )
+        );
+    }
+    public static function get_branch_quizes_if_complete_returns() {
+        return new external_single_structure(
+            array(
+                'completed' => new external_value(PARAM_BOOL, 'true, if branch is completed, else false'),
+                'branch' => new external_value(PARAM_TEXT, 'the letter of the topic branch'),
+                'candidates' => new external_multiple_structure(
+                    new external_single_structure(
+                        array(
+                        'cmid' => new external_value(PARAM_INT, 'the quiz id (as listed in the course module table)'),
+                        'grade' => new external_value(PARAM_FLOAT, 'the quiz grade scored by the given user')
+                ))),
+            )
+        );
+    }
     
-    // // TODO this function could be changed to return quizes from a whole branch, or just a sub branch (topic prefix)
-    // // the chatbot currently uses it to get quizes fronm a whole branch only
-    // public static function get_branch_quizes_if_complete($userid, $courseid, $sectionid, $includetypes=["url", "book", "resource", "quiz", "h5pactivity"]) {
-    //     $params = self::validate_parameters(self::get_branch_quizes_if_complete_parameters(), array('userid' => $userid, 'courseid' => $courseid, 'sectionid' => $sectionid, 'includetypes' => $includetypes));
-    //     global $DB;
+    // TODO this function could be changed to return quizes from a whole branch, or just a sub branch (topic prefix)
+    // the chatbot currently uses it to get quizes from a whole branch only
+    public static function get_branch_quizes_if_complete($userid, $courseid, $topicname, $includetypes=["url", "book", "resource", "quiz", "h5pactivity"]) {
+        $params = self::validate_parameters(self::get_branch_quizes_if_complete_parameters(), array('userid' => $userid, 'courseid' => $courseid, 'topicname' => $topicname, 'includetypes' => $includetypes));
+        global $DB;
+
+        $branch_letter = substr($params['topicname'], strlen("thema:"), 1); // A, B, ...
+
+        // check if all learning materials are completed
+        if(!topic_is_completed($params['userid'], $params['courseid'], $params['topicname'], explode(",", $params['includetypes']))) {
+            return array(
+                'completed' => false,
+                'branch' => $branch_letter,
+                'candidates' => array()
+            );
+        }
         
-	// 	// find all sections belonging to the same topic branch
-    //     $branch_sectionids = get_all_branch_section_ids($userid, $courseid, $sectionid);
-        
-    //     // check if there is any incomplete section
-    //     foreach($branch_sectionids as $topicletter => $sectionids) {
-    //         foreach($sectionids as $_sectionid) {
-    //             if(!section_is_completed($userid, $_sectionid, explode(",", $includetypes))) {
-    //                 // there is an incomplete section -> this branch is not ready for review yet!
-    //                 // -> stop checking and return empty list
-    //                 return array(
-    //                     'completed' => false,
-    //                     'branch' => $topicletter,
-    //                     'candidates' => array(),
-    //                 );
-    //             }
-    //         }
-    //     }
 
-    //     if(empty($sectionids)) {
-    //         return array(
-    //             'completed' => true,
-    //             'branch' => null,
-    //             'candidates' => array()
-    //         );
-    //     }
+        // TODO: better fix to filter out the course modules (quizzes) that depend on the completion of a jupyter notebook (currently using the cm.availability IS NULL)
+        // all sections are completed - collect list of review quiz candidates
+        $type_ids = array_map('get_id_by_typename', ["quiz", "h5pactivity"]);
+        [$_insql_types, $_insql_types_params] = $DB->get_in_or_equal($type_ids, SQL_PARAMS_NAMED, 'types');
+        $topic_like = $DB->sql_like('tag.name', ':topic');
+        $quiz_candidates = $DB->get_records_sql("SELECT cm.id as cmid, {grade_grades}.finalgrade / {grade_grades}.rawgrademax as grade
+                                           FROM {course_modules} as cm
+                                           JOIN {tag} as tag ON tag.name LIKE :topic
+                                           JOIN {tag_instance} as ti ON ti.tagid = tag.id
+                                           JOIN {grade_items} ON cm.instance = {grade_items}.iteminstance
+                                           JOIN {grade_grades} ON {grade_items}.id = {grade_grades}.itemid
+                                           WHERE cm.course = :courseid
+                                           AND {grade_grades}.userid = :userid
+                                           AND {grade_items}.itemmodule = 'h5pactivity'
+                                           AND {grade_items}.itemtype = 'mod'
+                                           AND cm.module $_insql_types
+                                           AND $topic_like
+                                           AND cm.availability IS NULL",
+                                           array_merge(
+                                                array(
+                                                    "courseid" => $courseid,
+                                                    "topic" => $branch_letter . "%"
+                                                   ),
+                                                $_insql_types_params
+                                            )
+        );
+        if(count($quiz_candidates) == 0) {
+            // could be a branch without quizzes
+            return array(
+                'completed' => true,
+                'branch' => $branch_letter,
+                'candidates' => array()
+            );
+        }
 
-    //     // all sections are completed - collect list of review quiz candidates
-    //     // NOTE: cm.availability = NULL filters out the course modules (quizzes) that depend on the completion of a jupyter notebook
-    //     $mergedArray = [];
-    //     foreach ($sectionids as $key => $array) {
-    //         $mergedArray = array_merge($mergedArray, $array);
-    //     }
-    //     [$_insql_sectionids, $_insql_sectionids_params] = $DB->get_in_or_equal($mergedArray, SQL_PARAMS_NAMED, 'sectionids');
+        // shuffle quizzes
+        shuffle($quiz_candidates);
 
-    //     $candidates = $DB->get_records_sql_menu("SELECT cm.id, {grade_grades}.finalgrade / {grade_grades}.rawgrademax 
-    //                                 FROM {course_modules} as cm
-    //                                 JOIN {grade_items} ON cm.instance = {grade_items}.iteminstance
-    //                                 JOIN {grade_grades} ON {grade_items}.id = {grade_grades}.itemid
-    //                                 WHERE cm.section $_insql_sectionids
-    //                                 AND {grade_grades}.userid = :userid
-    //                                 AND {grade_items}.itemmodule = 'h5pactivity'
-    //                                 AND {grade_items}.itemtype = 'mod'
-    //                                 AND cm.availability IS NULL
-    //                                 ORDER BY {grade_grades}.finalgrade ASC,
-    //                                         {grade_grades}.timemodified ASC",
-    //                                 array_merge($_insql_sectionids_params,
-    //                                     array('userid' => $userid)
-    //                                 )
-    //                             );
-    //     // convert into return type and return
-    //     $result = array();
-    //     foreach($candidates as $cmid => $grade) {
-    //         array_push($result, array(
-    //             "cmid" => $cmid,
-    //             "grade" => $grade
-    //         ));
-    //     }
-    //     return array(
-    //         "completed" => true,
-    //         "branch" => $topicletter,
-    //         "candidates" => $result
-    //     );
-    // }
-
+        // convert into return type and return
+        return $quiz_candidates;
+    }
 
 
     public static function has_seen_any_course_modules_parameters() {
@@ -429,6 +418,8 @@ class block_chatbot_external extends external_api {
                 array(
                     'cmid' => new external_value(PARAM_INT, 'id of the course module'),
                     'section' => new external_value(PARAM_INT, "id of the course module's section"),
+                    'topicid' => new external_value(PARAM_INT, "id of the course module's topic"),
+                    'topicname' => new external_value(PARAM_TEXT, "name of the course module's topic"),
                     'timeaccess' => new external_value(PARAM_INT, "timestamp of the course module's last access"),
                     'completionstate' => new external_value(PARAM_INT, "course module's completionstate"),
                 )
@@ -455,9 +446,12 @@ class block_chatbot_external extends external_api {
         );
         if($params['completed']) {
             // Include also course modules that are not completion-tracking enabled, but that have been viewed by the user
-            $results = $DB->get_records_sql("SELECT ra.cmid, ra.timeaccess, ra.completionstate, cm.section FROM {chatbot_recentlyaccessed} AS ra
+            $results = $DB->get_records_sql("SELECT ra.cmid, ra.timeaccess, ra.completionstate, cm.section, t.id as topicid, t.name as topicname
+                            FROM {chatbot_recentlyaccessed} AS ra
                             JOIN {course_modules} AS cm ON cm.id = ra.cmid
                             JOIN {modules} ON {modules}.id = cm.module
+                            JOIN {tag_instance} as ti ON ti.itemid = cm.id
+                            JOIN {tag} as t ON t.id = ti.tagid
                             WHERE ra.userid = :userid
                             AND ra.courseid = :courseid
                             AND (
@@ -472,9 +466,12 @@ class block_chatbot_external extends external_api {
             // Only show modules that are completion-tracking enabled:
             // If they are in this table, the user has at least already seen them.
             // If they are not tracking completion, viewing them once should be enough.
-            $results = $DB->get_records_sql("SELECT ra.cmid, ra.timeaccess, ra.completionstate, cm.section FROM {chatbot_recentlyaccessed} AS ra
+            $results = $DB->get_records_sql("SELECT ra.cmid, ra.timeaccess, ra.completionstate, cm.section, t.id as topicid, t.name as topicname
+                            FROM {chatbot_recentlyaccessed} AS ra
                             JOIN {course_modules} AS cm ON cm.id = ra.cmid
                             JOIN {modules} ON {modules}.id = cm.module
+                            JOIN {tag_instance} as ti ON ti.itemid = cm.id
+                            JOIN {tag} as t ON t.id = ti.tagid
                             WHERE ra.userid = :userid
                             AND ra.courseid = :courseid
                             AND ra.completionstate = 0

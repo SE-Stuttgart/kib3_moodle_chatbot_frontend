@@ -139,10 +139,10 @@ function course_modules_by_topic($topic, $courseid, $includetypes = ["url", "boo
     $type_ids = array_map('get_id_by_typename', $includetypes);
     [$_insql_types, $_insql_types_params] = $DB->get_in_or_equal($type_ids, SQL_PARAMS_NAMED, 'types');
 
-	$topic_like = $DB->sql_like('tag.rawname', ':topic');
+	$topic_like = $DB->sql_like('tag.name', ':topic');
     $course_modules = $DB->get_records_sql("SELECT cm.id as cmid, cm.module as module, cm.instance as instance, cm.section
                                        FROM {course_modules} as cm
-									   JOIN {tag} as tag ON tag.rawname LIKE :topic
+									   JOIN {tag} as tag ON tag.name LIKE :topic
 									   JOIN {tag_instance} as ti ON ti.tagid = tag.id
                                        WHERE cm.course = :courseid
                                        AND cm.module $_insql_types
@@ -225,9 +225,9 @@ function get_open_section_module_ids($userid, $courseid, $topic, $include_types=
 	return $difference;
 }
 
-function section_is_completed($userid, $sectionid, $include_types=["url", "book", "resource", "quiz", "h5pactivity", "icecreamgame"]) {
+function topic_is_completed($userid, $courseid, $topicname, $include_types=["url", "book", "resource", "quiz", "h5pactivity", "icecreamgame"]) {
 	// Check if all course modules with types whitelisted in $include types are completed for the given section.
-	$open_module_ids = get_open_section_module_ids($userid, $sectionid, $include_types);
+	$open_module_ids = get_open_section_module_ids($userid, $courseid, $include_types);
 	// var_dump($open_module_ids);
 	return count($open_module_ids) == 0;
 }
@@ -254,59 +254,6 @@ function course_module_is_completed($userid, $cmid) {
 								));
 }
 
-function get_all_branch_section_ids($userid, $courseid, $sectionid) {
-	// Return all section ids that are part of the same branch as the given section.
-	global $DB;
-
-	// Figure out current branch:
-	// check topics for course modules in current section
-	$cm_ids = $DB->get_fieldset_sql("SELECT id
-									 FROM {course_modules}
-									 WHERE section = :sectionid
-									 AND course = :courseid",
-					array("sectionid" => $sectionid,
-								  "courseid" => $courseid)
-	);
-	[$_insql_cmids, $_insql_cmids_params] = $DB->get_in_or_equal($cm_ids, SQL_PARAMS_NAMED, 'cmids');
-	// TODO only extract topic letter to keep current functionality
-	// TODO update course id in function call
-	$topic_names = $DB->get_field_sql("SELECT DISTINCT t.name
-											FROM {tag} as t
-											JOIN {tag_instance} as ti ON ti.tagid = t.id
-											WHERE ti.itemid $_insql_cmids",
-											$_insql_cmids_params
-	);
-
-	// get all tags matching the topic pattern
-	$topic_branch = array();
-	$sectionids = array();
-	foreach($topic_names as $topic_name) {
-		if(preg_match('/thema:([a-z])\d+(-\d+)?[a-z]:/', $topic_name, $matches)) {
-			// Extract topic letter
-			// $matches[0] contains the entire matched string
-			// $matches[1] contains the value of the first capture group
-			$topicletter = $matches[1]; // e.g., A, B, ...
-			if(!in_array($topicletter, $topic_branch)) {
-				array_push($topic_branch, $topicletter);
-
-				// get all section ids that are part of the same branch
-				$_likesql_topicletter = $DB->sql_like('name', ':topicletter');
-				$topic_section_ids = $DB->get_fieldset_sql("SELECT DISTINCT cm.section
-									FROM {course_modules} as cm
-									JOIN {tag_instance} as ti ON ti.itemid = cm.id
-									JOIN {tag} as t ON t.id = ti.tagid
-									WHERE $_likesql_topicletter
-									AND cm.course = :courseid",
-						array_merge(array("courseid" => $courseid,
-										  "topicletter" => "thema:" . $topicletter . "%")
-								)
-				);
-				$sectionids[$topicletter] = array_merge($sectionids, $topic_section_ids);
-			}
-		}
-	}
-	return $sectionids;
-}
 
 
 function is_prefered_usercontenttype($userid, $cmid) {
