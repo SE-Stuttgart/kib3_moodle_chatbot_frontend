@@ -281,7 +281,7 @@ function get_all_branch_section_ids($userid, $courseid, $sectionid) {
 	$topic_branch = array();
 	$sectionids = array();
 	foreach($topic_names as $topic_name) {
-		if(preg_match('/topic:([a-z])\d+(-\d+)?[a-z]:/', $topic_name, $matches)) {
+		if(preg_match('/thema:([a-z])\d+(-\d+)?[a-z]:/', $topic_name, $matches)) {
 			// Extract topic letter
 			// $matches[0] contains the entire matched string
 			// $matches[1] contains the value of the first capture group
@@ -298,7 +298,7 @@ function get_all_branch_section_ids($userid, $courseid, $sectionid) {
 									WHERE $_likesql_topicletter
 									AND cm.course = :courseid",
 						array_merge(array("courseid" => $courseid,
-										  "topicletter" => "topic:" . $topicletter . "%")
+										  "topicletter" => "thema:" . $topicletter . "%")
 								)
 				);
 				$sectionids[$topicletter] = array_merge($sectionids, $topic_section_ids);
@@ -530,18 +530,19 @@ function is_available($json_conditions, $userid) {
 }
 
 
-function is_available_course_section($userid, $topic_name) {
+function is_available_course_section($userid, $courseid, $topic_name) {
 	global $DB;
 
 	// for given topic id
 	// 1. get section ids
 	$infos = $DB->get_records_sql("SELECT cm.section as section, cm.module as module, cm.availability as cm_available, cm.visible as cm_visible, cs.availability as cs_available, cs.visible as cs_visible
 									 	  FROM {course_modules} as cm
-										  JOIN {course_section} as cs
+										  JOIN {course_sections} as cs ON cs.id = cm.section
 										  JOIN {tag_instance} as ti ON ti.itemid = cm.id
 										  JOIN {tag} as t ON t.id = ti.tagid
-										  WHERE t.rawname = :topic_name",
-							array("topic_name" => $topic_name)
+										  WHERE t.name = :topic_name
+										  AND cm.course = :courseid",
+							array("topic_name" => $topic_name, "courseid" => $courseid)
 						);
 	// sort infos by section id
 	$infos_by_section = array();
@@ -573,26 +574,23 @@ function is_available_course_section($userid, $topic_name) {
 	return $found_non_quiz_cm;
 }
 
-function is_available_course_module($userid, $cmid, $includetypes = "url,book,resource,h5pactivity,quiz,icecreamgame") {
+function is_available_course_module($userid, $cmid, $courseid, $includetypes = "url,book,resource,h5pactivity,quiz,icecreamgame") {
 	global $DB;
 
 	// first, check if the module's section is available 
-	$section = $DB->get_record_sql("SELECT section.id, section.name
-								    FROM {course_sections} as section
-									JOIN {course_modules} as cm ON cm.section = section.id
-									WHERE cm.id = :cmid", array(
-		"cmid" => $cmid 
-	));
-	$_like_topic_name = $DB->sql_like('tag.rawname', ':topicname');
-	$cm_topic_tag_id = $DB->get_field_sql("SELECT ti.tagid
-											FROM {tag_instance} as ti
-											JOIN {tag} as t ON t.id = ti.tagid
+	$_like_topic_name = $DB->sql_like('t.name', ':topicname');
+	$cm_topic_tag = $DB->get_field_sql("SELECT t.name
+											FROM {tag} as t
+											JOIN {tag_instance} as ti ON t.id = ti.tagid
+											JOIN {course_modules} as cm ON cm.id = ti.itemid
 											WHERE ti.itemid = :cmid
-											AND $_like_topic_name",
+											AND $_like_topic_name
+											AND cm.course = :courseid",
 											array("cmid" => $cmid,
-												  "topicname" => "topic:%")
+												  "topicname" => "thema:%",
+												  "courseid" => $courseid)
 	);
-	if(!is_available_course_section($userid, $cm_topic_tag_id)) {
+	if(!is_available_course_section($userid, $courseid, $cm_topic_tag)) {
 		return false;
 	}
 
@@ -613,16 +611,18 @@ function is_available_course_module($userid, $cmid, $includetypes = "url,book,re
 
 function get_topic_id_and_name($cmid) {
 	global $DB;
-	$result = $DB->get_record_sql("SELECT {tag}.id, {tag}.rawname
-								FROM {tag}
-								JOIN {tag_instance} ON {tag_instance}.tagid = {tag}.id
-								WHERE {tag_instance}.itemid = :cmid
+	$_insql_like_name = $DB->sql_like('t.name', ':topicname');
+	$result = $DB->get_record_sql("SELECT t.id as id, t.name as name
+								FROM {tag} as t
+								JOIN {tag_instance} as ti ON ti.tagid = t.id
+								WHERE ti.itemid = :cmid
+								AND $_insql_like_name
 								LIMIT 1",
-								array("cmid" => $cmid)
+								array("cmid" => $cmid, "topicname" => "thema:%")
 							);
 	return array(
 		$result->id,
-		$result->rawname
+		$result->name
 	);
 }
 
@@ -630,18 +630,23 @@ function count_completed_course_modules($userid, $courseid, $includetypes, $star
 	global $DB;
 
 	[$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $includetypes), SQL_PARAMS_NAMED, 'types');
+	$_likesql_topic = $DB->sql_like('t.name', ':topicname');
 	if($endtime <= 0 || $endtime <= $starttime) {
 		// no time interval - return count of all viewed course modules
 		$count = $DB->count_records_sql("SELECT COUNT({course_modules_completion}.id)
 										 FROM {course_modules_completion}
 										 JOIN {course_modules} ON {course_modules}.id = {course_modules_completion}.coursemoduleid
 										 JOIN {modules} ON {modules}.id = {course_modules}.module
+										 JOIN {tag_instance} as ti ON ti.itemid = {course_modules}.id
+										 JOIN {tag} as t ON t.id = ti.tagid
 										 WHERE {course_modules_completion}.userid = :userid
 										 AND {course_modules}.course = :courseid
-										 AND {modules}.name $_insql_types",
+										 AND {modules}.name $_insql_types
+										 AND $_likesql_topic",
 										array_merge(array(
 											"userid" => $userid,
 											"courseid" => $courseid,
+											"topicname" => "thema:%"
 										), $_insql_types_params)
 									);
 	} else {
@@ -650,16 +655,20 @@ function count_completed_course_modules($userid, $courseid, $includetypes, $star
 										 FROM {course_modules_completion}
 										 JOIN {course_modules} ON {course_modules}.id = {course_modules_completion}.coursemoduleid
 										 JOIN {modules} ON {modules}.id = {course_modules}.module
+										 JOIN {tag_instance} as ti ON ti.itemid = {course_modules}.id
+										 JOIN {tag} as t ON t.id = ti.tagid
 										 WHERE {course_modules_completion}.userid = :userid
 										 AND {course_modules_completion}.timemodified >= :starttime
 										 AND {course_modules_completion}.timemodified <= :endtime
 										 AND {course_modules}.course = :courseid
-										 AND {modules}.name $_insql_types",
+										 AND {modules}.name $_insql_types
+										 AND $_likesql_topic",
 										array_merge(array(
 											"userid" => $userid,
 											"courseid" => $courseid,
 											"starttime" => $starttime,
-											"endtime" => $endtime
+											"endtime" => $endtime,
+											"topicname" => "thema:%"
 										), $_insql_types_params)
 									);
 	}
@@ -668,16 +677,23 @@ function count_completed_course_modules($userid, $courseid, $includetypes, $star
 
 function get_user_course_completion_percentage($userid, $courseid, $includetypes) {
 	global $DB;
-	// calculate current course progress percentage (only including 1) whitelisted module types, and 2) only including modules that enable completion tracking)
+	// calculate current course progress percentage:
+	// 1) only including whitelisted module types, and 
+	// 2) only including modules that enable completion tracking, and
+	// 3) only being tagged with topic:...
 	[$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $includetypes), SQL_PARAMS_NAMED, 'types');
+	$_likeseql_topic = $DB->sql_like('t.name', ':topicname');
 	$total_num_modules = $DB->count_records_sql("SELECT COUNT({course_modules}.id)
 												FROM {course_modules}
 												JOIN {modules} ON {modules}.id = {course_modules}.module
+												JOIN {tag_instance} as ti ON ti.itemid = {course_modules}.id
+												JOIN {tag} as t ON t.id = ti.tagid
 												WHERE {course_modules}.course = :courseid
 												AND {course_modules}.completion > 0
-												AND {modules}.name $_insql_types",
+												AND {modules}.name $_insql_types
+												AND $_likeseql_topic",
 										array_merge(
-											array("courseid" => $courseid),
+											array("courseid" => $courseid, "topicname" => "thema:%"),
 											$_insql_types_params    
 										)
 	);
@@ -707,51 +723,65 @@ function get_badge_completion_percentage($userid, $cmids) {
 	);
 }
 
-function is_quiz_with_requirements($cmid) {
-	// Returns true if cmid is a quiz & it has requirements for availability => here: it is a quiz about a jupyer notebook/
-	// We only want to recommend a jupyter notebook quiz once all other content of the section has been completed.
+// function is_quiz_with_requirements($cmid) {
+// 	// Returns true if cmid is a quiz & it has requirements for availability => here: it is a quiz about a jupyer notebook/
+// 	// We only want to recommend a jupyter notebook quiz once all other content of the section has been completed.
+// 	global $DB;
+// 	if(get_module_type_name($cmid) == "h5pactivity") {
+// 		return !$DB->record_exists_sql("SELECT id FROM {course_modules} WHERE id = :cmid AND availability is NULL",
+// 										array("cmid" => $cmid)
+// 				);
+// 	}
+// 	return false;
+// }
+
+function get_first_available_course_module_in_section($userid, $topicname, $courseid, $includetypes, $allowonlyunfinished) {
 	global $DB;
-	if(get_module_type_name($cmid) == "h5pactivity") {
-		return !$DB->record_exists_sql("SELECT id FROM {course_modules} WHERE id = :cmid AND availability is NULL",
-										array("cmid" => $cmid)
-				);
+
+	// get all course modules from this topic
+	// NOTE: they are sorted by
+	// 1) section position inside course, then
+	// 2) course module position inside section
+	$_likesql_topic = $DB->sql_like('t.name', ':topicname');
+	$course_modules_with_topic = $DB->get_records_sql("SELECT cm.id as cmid, cm.module as typeid, cs.id as sectionid, cs.section as sectionidx, cs.sequence as cmsequence
+														FROM {course_modules} as cm
+														JOIN {course_sections} as cs ON cs.id = cm.section
+														JOIN {tag_instance} as ti ON ti.itemid = cm.id
+														JOIN {tag} as t ON t.id = ti.tagid
+														WHERE cm.course = :courseid
+														AND $_likesql_topic
+														ORDER BY cs.section ASC",
+													array("topicname" => $topicname, "courseid" => $courseid)
+	);
+	$section_cm_map = array();
+	foreach($course_modules_with_topic as $cm) {
+		if(!array_key_exists($cm->sectionidx, $section_cm_map)) {
+			$section_cm_map[$cm->sectionidx] = array();
+		}
+		$cm_position_in_sequence = array_search($cm->cmid, explode(',', $cm->cmsequence));
+		$section_cm_map[$cm->sectionidx][$cm_position_in_sequence] = $cm;
 	}
-	return false;
-}
 
-function get_first_available_course_module_in_section($userid, $sectionid, $includetypes, $allowonlyunfinished) {
-	global $DB;
-
-	# get name + all modules from current section
-	$section = $DB->get_record("course_sections", array(
-		"id" => $sectionid
-	), "name,sequence");
 	$current_suggestion = null;
-	$first_quiz_with_requirements = null;
-	foreach(explode(",", $section->sequence) as $cmid) {
-		# loop over all course modules in current section
-		// echo "\nCMID: " . $cmid . " -> completed: ";
-		// echo "\nCOMPLETED: " .  course_module_is_completed($userid, $cmid);
-		// echo "\nTYPE: " . get_module_type_name($cmid) . " -> " . in_array(get_module_type_name($cmid), explode(",", $includetypes));
-		// echo "\nAVAILABLE: " . is_available_course_module($userid, $cmid);
-		if(in_array(get_module_type_name($cmid), explode(",", $includetypes)) && is_available_course_module($userid, $cmid) && (($allowonlyunfinished && !course_module_is_completed($userid, $cmid)) || !$allowonlyunfinished)) {
-			$is_quiz_with_reqs = is_quiz_with_requirements($cmid);
-			if($is_quiz_with_reqs) {
-				$first_quiz_with_requirements = $cmid;
-			}
-			elseif(is_null($current_suggestion)) {
-				// set suggestion to first candidate
-				$current_suggestion = $cmid;
-			}
-			// if current module is prefered module type, change suggestion to this module
-			// then break and return immediately
-			if(is_prefered_usercontenttype($userid, $cmid)) {
-				$current_suggestion = $cmid;
-				break;
+	foreach($section_cm_map as $section) {
+		foreach($section as $cm) {
+			# loop over all course modules in current section
+			if(in_array(get_typename_by_id($cm->typeid), explode(",", $includetypes)) && is_available_course_module($userid, $cm->cmid, $courseid) && (($allowonlyunfinished && !course_module_is_completed($userid, $cm->cmid)) || !$allowonlyunfinished)) {
+				if(is_null($current_suggestion)) {
+					// set suggestion to first candidate
+					$current_suggestion = $cm;
+				}
+				// if current module is prefered module type, change suggestion to this module
+				// then break and return immediately
+				elseif(is_prefered_usercontenttype($userid, $cm->cmid)) {
+					// modules are in-order, so we can return the first module that fits the user's preferred content type.
+					$current_suggestion = $cm;
+					return $cm;
+				}
 			}
 		}
 	}
-	return $current_suggestion == null? $first_quiz_with_requirements : $current_suggestion;
+	return $current_suggestion;
 }
 
 

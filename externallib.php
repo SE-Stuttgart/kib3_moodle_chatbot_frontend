@@ -211,12 +211,12 @@ class block_chatbot_external extends external_api {
                         JOIN {tag_instance} as ti ON ti.itemid = cm.id
                         JOIN {tag} as t ON t.id = ti.tagid
                         WHERE cm.course = :courseid
-                        AND t.rawname = 'first-module'",
-                        array('courseid' => $courseid)
+                        AND t.name = :topic",
+                        array('courseid' => $courseid, 'topic' => 'thema:einstiegsaktivität')
                     );
         if($cmid != false) {
             return array(
-            'cmid' => $cmid
+                'cmid' => $cmid
             );
         }
 
@@ -226,12 +226,12 @@ class block_chatbot_external extends external_api {
                         JOIN {tag_instance} as ti ON ti.itemid = cm.id
                         JOIN {tag} as t ON t.id = ti.tagid
                         WHERE cm.course = :courseid
-                        AND t.rawname = 'course-overview'",
-                        array('courseid' => $courseid)
+                        AND t.name = :topic",
+                        array('courseid' => $courseid, 'topic' => 'thema:kursüberblick')
                     );
         if($cmid != false) {
             return array(
-            'cmid' => $cmid
+                'cmid' => $cmid
             );
         }
 
@@ -242,13 +242,13 @@ class block_chatbot_external extends external_api {
                 JOIN {tag_instance} as ti ON ti.itemid = cm.id
                 JOIN {tag} as t ON t.id = ti.tagid
                 WHERE cm.course = :courseid
-                AND t.rawname = :topic",
+                AND t.name = :topic",
                 array('courseid' => $courseid,
-                          'topic' => 'topic:first-section'),
+                          'topic' => 'thema:einstieg'),
         );
         if($cmid != false) {
             return array(
-            'cmid' => $cmid
+                'cmid' => $cmid
             );
         }
         
@@ -379,153 +379,149 @@ class block_chatbot_external extends external_api {
 
 
 
-    // public static function has_seen_any_course_modules_parameters() {
-    //     return new external_function_parameters(
-    //         array(
-    //             'userid' => new external_value(PARAM_INT, 'user id'),
-    //             'courseid' => new external_value(PARAM_INT, 'course id')
-    //         )
-    //     );
-    // }
-    // public static function has_seen_any_course_modules_returns() {
-    //     return new external_single_structure(
-    //         array(
-    //             'seen' => new external_value(PARAM_BOOL, 'true, if the given user has seen at least one module in the given course'),
-    //         )
-    //     );
-    // }
-    // public static function has_seen_any_course_modules($userid, $courseid) {
-    //     global $DB;
-    //     $params = self::validate_parameters(self::has_seen_any_course_modules_parameters(), array('userid' => $userid, 'courseid' => $courseid));
+    public static function has_seen_any_course_modules_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'),
+                'courseid' => new external_value(PARAM_INT, 'course id')
+            )
+        );
+    }
+    public static function has_seen_any_course_modules_returns() {
+        return new external_single_structure(
+            array(
+                'seen' => new external_value(PARAM_BOOL, 'true, if the given user has seen at least one module in the given course'),
+            )
+        );
+    }
+    public static function has_seen_any_course_modules($userid, $courseid) {
+        global $DB;
+        $params = self::validate_parameters(self::has_seen_any_course_modules_parameters(), array('userid' => $userid, 'courseid' => $courseid));
         
-    //     $result = $DB->record_exists_sql(
-    //                             "SELECT id
-    //                              FROM {chatbot_recentlyaccessed}
-    //                              WHERE userid = :userid
-    //                              AND courseid = :courseid",
-    //                         array("userid" => $userid,
-    //                               "courseid" => $courseid)
-    //                         );
-    //     return array(
-    //         'seen' => $result
-    //     );
-    // }
+        $result = $DB->record_exists_sql(
+                    "SELECT id
+                     FROM {chatbot_recentlyaccessed}
+                     WHERE userid = :userid
+                     AND courseid = :courseid",
+                    array("userid" => $params['userid'],
+                      "courseid" => $params['courseid'])
+                    );
+        return array(
+            'seen' => $result
+        );
+    }
 
 
 
-    // public static function get_last_viewed_course_modules_parameters() {
-    //     return new external_function_parameters(
-    //         array(
-    //             'userid' => new external_value(PARAM_INT, 'user id'), 
-    //             'courseid' => new external_value(PARAM_INT, 'course id'), 
-    //             'completed' => new external_value(PARAM_BOOL, 'whether the module status should be viewed or completed'),
-    //             'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
-    //         )
-    //     );
-    // }
-    // public static function get_last_viewed_course_modules_returns() {
-    //     return new external_multiple_structure(
-    //         new external_single_structure(
-    //             array(
-    //                 'cmid' => new external_value(PARAM_INT, 'id of the course module'),
-    //                 'section' => new external_value(PARAM_INT, "id of the course module's section"),
-    //                 'timeaccess' => new external_value(PARAM_INT, "timestamp of the course module's last access"),
-    //                 'completionstate' => new external_value(PARAM_INT, "course module's completionstate"),
-    //             )
-    //         )
-    //     );
-    // }
-    // public static function get_last_viewed_course_modules($userid, $courseid, $completed, $includetypes) {
-    //     global $DB;
-    //     $params = self::validate_parameters(self::get_last_viewed_course_modules_parameters(), 
-    //         array('userid' => $userid, 
-    //               'courseid' => $courseid,
-    //               'completed' => $completed,
-    //               'includetypes' => $includetypes
-    //         )
-    //     );
+    public static function get_last_viewed_course_modules_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'), 
+                'courseid' => new external_value(PARAM_INT, 'course id'), 
+                'completed' => new external_value(PARAM_BOOL, 'whether the module status should be viewed or completed'),
+                'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
+            )
+        );
+    }
+    public static function get_last_viewed_course_modules_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'cmid' => new external_value(PARAM_INT, 'id of the course module'),
+                    'section' => new external_value(PARAM_INT, "id of the course module's section"),
+                    'timeaccess' => new external_value(PARAM_INT, "timestamp of the course module's last access"),
+                    'completionstate' => new external_value(PARAM_INT, "course module's completionstate"),
+                )
+            )
+        );
+    }
+    public static function get_last_viewed_course_modules($userid, $courseid, $completed, $includetypes) {
+        global $DB;
+        $params = self::validate_parameters(self::get_last_viewed_course_modules_parameters(), 
+            array('userid' => $userid, 
+              'courseid' => $courseid,
+              'completed' => $completed,
+              'includetypes' => $includetypes
+            )
+        );
         
-    //     [$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $includetypes), SQL_PARAMS_NAMED, 'types');
-    //     $sql_params = array_merge(
-    //         array(
-    //             "courseid" => $courseid,
-    //             "userid" => $userid
-    //         ),
-    //         $_insql_types_params
-    //     );
-    //     if($completed) {
-    //         // Include also course modules that are not completion-tracking enabled, but that have been viewed by the user
-    //         $results = $DB->get_records_sql("SELECT ra.cmid, ra.timeaccess, ra.completionstate, cm.section FROM {chatbot_recentlyaccessed} AS ra
-    //                                         JOIN {course_modules} AS cm ON cm.id = ra.cmid
-    //                                         JOIN {modules} ON {modules}.id = cm.module
-    //                                         WHERE ra.userid = :userid
-    //                                         AND ra.courseid = :courseid
-    //                                         AND (
-    //                                             ra.completionstate = 1
-    //                                             OR cm.completion = 0
-    //                                         )
-    //                                         AND {modules}.name $_insql_types
-    //                                         ORDER BY timeaccess DESC", 
-    //                $sql_params
-    //         );
-    //     } else {
-    //         // Only show modules that are completion-tracking enabled:
-    //         // If they are in this table, the user has at least already seen them.
-    //         // If they are not tracking completion, viewing them once should be enough.
-    //         $results = $DB->get_records_sql("SELECT ra.cmid, ra.timeaccess, ra.completionstate, cm.section FROM {chatbot_recentlyaccessed} AS ra
-    //                                         JOIN {course_modules} AS cm ON cm.id = ra.cmid
-    //                                         JOIN {modules} ON {modules}.id = cm.module
-    //                                         WHERE ra.userid = :userid
-    //                                         AND ra.courseid = :courseid
-    //                                         AND ra.completionstate = 0
-    //                                         AND cm.completion > 0
-    //                                         AND {modules}.name $_insql_types
-    //                                         ORDER BY timeaccess DESC", 
-    //                $sql_params
-    //         );
-    //     }
+        [$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $params['includetypes']), SQL_PARAMS_NAMED, 'types');
+        $sql_params = array_merge(
+            array(
+            "courseid" => $params['courseid'],
+            "userid" => $params['userid']
+            ),
+            $_insql_types_params
+        );
+        if($params['completed']) {
+            // Include also course modules that are not completion-tracking enabled, but that have been viewed by the user
+            $results = $DB->get_records_sql("SELECT ra.cmid, ra.timeaccess, ra.completionstate, cm.section FROM {chatbot_recentlyaccessed} AS ra
+                            JOIN {course_modules} AS cm ON cm.id = ra.cmid
+                            JOIN {modules} ON {modules}.id = cm.module
+                            WHERE ra.userid = :userid
+                            AND ra.courseid = :courseid
+                            AND (
+                            ra.completionstate = 1
+                            OR cm.completion = 0
+                            )
+                            AND {modules}.name $_insql_types
+                            ORDER BY timeaccess DESC", 
+               $sql_params
+            );
+        } else {
+            // Only show modules that are completion-tracking enabled:
+            // If they are in this table, the user has at least already seen them.
+            // If they are not tracking completion, viewing them once should be enough.
+            $results = $DB->get_records_sql("SELECT ra.cmid, ra.timeaccess, ra.completionstate, cm.section FROM {chatbot_recentlyaccessed} AS ra
+                            JOIN {course_modules} AS cm ON cm.id = ra.cmid
+                            JOIN {modules} ON {modules}.id = cm.module
+                            WHERE ra.userid = :userid
+                            AND ra.courseid = :courseid
+                            AND ra.completionstate = 0
+                            AND cm.completion > 0
+                            AND {modules}.name $_insql_types
+                            ORDER BY timeaccess DESC", 
+               $sql_params
+            );
+        }
 
-    //     return $results;
-    // }
+        return $results;
+    }
 
 
 
-    // public static function get_first_available_course_module_parameters() {
-    //     return new external_function_parameters(
-    //         array(
-    //             'userid' => new external_value(PARAM_INT, 'user id'), 
-    //             'courseid' => new external_value(PARAM_INT, 'course id'),
-    //             'sectionid' => new external_value(PARAM_INT, 'section id (where to look for for the first course module). if < 0, first module in entire course is returned', VALUE_DEFAULT, -1),
-    //             'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
-    //             'allowonlyunfinished' => new external_value(PARAM_BOOL, 'if True, will filter for only course modules that were not completed by the user')
-    //         )
-    //     );
-    // }
-    // public static function get_first_available_course_module_returns() {
-    //     return new external_single_structure(
-    //         array(
-    //             'cmid' => new external_value(PARAM_INT, 'id of the course module'),
-    //         )
-    //     );
-    // }
-    // public static function get_first_available_course_module($userid, $courseid, $sectionid, $includetypes, $allowonlyunfinished) {
-    //     global $DB;
-    //     $params = self::validate_parameters(self::get_first_available_course_module_parameters(), array(
-    //         'userid' => $userid, 
-    //         'courseid' => $courseid,
-    //         'sectionid' => $sectionid,
-    //         'includetypes' => $includetypes, 
-    //         'allowonlyunfinished' => $allowonlyunfinished));
-        
-    //     if($sectionid < 0) {
-    //         $sectionid = $DB->get_field("course_sections", "id", array(
-    //             "course" => $courseid,
-    //             "section" => 1
-    //         ));
-    //     }
-    //     $current_suggestion = get_first_available_course_module_in_section($userid, $sectionid, $includetypes, $allowonlyunfinished);
-    //     return array("cmid" => $current_suggestion);
-    // }
+    public static function get_first_available_course_module_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'), 
+                'courseid' => new external_value(PARAM_INT, 'course id'),
+                'topicname' => new external_value(PARAM_TEXT, 'topic name (where to look for for the first course module). if empty, first module in entire course is returned', VALUE_DEFAULT, -1),
+                'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
+                'allowonlyunfinished' => new external_value(PARAM_BOOL, 'if True, will filter for only course modules that were not completed by the user')
+            )
+        );
+    }
+    public static function get_first_available_course_module_returns() {
+        return new external_single_structure(
+            array(
+                'cmid' => new external_value(PARAM_INT, 'id of the course module'),
+            )
+        );
+    }
+    public static function get_first_available_course_module($userid, $courseid, $topicname, $includetypes, $allowonlyunfinished) {
+        global $DB;
+        $params = self::validate_parameters(self::get_first_available_course_module_parameters(), array(
+            'userid' => $userid, 
+            'courseid' => $courseid,
+            'topicname' => $topicname,
+            'includetypes' => $includetypes, 
+            'allowonlyunfinished' => $allowonlyunfinished));
+        if(strlen($params['topicname']) == 0) {
+            return self::get_starter_module($params['courseid']);
+        }
+        $current_suggestion = get_first_available_course_module_in_section($params['userid'], $params['topicname'], $params['courseid'], $params['includetypes'], $params['allowonlyunfinished']);
+        return array("cmid" => $current_suggestion->cmid);
+    }
 
 
     public static function get_course_module_content_link_parameters() {
@@ -628,41 +624,6 @@ class block_chatbot_external extends external_api {
     //     }
         
     //     return $available;
-    // }
-
-
-
-    // public static function get_icecreamgame_course_module_id_parameters() {
-    //     return new external_function_parameters(
-    //         array(
-    //             'courseid' => new external_value(PARAM_INT, 'course id'), 
-    //         )
-    //     );
-    // }
-    // public static function get_icecreamgame_course_module_id_returns() {
-    //     return new external_single_structure(
-    //         array(
-    //             'id' => new external_value(PARAM_INT, 'ice cream game id for the given course'),
-    //         )
-    //     );
-    // }
-    // public static function get_icecreamgame_course_module_id($courseid) {
-    //     global $DB;
-
-    //     $params = self::validate_parameters(self::get_icecreamgame_course_module_id_parameters(), array(
-    //         'courseid' => $courseid
-    //     ));
-        
-    //     $icecreamgame_cmid = $DB->get_field_sql("SELECT cm.id
-    //                                              FROM {course_modules} as cm
-    //                                              JOIN {modules} ON {modules}.id = cm.module
-    //                                              WHERE {modules}.name = :modulename
-    //                                              AND cm.course = :courseid",
-    //                                              array(
-    //                                                 "courseid" => $courseid,
-    //                                                 "modulename" => 'icecreamgame')
-    //                                         );
-    //     return array("id" => intval($icecreamgame_cmid));
     // }
 
 
@@ -771,110 +732,110 @@ class block_chatbot_external extends external_api {
 
 
 
-    // public static function count_completed_course_modules_parameters() {
-    //     return new external_function_parameters(
-    //         array(
-    //             'userid' => new external_value(PARAM_INT, 'user id'),
-    //             'courseid' => new external_value(PARAM_INT, 'course id'),
-    //             'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
-    //             'starttime' => new external_value(PARAM_INT, 'start point of interval)'),
-    //             'endtime' => new external_value(PARAM_INT, 'end point of interval (or 0, if there should be no time limit)')
-    //         )
-    //     );
-    // }
-    // public static function count_completed_course_modules_returns() {
-    //     return new external_single_structure(
-    //         array(
-    //             'count' => new external_value(PARAM_INT, 'number of viewed course modules in given course during specified time range'),
-    //         )
-    //     );
-    // }
-    // public static function count_completed_course_modules($userid, $courseid, $includetypes, $starttime, $endtime) {
-    //     global $DB;
+    public static function count_completed_course_modules_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'),
+                'courseid' => new external_value(PARAM_INT, 'course id'),
+                'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
+                'starttime' => new external_value(PARAM_INT, 'start point of interval)'),
+                'endtime' => new external_value(PARAM_INT, 'end point of interval (or 0, if there should be no time limit)')
+            )
+        );
+    }
+    public static function count_completed_course_modules_returns() {
+        return new external_single_structure(
+            array(
+                'count' => new external_value(PARAM_INT, 'number of viewed course modules in given course during specified time range'),
+            )
+        );
+    }
+    public static function count_completed_course_modules($userid, $courseid, $includetypes, $starttime, $endtime) {
+        global $DB;
 
-    //     $params = self::validate_parameters(self::count_completed_course_modules_parameters(), array(
-    //         'userid' => $userid,
-    //         'courseid' => $courseid,
-    //         'includetypes' => $includetypes,
-    //         'starttime' => $starttime,
-    //         'endtime' => $endtime
-    //     ));
+        $params = self::validate_parameters(self::count_completed_course_modules_parameters(), array(
+            'userid' => $userid,
+            'courseid' => $courseid,
+            'includetypes' => $includetypes,
+            'starttime' => $starttime,
+            'endtime' => $endtime
+        ));
 
-    //     $count = count_completed_course_modules($userid, $courseid, $includetypes, $starttime, $endtime);
-    //     return array("count" => $count);
-    // }
+        $count = count_completed_course_modules($params['userid'], $params['courseid'], $params['includetypes'], $params['starttime'], $params['endtime']);
+        return array("count" => $count);
+    }
 
 
 
-    // public static function get_user_statistics_parameters() {
-    //     return new external_function_parameters(
-    //         array(
-    //             'userid' => new external_value(PARAM_INT, 'user id'),
-    //             'courseid' => new external_value(PARAM_INT, 'course id'),
-    //             'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
-    //             'updatedb' => new external_value(PARAM_BOOL, 'whether to update the progress column in the database with the newly calculated values')
-    //         )
-    //     );
-    // }
-    // public static function get_user_statistics_returns() {
-    //     return new external_single_structure(
-    //         array(
-    //             'course_completion_percentage' => new external_value(PARAM_FLOAT, 'percentage of course completed by user so far'),
-    //             'quiz_repetition_percentage' => new external_value(PARAM_FLOAT, 'percentage of quizzes repeated by the user so far'),
-    //         )
-    //     );
-    // }
-    // public static function get_user_statistics($userid, $courseid, $includetypes, $updatedb) {
-    //     global $DB;
+    public static function get_user_statistics_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'),
+                'courseid' => new external_value(PARAM_INT, 'course id'),
+                'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity'),
+                'updatedb' => new external_value(PARAM_BOOL, 'whether to update the progress column in the database with the newly calculated values')
+            )
+        );
+    }
+    public static function get_user_statistics_returns() {
+        return new external_single_structure(
+            array(
+                'course_completion_percentage' => new external_value(PARAM_FLOAT, 'percentage of course completed by user so far'),
+                'quiz_repetition_percentage' => new external_value(PARAM_FLOAT, 'percentage of quizzes repeated by the user so far'),
+            )
+        );
+    }
+    public static function get_user_statistics($userid, $courseid, $includetypes, $updatedb) {
+        global $DB;
 
-    //     $params = self::validate_parameters(self::get_user_statistics_parameters(), array(
-    //         'userid' => $userid,
-    //         'courseid' => $courseid,
-    //         'includetypes' => $includetypes,
-    //         'updatedb' => $updatedb
-    //     ));
+        $params = self::validate_parameters(self::get_user_statistics_parameters(), array(
+            'userid' => $userid,
+            'courseid' => $courseid,
+            'includetypes' => $includetypes,
+            'updatedb' => $updatedb
+        ));
 
-    //     // calculate current progress percentage for quizzes
-    //     [$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $includetypes), SQL_PARAMS_NAMED, 'types');
-    //     $total_num_quizzes = $DB->count_records_sql("SELECT COUNT(id)
-    //                                                  FROM {grade_items}
-    //                                                  WHERE courseid = :courseid
-    //                                                  AND itemmodule $_insql_types",
-    //                                             array_merge(
-    //                                                 array("courseid" => $courseid),
-    //                                                 $_insql_types_params    
-    //                                             ));
-    //     $num_repeated_quizzes = count($DB->get_fieldset_sql("SELECT {grade_grades_history}.id
-    //                                                     FROM {grade_grades_history}
-    //                                                     JOIN {grade_items} ON {grade_items}.id = {grade_grades_history}.itemid
-    //                                                     WHERE {grade_grades_history}.userid = :userid
-    //                                                     AND {grade_items}.courseid = :courseid
-    //                                                     AND {grade_grades_history}.finalgrade IS NOT NULL
-    //                                                     AND {grade_grades_history}.source = :source
-    //                                                     GROUP BY {grade_grades_history}.itemid
-    //                                                     HAVING COUNT({grade_grades_history}.id) > 1
-    //                                                 ",
-    //                                             array("userid" => $userid,
-    //                                                     "courseid" => $courseid,
-    //                                                     "source" => "mod/h5pactivity")
-    //                                             )
-    //                                     );
-    //     $percentage_repeated_quizzes = $num_repeated_quizzes / $total_num_quizzes;
+        // calculate current progress percentage for quizzes
+        [$_insql_types, $_insql_types_params] = $DB->get_in_or_equal(explode(",", $params['includetypes']), SQL_PARAMS_NAMED, 'types');
+        $total_num_quizzes = $DB->count_records_sql("SELECT COUNT(id)
+                                 FROM {grade_items}
+                                 WHERE courseid = :courseid
+                                 AND itemmodule $_insql_types",
+                            array_merge(
+                                array("courseid" => $params['courseid']),
+                                $_insql_types_params    
+                            ));
+        $num_repeated_quizzes = count($DB->get_fieldset_sql("SELECT {grade_grades_history}.id
+                                FROM {grade_grades_history}
+                                JOIN {grade_items} ON {grade_items}.id = {grade_grades_history}.itemid
+                                WHERE {grade_grades_history}.userid = :userid
+                                AND {grade_items}.courseid = :courseid
+                                AND {grade_grades_history}.finalgrade IS NOT NULL
+                                AND {grade_grades_history}.source = :source
+                                GROUP BY {grade_grades_history}.itemid
+                                HAVING COUNT({grade_grades_history}.id) > 1
+                                ",
+                            array("userid" => $params['userid'],
+                                "courseid" => $params['courseid'],
+                                "source" => "mod/h5pactivity")
+                            )
+                        );
+        $percentage_repeated_quizzes = $num_repeated_quizzes / $total_num_quizzes;
         
-    //     $percentage_done = get_user_course_completion_percentage($userid, $courseid, $includetypes);
-    //     if($updatedb) {
-    //         // update database with newly calculated values
-    //         $progress_summary_record = $DB->get_record("chatbot_progress_summary", array("userid" => $userid, "courseid" => $courseid));
-    //         $progress_summary_record->progress = $percentage_done;
-    //         $progress_summary_record->timecreated = (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp();
-    //         $DB->update_record("chatbot_progress_summary", $progress_summary_record);
-    //     }
+        $percentage_done = get_user_course_completion_percentage($params['userid'], $params['courseid'], $params['includetypes']);
+        if($params['updatedb']) {
+            // update database with newly calculated values
+            $progress_summary_record = $DB->get_record("chatbot_progress_summary", array("userid" => $params['userid'], "courseid" => $params['courseid']));
+            $progress_summary_record->progress = $percentage_done;
+            $progress_summary_record->timecreated = (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp();
+            $DB->update_record("chatbot_progress_summary", $progress_summary_record);
+        }
 
-    //     return array(
-    //         "course_completion_percentage" => $percentage_done,
-    //         "quiz_repetition_percentage" => $percentage_repeated_quizzes
-    //     );
-    // }
+        return array(
+            "course_completion_percentage" => $percentage_done,
+            "quiz_repetition_percentage" => $percentage_repeated_quizzes
+        );
+    }
 
 
 
