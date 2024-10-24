@@ -136,17 +136,18 @@ function course_modules_by_topic($topic, $courseid, $includetypes = ["url", "boo
 	// - section id
     global $DB;
 
+	// note: we filter here also by course module visibility, since course modules that are not visible are only enabled for the admin
     $type_ids = array_map('get_id_by_typename', $includetypes);
     [$_insql_types, $_insql_types_params] = $DB->get_in_or_equal($type_ids, SQL_PARAMS_NAMED, 'types');
-
 	$topic_like = $DB->sql_like('tag.name', ':topic');
-    $course_modules = $DB->get_records_sql("SELECT cm.id as cmid, cm.module as module, cm.instance as instance, cm.section
+	$course_modules = $DB->get_records_sql("SELECT cm.id as cmid, cm.module as module, cm.instance as instance, cm.section
                                        FROM {course_modules} as cm
-									   JOIN {tag} as tag ON tag.name LIKE :topic
-									   JOIN {tag_instance} as ti ON ti.tagid = tag.id
+									   JOIN {tag_instance} as ti ON ti.itemid = cm.id
+									   JOIN {tag} as tag ON tag.id = ti.tagid
                                        WHERE cm.course = :courseid
+									   AND cm.visible = 1
                                        AND cm.module $_insql_types
-                                       AND $topic_like ",
+                                       AND $topic_like",
                                        array_merge(
 											array(
 												"courseid" => $courseid,
@@ -192,19 +193,19 @@ function get_open_section_module_ids($userid, $courseid, $topic, $include_types=
 	// Get all the course modules with types whitelisted in $include_types for the specified section that are not marked as completed. 
 	global $DB;
 	// get all topic modules
-	$filtered_section_module_ids = array_map('_extract_id_from_record', course_modules_by_topic($topic, $courseid, $include_types));
+	$filtered_section_module_ids = array_keys(array_map('_extract_id_from_record', course_modules_by_topic($topic, $courseid, $include_types)));
 	if(empty($filtered_section_module_ids)) {
 		return array();
 	}
 	[$_insql_filteredsectionmoduleids, $_insql_filteredsectionmoduleids_params] = $DB->get_in_or_equal($filtered_section_module_ids, SQL_PARAMS_NAMED, 'filteredsectionmoduleids');
-	$completed_section_module_ids = $DB->get_fieldset_sql("SELECT coursemoduleid
+	$completed_section_module_ids = array_map('intval', $DB->get_fieldset_sql("SELECT coursemoduleid
 												  FROM {course_modules_completion}
 												  WHERE coursemoduleid $_insql_filteredsectionmoduleids
 												  AND completionstate = 1
 												  AND userid = :userid",
 												array_merge($_insql_filteredsectionmoduleids_params,
-														    array("userid" => $userid))
-												);
+															array("userid" => $userid))
+												));
 	// also exclude course modules that are not tracked for completion, but were seen once (which is why they have an entry in the chatbot history)
 	$seen_but_not_tracked_section_module_ids = $DB->get_fieldset_sql(
 		"SELECT ra.cmid
@@ -218,17 +219,14 @@ function get_open_section_module_ids($userid, $courseid, $topic, $include_types=
 			"courseid" => $courseid
 		)
 	);
+	// var_dump($seen_but_not_tracked_section_module_ids);
 	$difference = array_values(array_diff($filtered_section_module_ids, $completed_section_module_ids, $seen_but_not_tracked_section_module_ids));
-	// var_dump($filtered_section_module_ids);
-	// var_dump($completed_section_module_ids);
-	// var_dump($difference);
 	return $difference;
 }
 
 function topic_is_completed($userid, $courseid, $topicname, $include_types=["url", "book", "resource", "quiz", "h5pactivity", "icecreamgame"]) {
 	// Check if all course modules with types whitelisted in $include types are completed for the given section.
-	$open_module_ids = get_open_section_module_ids($userid, $courseid, $include_types);
-	// var_dump($open_module_ids);
+	$open_module_ids = get_open_section_module_ids($userid, $courseid, $topicname, $include_types);
 	return count($open_module_ids) == 0;
 }
 

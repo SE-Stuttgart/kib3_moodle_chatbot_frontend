@@ -314,16 +314,15 @@ class block_chatbot_external extends external_api {
         global $DB;
 
         $branch_letter = substr($params['topicname'], strlen("thema:"), 1); // A, B, ...
-
         // check if all learning materials are completed
-        if(!topic_is_completed($params['userid'], $params['courseid'], $params['topicname'], explode(",", $params['includetypes']))) {
+        if(!topic_is_completed($params['userid'], $params['courseid'], "thema:" . $branch_letter, explode(",", $params['includetypes']))) {
             return array(
                 'completed' => false,
                 'branch' => $branch_letter,
                 'candidates' => array()
             );
         }
-        
+
 
         // TODO: better fix to filter out the course modules (quizzes) that depend on the completion of a jupyter notebook (currently using the cm.availability IS NULL)
         // all sections are completed - collect list of review quiz candidates
@@ -332,8 +331,8 @@ class block_chatbot_external extends external_api {
         $topic_like = $DB->sql_like('tag.name', ':topic');
         $quiz_candidates = $DB->get_records_sql("SELECT cm.id as cmid, {grade_grades}.finalgrade / {grade_grades}.rawgrademax as grade
                                            FROM {course_modules} as cm
-                                           JOIN {tag} as tag ON tag.name LIKE :topic
-                                           JOIN {tag_instance} as ti ON ti.tagid = tag.id
+                                           JOIN {tag_instance} as ti ON ti.itemid = cm.id
+                                           JOIN {tag} as tag ON tag.id = ti.tagid
                                            JOIN {grade_items} ON cm.instance = {grade_items}.iteminstance
                                            JOIN {grade_grades} ON {grade_items}.id = {grade_grades}.itemid
                                            WHERE cm.course = :courseid
@@ -345,8 +344,9 @@ class block_chatbot_external extends external_api {
                                            AND cm.availability IS NULL",
                                            array_merge(
                                                 array(
-                                                    "courseid" => $courseid,
-                                                    "topic" => $branch_letter . "%"
+                                                    "courseid" => $params['courseid'],
+                                                    "userid" => $params['userid'],
+                                                    "topic" => "thema:" . $branch_letter . "%"
                                                    ),
                                                 $_insql_types_params
                                             )
@@ -364,7 +364,11 @@ class block_chatbot_external extends external_api {
         shuffle($quiz_candidates);
 
         // convert into return type and return
-        return $quiz_candidates;
+        return array(
+            'completed' => true,
+            'branch' => $branch_letter,
+            'candidates' => $quiz_candidates
+        );
     }
 
 
