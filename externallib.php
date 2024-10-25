@@ -258,28 +258,29 @@ class block_chatbot_external extends external_api {
     }
 
 
-    // public static function get_section_completionstate_parameters() {
-    //     return new external_function_parameters(
-    //         array(
-    //             'userid' => new external_value(PARAM_INT, 'user id'),
-    //             'sectionid' => new external_value(PARAM_INT, 'section id'),
-    //             'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity')
-    //         )
-    //     );
-    // }
-    // public static function get_section_completionstate_returns() {
-    //     return new external_single_structure(
-    //         array(
-    //             'completed' => new external_value(PARAM_BOOL, 'true, if section is completed, else false'),
-    //         )
-    //     );
-    // }
-    // public static function get_section_completionstate($userid, $sectionid, $includetypes) {
-    //     $params = self::validate_parameters(self::get_section_completionstate_parameters(), array('userid' => $userid, 'sectionid' => $sectionid, 'includetypes' => $includetypes));
-    //     return array(
-    //         'completed' => section_is_completed($userid, $sectionid, explode(",", $includetypes))
-    //     );
-    // }
+    public static function get_topic_completionstate_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'),
+                'courseid' => new external_value(PARAM_INT, 'coruse id'),
+                'topicname' => new external_value(PARAM_TEXT, 'topic name'),
+                'includetypes' => new external_value(PARAM_TEXT, 'comma-seperated whitelist of module types, e.g. url, book, resource, quiz, h5pactivity')
+            )
+        );
+    }
+    public static function get_topic_completionstate_returns() {
+        return new external_single_structure(
+            array(
+                'completed' => new external_value(PARAM_BOOL, 'true, if section is completed, else false'),
+            )
+        );
+    }
+    public static function get_topic_completionstate($userid, $courseid, $topicname, $includetypes) {
+        $params = self::validate_parameters(self::get_topic_completionstate_parameters(), array('userid' => $userid, 'courseid' => $courseid, 'topicname' => $topicname, 'includetypes' => $includetypes));
+        return array(
+            'completed' => topic_is_completed($userid, $courseid, $topicname, explode(",", $includetypes))
+        );
+    }
 
 
     public static function get_branch_quizes_if_complete_parameters() {

@@ -63,15 +63,15 @@ $functions = array(
         'services' => array(),    // Optional, only available for Moodle 3.1 onwards. List of built-in services (by shortname) where the function will be included.  Services created manually via the Moodle interface are not supported.
         'capabilities' => '', // comma separated list of capabilities used by the function.
     ),
-    // 'block_chatbot_get_section_completionstate' => array(
-    //     'classname'   => 'block_chatbot_external',  //class containing the external function OR namespaced class in classes/external/XXXX.php
-    //     'methodname'  => 'get_section_completionstate',          //external function name
-    //     'description' => 'Get completion state of course section',    //human readable description of the web service function
-    //     'type'        => 'read',                  //database rights of the web service function (read, write)
-    //     'ajax' => true,        // is the service available to 'internal' ajax calls. 
-    //     'services' => array(),    // Optional, only available for Moodle 3.1 onwards. List of built-in services (by shortname) where the function will be included.  Services created manually via the Moodle interface are not supported.
-    //     'capabilities' => '', // comma separated list of capabilities used by the function.
-    // ),
+    'block_chatbot_get_topic_completionstate' => array(
+        'classname'   => 'block_chatbot_external',  //class containing the external function OR namespaced class in classes/external/XXXX.php
+        'methodname'  => 'get_topic_completionstate',          //external function name
+        'description' => 'Get completion state of course section',    //human readable description of the web service function
+        'type'        => 'read',                  //database rights of the web service function (read, write)
+        'ajax' => true,        // is the service available to 'internal' ajax calls. 
+        'services' => array(),    // Optional, only available for Moodle 3.1 onwards. List of built-in services (by shortname) where the function will be included.  Services created manually via the Moodle interface are not supported.
+        'capabilities' => '', // comma separated list of capabilities used by the function.
+    ),
     'block_chatbot_get_branch_quizes_if_complete' => array(
         'classname'   => 'block_chatbot_external',  //class containing the external function OR namespaced class in classes/external/XXXX.php
         'methodname'  => 'get_branch_quizes_if_complete',          //external function name
