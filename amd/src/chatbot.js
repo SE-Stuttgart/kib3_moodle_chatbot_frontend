@@ -323,12 +323,26 @@ class ChatbotConnection {
             });
         };
         this.conn.onclose = () => {
-            this.conn.close();
-            setTimeout(this.openConnection, 2500);
+            this.reconnect();
+        };
+        this.conn.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            this.reconnect();
         };
     };
 
+    reconnect = () => {
+        setTimeout(() => {
+            console.log('Reconnecting...');
+            this.openConnection();
+        }, 5000);
+    };
+
     sendMessage = (message) => {
+        if (this.conn.readyState !== WebSocket.OPEN) {
+            console.error("WebSocket is not open. Ready state: " + this.conn.readyState);
+            return;
+        }
         const msg = {
             userid: this.userid,
             domain: 0,
