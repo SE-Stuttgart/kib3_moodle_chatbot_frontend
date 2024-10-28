@@ -117,24 +117,24 @@ $functions = array(
         'services' => array(),    // Optional, only available for Moodle 3.1 onwards. List of built-in services (by shortname) where the function will be included.  Services created manually via the Moodle interface are not supported.
         'capabilities' => '', // comma separated list of capabilities used by the function.
     ),
-    // 'block_chatbot_get_available_new_course_sections' => array(
-    //     'classname'   => 'block_chatbot_external',  //class containing the external function OR namespaced class in classes/external/XXXX.php
-    //     'methodname'  => 'get_available_new_course_sections',          //external function name
-    //     'description' => 'Returns all course sections the user can start (according to section requirements), exluding already completed sections',    //human readable description of the web service function
-    //     'type'        => 'read',                  //database rights of the web service function (read, write)
-    //     'ajax' => true,        // is the service available to 'internal' ajax calls. 
-    //     'services' => array(),    // Optional, only available for Moodle 3.1 onwards. List of built-in services (by shortname) where the function will be included.  Services created manually via the Moodle interface are not supported.
-    //     'capabilities' => '', // comma separated list of capabilities used by the function.
-    // ),
-    // 'block_chatbot_get_next_available_course_module_id' => array(
-    //     'classname'   => 'block_chatbot_external',  //class containing the external function OR namespaced class in classes/external/XXXX.php
-    //     'methodname'  => 'get_next_available_course_module_id',          //external function name
-    //     'description' => 'Given a current course module (e.g. the most recently finished one) in this course section, find the course module the student should do next.',    //human readable description of the web service function
-    //     'type'        => 'read',                  //database rights of the web service function (read, write)
-    //     'ajax' => true,        // is the service available to 'internal' ajax calls. 
-    //     'services' => array(),    // Optional, only available for Moodle 3.1 onwards. List of built-in services (by shortname) where the function will be included.  Services created manually via the Moodle interface are not supported.
-    //     'capabilities' => '', // comma separated list of capabilities used by the function.
-    // ),
+    'block_chatbot_get_available_new_course_sections' => array(
+        'classname'   => 'block_chatbot_external',  //class containing the external function OR namespaced class in classes/external/XXXX.php
+        'methodname'  => 'get_available_new_course_sections',          //external function name
+        'description' => 'Returns all course sections the user can start (according to section requirements), exluding already completed sections',    //human readable description of the web service function
+        'type'        => 'read',                  //database rights of the web service function (read, write)
+        'ajax' => true,        // is the service available to 'internal' ajax calls. 
+        'services' => array(),    // Optional, only available for Moodle 3.1 onwards. List of built-in services (by shortname) where the function will be included.  Services created manually via the Moodle interface are not supported.
+        'capabilities' => '', // comma separated list of capabilities used by the function.
+    ),
+    'block_chatbot_get_next_available_course_module_id' => array(
+        'classname'   => 'block_chatbot_external',  //class containing the external function OR namespaced class in classes/external/XXXX.php
+        'methodname'  => 'get_next_available_course_module_id',          //external function name
+        'description' => 'Given a current course module (e.g. the most recently finished one) in this course section, find the course module the student should do next.',    //human readable description of the web service function
+        'type'        => 'read',                  //database rights of the web service function (read, write)
+        'ajax' => true,        // is the service available to 'internal' ajax calls. 
+        'services' => array(),    // Optional, only available for Moodle 3.1 onwards. List of built-in services (by shortname) where the function will be included.  Services created manually via the Moodle interface are not supported.
+        'capabilities' => '', // comma separated list of capabilities used by the function.
+    ),
     'block_chatbot_count_completed_course_modules' => array(
         'classname'   => 'block_chatbot_external',  //class containing the external function OR namespaced class in classes/external/XXXX.php
         'methodname'  => 'count_completed_course_modules',          //external function name
@@ -189,15 +189,15 @@ $functions = array(
         'services' => array(),    // Optional, only available for Moodle 3.1 onwards. List of built-in services (by shortname) where the function will be included.  Services created manually via the Moodle interface are not supported.
         'capabilities' => '', // comma separated list of capabilities used by the function.
     ),
-    // 'block_chatbot_get_oldest_worst_grade_attempts' => array(
-    //     'classname'   => 'block_chatbot_external',  //class containing the external function OR namespaced class in classes/external/XXXX.php
-    //     'methodname'  => 'get_oldest_worst_grade_attempts',          //external function name
-    //     'description' => 'Returns the oldest, worst (sorted in that order) grade attempt by the current user for the specified course',    //human readable description of the web service function
-    //     'type'        => 'read',                  //database rights of the web service function (read, write)
-    //     'ajax' => true,        // is the service available to 'internal' ajax calls. 
-    //     'services' => array(),    // Optional, only available for Moodle 3.1 onwards. List of built-in services (by shortname) where the function will be included.  Services created manually via the Moodle interface are not supported.
-    //     'capabilities' => '', // comma separated list of capabilities used by the function.
-    // ),
+    'block_chatbot_get_oldest_worst_grade_attempts' => array(
+        'classname'   => 'block_chatbot_external',  //class containing the external function OR namespaced class in classes/external/XXXX.php
+        'methodname'  => 'get_oldest_worst_grade_attempts',          //external function name
+        'description' => 'Returns the oldest, worst (sorted in that order) grade attempt by the current user for the specified course',    //human readable description of the web service function
+        'type'        => 'read',                  //database rights of the web service function (read, write)
+        'ajax' => true,        // is the service available to 'internal' ajax calls. 
+        'services' => array(),    // Optional, only available for Moodle 3.1 onwards. List of built-in services (by shortname) where the function will be included.  Services created manually via the Moodle interface are not supported.
+        'capabilities' => '', // comma separated list of capabilities used by the function.
+    ),
     'block_chatbot_log_interaction' => array(
         'classname'   => 'block_chatbot_external',  //class containing the external function OR namespaced class in classes/external/XXXX.php
         'methodname'  => 'log_interaction',          //external function name
