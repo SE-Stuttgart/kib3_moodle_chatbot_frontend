@@ -207,13 +207,13 @@ $functions = array(
         'services' => array(),    // Optional, only available for Moodle 3.1 onwards. List of built-in services (by shortname) where the function will be included.  Services created manually via the Moodle interface are not supported.
         'capabilities' => '', // comma separated list of capabilities used by the function.
     ), 
-    // 'block_chatbot_search_glossary' => array(
-    //     'classname'   => 'block_chatbot_external',  //class containing the external function OR namespaced class in classes/external/XXXX.php
-    //     'methodname'  => 'search_glossary',          //external function name
-    //     'description' => 'Searches terms in the glossary',    //human readable description of the web service function
-    //     'type'        => 'read',                  //database rights of the web service function (read, write)
-    //     'ajax' => true,        // is the service available to 'internal' ajax calls. 
-    //     'services' => array(),    // Optional, only available for Moodle 3.1 onwards. List of built-in services (by shortname) where the function will be included.  Services created manually via the Moodle interface are not supported.
-    //     'capabilities' => '', // comma separated list of capabilities used by the function.
-    // ),  
+    'block_chatbot_search_glossary' => array(
+        'classname'   => 'block_chatbot_external',  //class containing the external function OR namespaced class in classes/external/XXXX.php
+        'methodname'  => 'search_glossary',          //external function name
+        'description' => 'Searches terms in the glossary',    //human readable description of the web service function
+        'type'        => 'read',                  //database rights of the web service function (read, write)
+        'ajax' => true,        // is the service available to 'internal' ajax calls. 
+        'services' => array(),    // Optional, only available for Moodle 3.1 onwards. List of built-in services (by shortname) where the function will be included.  Services created manually via the Moodle interface are not supported.
+        'capabilities' => '', // comma separated list of capabilities used by the function.
+    ),  
 );

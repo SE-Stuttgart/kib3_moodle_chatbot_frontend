@@ -1255,68 +1255,67 @@ class block_chatbot_external extends external_api {
 
 
 
-    // public static function search_glossary_parameters() {
-    //     return new external_function_parameters(
-    //         array(
-    //             'userid' => new external_value(PARAM_INT, 'user id'),
-    //             'courseid' => new external_value(PARAM_INT, 'course id'),
-    //             'searchterm' => new external_value(PARAM_TEXT, 'search term'),
-    //             'fullsearch' => new external_value(PARAM_BOOL, "perform full search"),
-    //             'startidx' => new external_value(PARAM_INT, "start returning results form this index", VALUE_OPTIONAL, 0),
-    //             'limit' => new external_value(PARAM_INT, "max. number of serach results", VALUE_OPTIONAL, 0)
-    //         )
-    //     );
-    // }
-    // public static function search_glossary_returns() {
-    //     return new external_multiple_structure(
-    //             new external_single_structure(
-    //                 array(
-    //                     'id' => new external_value(PARAM_TEXT, "id of glossary entry"),
-    //                     'glossaryid' => new external_value(PARAM_TEXT, "id of glossary entry appears in"),
-    //                     'concept' => new external_value(PARAM_TEXT, "concept"),
-    //                     'definition' => new external_value(PARAM_RAW, "definition of concept"),
-    //                 )
-    //             )
-    //     );
-    // }
+    public static function search_glossary_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'),
+                'courseid' => new external_value(PARAM_INT, 'course id'),
+                'searchterm' => new external_value(PARAM_TEXT, 'search term'),
+                'fullsearch' => new external_value(PARAM_BOOL, "perform full search"),
+                'startidx' => new external_value(PARAM_INT, "start returning results form this index", VALUE_OPTIONAL, 0),
+                'limit' => new external_value(PARAM_INT, "max. number of serach results", VALUE_OPTIONAL, 0)
+            )
+        );
+    }
+    public static function search_glossary_returns() {
+        return new external_multiple_structure(
+                new external_single_structure(
+                    array(
+                        'id' => new external_value(PARAM_TEXT, "id of glossary entry"),
+                        'glossaryid' => new external_value(PARAM_TEXT, "id of glossary entry appears in"),
+                        'concept' => new external_value(PARAM_TEXT, "concept"),
+                        'definition' => new external_value(PARAM_RAW, "definition of concept"),
+                    )
+                )
+        );
+    }
 
-    // public static function search_glossary($userid, $courseid, $searchterm, $fullsearch, $startidx, $limit) {
-    //     global $DB;
+    public static function search_glossary($userid, $courseid, $searchterm, $fullsearch, $startidx, $limit) {
+        global $DB;
 
-    //     $params = self::validate_parameters(self::search_glossary_parameters(), array(
-    //         'userid' => $userid,
-    //         'courseid' => $courseid,
-    //         'searchterm' => $searchterm,
-    //         'fullsearch' => $fullsearch,
-    //         'startidx' => $startidx,
-    //         'limit' => $limit
-    //     ));
+        $params = self::validate_parameters(self::search_glossary_parameters(), array(
+            'userid' => $userid,
+            'courseid' => $courseid,
+            'searchterm' => $searchterm,
+            'fullsearch' => $fullsearch,
+            'startidx' => $startidx,
+            'limit' => $limit
+        ));
 
-    //     // get glossaries for course
-    //     $glossary_ids = $DB->get_fieldset_select('glossary', 'id', 
-    //     'course = :courseid', 
-    //     array(
-    //         'courseid' => $courseid
-    //         )
-    //     );
-    //     [$_insql_glossaryids, $_insql_glossaryids_params] = $DB->get_in_or_equal($glossary_ids, SQL_PARAMS_NAMED, 'glossaryids');
+        // get glossaries for course
+        $glossary_ids = $DB->get_fieldset_select('glossary', 'id', 
+        'course = :courseid', 
+        array(
+            'courseid' => $params['courseid']
+            )
+        );
+        [$_insql_glossaryids, $_insql_glossaryids_params] = $DB->get_in_or_equal($glossary_ids, SQL_PARAMS_NAMED, 'glossaryids');
         
-    //     // search 
-    //     $results = array();
-    //     $context = context_system::instance();
-    //     foreach($glossary_ids as $glossary_id) {
-    //         [$res, $num_results] = glossary_get_entries_by_search($glossary_id, $context, $searchterm, $fullsearch, "CONCEPT", "ASC", $startidx, $limit);
-    //         foreach($res as $item) {
-    //             array_push($results, array(
-    //                 "id" => $item->id,
-    //                 "glossaryid" => $item->glossaryid,
-    //                 "concept" => $item->concept,
-    //                 "definition" => $item->definition
-    //             ));
-    //         }
-    //     }
-    //     var_dump($results);
-    //     return $results;
-    // }
+        // search 
+        $results = array();
+        $context = context_system::instance();
+        foreach($glossary_ids as $glossary_id) {
+            [$res, $num_results] = glossary_get_entries_by_search($glossary_id, $context, $params['searchterm'], $params['fullsearch'], "CONCEPT", "ASC", $params['startidx'], $params['limit']);
+            foreach($res as $item) {
+            array_push($results, array(
+                "id" => $item->id,
+                "glossaryid" => $item->glossaryid,
+                "concept" => $item->concept,
+                "definition" => $item->definition
+            ));
+            }
+        }
+        return $results;
+    }
 }
 
