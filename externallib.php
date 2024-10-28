@@ -1071,54 +1071,54 @@ class block_chatbot_external extends external_api {
     }
 
 
-    // public static function get_h5pquiz_params_parameters() {
-    //     return new external_function_parameters(
-    //         array(
-    //             'cmid' => new external_value(PARAM_INT, 'course module id for h5p activity'),
-    //         )
-    //     );
-    // }
-    // public static function get_h5pquiz_params_returns() {
-    //     return new external_single_structure(
-    //         array(
-    //             'host' => new external_value(PARAM_RAW, "host address of this moodle"),
-    //             'context' => new external_value(PARAM_INT, 'context id'),
-    //             'filearea' => new external_value(PARAM_TEXT, 'filearea'),
-    //             'itemid' => new external_value(PARAM_INT, 'item id'),
-    //             'filename' => new external_value(PARAM_TEXT, 'file name')
-    //         )
-    //     );
-    // }
-    // public static function get_h5pquiz_params($cmid) {
-    //     global $DB;
-    //     global $CFG;
+    public static function get_h5pquiz_params_parameters() {
+        return new external_function_parameters(
+            array(
+                'cmid' => new external_value(PARAM_INT, 'course module id for h5p activity'),
+            )
+        );
+    }
+    public static function get_h5pquiz_params_returns() {
+        return new external_single_structure(
+            array(
+                'host' => new external_value(PARAM_RAW, "host address of this moodle"),
+                'context' => new external_value(PARAM_INT, 'context id'),
+                'filearea' => new external_value(PARAM_TEXT, 'filearea'),
+                'itemid' => new external_value(PARAM_INT, 'item id'),
+                'filename' => new external_value(PARAM_TEXT, 'file name')
+            )
+        );
+    }
+    public static function get_h5pquiz_params($cmid) {
+        global $DB;
+        global $CFG;
 
-    //     $params = self::validate_parameters(self::get_h5pquiz_params_parameters(), array(
-    //         'cmid' => $cmid,
-    //     ));
+        $params = self::validate_parameters(self::get_h5pquiz_params_parameters(), array(
+            'cmid' => $cmid,
+        ));
         
-    //     $_likesql_filename = $DB->sql_like('{files}.filename', ':filename');
-    //     $result = $DB->get_record_sql("SELECT {context}.id AS context, {files}.filearea AS filearea, {files}.itemid AS itemid,
-    //                                           {files}.itemid AS itemid, {files}.filename AS filename
-    //                                    FROM {course_modules}
-    //                                    JOIN {context} ON {context}.instanceid = {course_modules}.id
-    //                                    JOIN {files} ON {files}.contextid = {context}.id
-    //                                    WHERE {course_modules}.id = :cmid
-    //                                    AND $_likesql_filename
-    //                                    ",
-    //                                 array(
-    //                                     "cmid" => $cmid,
-    //                                     "filename" => "%.h5p"
-    //                                 )
-    //                         );
-    //     return array(
-    //         "host" => $CFG->wwwroot,
-    //         "context" => $result->context,
-    //         "filearea" => $result->filearea,
-    //         "itemid" => $result->itemid,
-    //         "filename" => $result->filename
-    //     );
-    // }
+        $_likesql_filename = $DB->sql_like('{files}.filename', ':filename');
+        $result = $DB->get_record_sql("SELECT {context}.id AS context, {files}.filearea AS filearea, {files}.itemid AS itemid,
+                                              {files}.itemid AS itemid, {files}.filename AS filename
+                                       FROM {course_modules}
+                                       JOIN {context} ON {context}.instanceid = {course_modules}.id
+                                       JOIN {files} ON {files}.contextid = {context}.id
+                                       WHERE {course_modules}.id = :cmid
+                                       AND $_likesql_filename
+                                       ",
+                                    array(
+                                        "cmid" => $params['cmid'],
+                                        "filename" => "%.h5p"
+                                    )
+                            );
+        return array(
+            "host" => $CFG->wwwroot,
+            "context" => $result->context,
+            "filearea" => $result->filearea,
+            "itemid" => $result->itemid,
+            "filename" => $result->filename
+        );
+    }
 
 
     // public static function get_oldest_worst_grade_attempts_parameters() {
