@@ -1212,46 +1212,46 @@ class block_chatbot_external extends external_api {
     // }
 
 
-    // public static function log_interaction_parameters() {
-    //     return new external_function_parameters(
-    //         array(
-    //             'userid' => new external_value(PARAM_INT, 'user id'),
-    //             'courseid' => new external_value(PARAM_INT, 'course id'),
-    //             'speaker' => new external_value(PARAM_TEXT, 'interlocuter'),
-    //             'message' => new external_value(PARAM_RAW, 'utterance'),
-    //             'act' => new external_value(PARAM_TEXT, 'recognized / generated dialog act'),
-    //         )
-    //     );
-    // }
-    // public static function log_interaction_returns() {
-    //     return new external_single_structure(
-    //         array(
-    //             'ack' => new external_value(PARAM_BOOL, 'success'),
-    //         )
-    //     );
-    // }
-    // public static function log_interaction($userid, $courseid, $speaker, $message, $act) {
-    //     global $DB;
+    public static function log_interaction_parameters() {
+        return new external_function_parameters(
+            array(
+                'userid' => new external_value(PARAM_INT, 'user id'),
+                'courseid' => new external_value(PARAM_INT, 'course id'),
+                'speaker' => new external_value(PARAM_TEXT, 'interlocuter'),
+                'message' => new external_value(PARAM_RAW, 'utterance'),
+                'act' => new external_value(PARAM_TEXT, 'recognized / generated dialog act'),
+            )
+        );
+    }
+    public static function log_interaction_returns() {
+        return new external_single_structure(
+            array(
+                'ack' => new external_value(PARAM_BOOL, 'success'),
+            )
+        );
+    }
+    public static function log_interaction($userid, $courseid, $speaker, $message, $act) {
+        global $DB;
 
-    //     $params = self::validate_parameters(self::log_interaction_parameters(), array(
-    //         'userid' => $userid,
-    //         'courseid' => $courseid,
-    //         'speaker' => $speaker,
-    //         'message' => $message,
-    //         'act' => $act
-    //     ));
+        $params = self::validate_parameters(self::log_interaction_parameters(), array(
+            'userid' => $userid,
+            'courseid' => $courseid,
+            'speaker' => $speaker,
+            'message' => $message,
+            'act' => $act
+        ));
         
-    //     $DB->insert_record("chatbot_history", array(
-    //         "userid" => $userid,
-    //         "courseid" => $courseid,
-    //         'speaker' => $speaker,
-    //         "message" => $message,
-    //         "act" => $act,
-    //         "timecreated" => (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp()
-    //     ));
+        $DB->insert_record("chatbot_history", array(
+            "userid" => $params['userid'],
+            "courseid" => $params['courseid'],
+            'speaker' => $params['speaker'],
+            "message" => $params['message'],
+            "act" => $params['act'],
+            "timecreated" => (new DateTime("now", core_date::get_server_timezone_object()))->getTimestamp()
+        ));
 
-    //     return array("ack" => true);
-    // }
+        return array("ack" => true);
+    }
 
 
 
