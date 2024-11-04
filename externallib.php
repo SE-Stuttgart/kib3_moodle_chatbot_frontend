@@ -171,6 +171,7 @@ class block_chatbot_external extends external_api {
             array(
                 'id' => new external_value(PARAM_INT, 'topic id for given course module id'),
                 'name' => new external_value(PARAM_TEXT, 'topic name'),
+                'sectionname' => new external_value(PARAM_TEXT, 'section name'),
             )
         );
     }
@@ -178,9 +179,16 @@ class block_chatbot_external extends external_api {
         global $DB;
         $params = self::validate_parameters(self::get_topic_id_and_name_parameters(), array('cmid' => $cmid));
         [$id, $name] = get_topic_id_and_name($params['cmid']);
+        $sectionname = $DB->get_field_sql("SELECT s.name
+                        FROM {course_modules} as cm
+                        JOIN {course_sections} as s ON s.id = cm.section
+                        WHERE cm.id = :cmid",
+                        array("cmid" => $params['cmid'])
+                    );
         return array(
             'id' => $id, 
-            'name' => $name
+            'name' => $name,
+            'sectionname' => $sectionname
         );
     }
 
@@ -576,6 +584,7 @@ class block_chatbot_external extends external_api {
             new external_single_structure(
                 array(
                     'sectionid' => new external_value(PARAM_INT, 'section index within course'),
+                    'sectionname' => new external_value(PARAM_TEXT, 'name of section'),
                     'url' => new external_value(PARAM_RAW, 'url to section'),
                     'topicname' => new external_value(PARAM_TEXT, "name of topic"),
                     'firstcmid' => new external_value(PARAM_INT, "first module in section, respecting user preferences for module type")
@@ -615,8 +624,9 @@ class block_chatbot_external extends external_api {
                         array_push($available, 
                             array(
                             "sectionid" => $first_cm->sectionidx,
+                            'sectionname' => $sectionname,
                             "url" => '<a href="' . $CFG->wwwroot . '/course/view.php?id=' . $params['courseid'] . '&section=' . $first_cm->sectionidx . '">' . $sectionname . '</a>',
-                            "firstcmid" => $first_cm->sectionidx,
+                            "firstcmid" => $first_cm->cmid,
                             "topicname" => $topic
                             )
                         );
