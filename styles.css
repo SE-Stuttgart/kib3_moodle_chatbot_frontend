@@ -163,6 +163,10 @@
     text-decoration: underline;
     color: white;
 }
+.block_chatbot-message .card-body a {
+    text-decoration: underline;
+    color: #399be2; /* Replace with your desired color */
+  }
 
 .block_chatbot-answer_candidate_list {
     display: flex;

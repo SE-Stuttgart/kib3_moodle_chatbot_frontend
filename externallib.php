@@ -179,12 +179,41 @@ class block_chatbot_external extends external_api {
         global $DB;
         $params = self::validate_parameters(self::get_topic_id_and_name_parameters(), array('cmid' => $cmid));
         [$id, $name] = get_topic_id_and_name($params['cmid']);
-        $sectionname = $DB->get_field_sql("SELECT s.name
-                        FROM {course_modules} as cm
-                        JOIN {course_sections} as s ON s.id = cm.section
-                        WHERE cm.id = :cmid",
-                        array("cmid" => $params['cmid'])
-                    );
+        
+        # get section name:
+        # 1. use closest label inside section. if none,
+        # 2. use section name
+        $section = $DB->get_record_sql("SELECT cs.name as name, cs.sequence as sequence
+                                             FROM {course_modules} as cm
+                                             JOIN {course_sections} as cs ON cm.section = cs.id
+                                             WHERE cm.id = :cmid",
+                                        array("cmid" => $params['cmid']));
+        $sectionname = extract_topic_text($section->name, $section->name);
+
+        # get position of cmid in section
+        $sequence = explode(",", $section->sequence);
+        $cm_idx = array_search($params['cmid'], $sequence);
+        # only consider labels before cm_idx (if any)
+        # walk backwards through sequence
+        for($i = $cm_idx - 1; $i >= 0; $i--) {
+            $cmid_candidate = $sequence[$i];
+            $candidate_type = get_module_type_name($cmid_candidate);
+            if($candidate_type == "label") {
+                # get label text
+                $label_text = $DB->get_field_sql("SELECT l.name
+                                                  FROM {label} as l
+                                                  JOIN {course_modules} as cm ON l.id = cm.instance
+                                                  WHERE cm.id = :cmid",
+                                                  array("cmid" => $cmid_candidate));    
+                if(strpos(strtolower($label_text), "abschluss") == false && strpos(strtolower($label_text), "kann ich schon") == false) {
+                    # we found a (closest) topic label -> assign and break
+                    $sectionname = extract_topic_text($label_text, $sectionname);
+                    break;
+                } 
+            }
+        }
+
+
         return array(
             'id' => $id, 
             'name' => $name,
@@ -583,7 +612,8 @@ class block_chatbot_external extends external_api {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
-                    'sectionid' => new external_value(PARAM_INT, 'section index within course'),
+                    'sectionid' => new external_value(PARAM_INT, 'section id'),
+                    'sectionindex' => new external_value(PARAM_INT, 'section index within course'),
                     'sectionname' => new external_value(PARAM_TEXT, 'name of section'),
                     'url' => new external_value(PARAM_RAW, 'url to section'),
                     'topicname' => new external_value(PARAM_TEXT, "name of topic"),
@@ -623,7 +653,8 @@ class block_chatbot_external extends external_api {
                         $sectionname = get_section_name($params['courseid'], $first_cm->sectionidx);
                         array_push($available, 
                             array(
-                            "sectionid" => $first_cm->sectionidx,
+                            "sectionid" => $first_cm->sectionid,
+                            "sectionindex" => $first_cm->sectionidx,
                             'sectionname' => $sectionname,
                             "url" => '<a href="' . $CFG->wwwroot . '/course/view.php?id=' . $params['courseid'] . '&section=' . $first_cm->sectionidx . '">' . $sectionname . '</a>',
                             "firstcmid" => $first_cm->cmid,

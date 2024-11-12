@@ -335,6 +335,16 @@ function get_module_type_name($cmid) {
 	);
 }
 
+function extract_topic_text($sectionname, $top_level_sectionname) {
+	// Extracts the text of the topic (excluding topic letter and number)
+	$pattern = '{(Video\s+|Thema\s+)?([A-Za-z]\d+(?:-\d+)?[A-Za-z]?):?(?<name>.*)}';
+	preg_match($pattern, $sectionname, $match);
+	if (isset($match['name'])) {
+		return trim($match['name']); 
+	}
+	return trim($top_level_sectionname);
+}
+
 function get_course_module_name($cmid) {
 	global $DB;
 	$typename = get_module_type_name($cmid);
