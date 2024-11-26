@@ -372,14 +372,14 @@ const sendConsent = async (userid, wstoken, wwwroot, consent) => {
     // fetch initial settings
     var settings = await fetchUserSetttings(userid, wstoken, wwwroot);
     // Add consent and firstturn signal
-    settings.logging = consent;
+    // settings.logging = consent;
     delete settings.preferedcontenttypeid;
 
-    const msgContent = await saveUserSetttings(userid, wstoken, wwwroot, settings);
+    // const msgContent = await saveUserSetttings(userid, wstoken, wwwroot, settings);
 
     // we need to reload the page, because changing the "consent" state requires reloading the template
-    window.location = self.location;
-    location.reload(true);
+    // window.location = self.location;
+    // location.reload(true);
 
     return true;
 };
@@ -438,21 +438,21 @@ export const init = (enabled, firstturn, server_name, server_port, wwwroot, user
         }
         resizeWindow(localStorage.getItem("chatbot.size"));
 
-        if(firstturn === "1") {
+        // if(firstturn === "1") {
             // Show consent on first turn
-            setWindowState(true);
-        } else {
-            // Minimize chatbot when course module modal
-            $("#block_chatbot_coursemoduleview").on('show.bs.modal', function () {
-                setWindowState(false);
-            });
+            // setWindowState(true);
+        // } else {
+        // Minimize chatbot when course module modal
+        $("#block_chatbot_coursemoduleview").on('show.bs.modal', function () {
+            setWindowState(false);
+        });
 
-            // Restore chat history
-            restore_chat_history();
+        // Restore chat history
+        restore_chat_history();
 
-            // Connect
-            conn.openConnection();
-        }
+        // Connect
+        conn.openConnection();
+        // }
 
         // Minimize chatbot when clicking outside
         document.addEventListener('click', function(event) {

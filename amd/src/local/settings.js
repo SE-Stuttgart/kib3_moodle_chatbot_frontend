@@ -23,7 +23,7 @@ export const fetchUserSetttings = async (userid, wstoken, wwwroot) => {
 
 export const assignUserSettings = (settings) => {
     document.getElementById("block_chatbot_enabled").checked = settings.enabled;
-    document.getElementById("block_chatbot_logging").checked = settings.logging;
+    // document.getElementById("block_chatbot_logging").checked = settings.logging;
     document.getElementById("block_chatbot_openonlogin").checked = settings.openonlogin;
     document.getElementById("block_chatbot_openonquiz").checked = settings.openonquiz;
     document.getElementById("block_chatbot_openonsection").checked = settings.openonsection;
@@ -43,7 +43,7 @@ export const readUserSettings = () => {
         )).filter(el => el.checked)[0].id.replace("block_chatbot_preferedcontenttype_", "");
     return {
         enabled: document.getElementById("block_chatbot_enabled").checked,
-        logging: document.getElementById("block_chatbot_logging").checked,
+        logging: false,
         openonlogin: document.getElementById("block_chatbot_openonlogin").checked,
         openonquiz: document.getElementById("block_chatbot_openonquiz").checked,
         openonsection: document.getElementById("block_chatbot_openonsection").checked,

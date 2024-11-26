@@ -49,12 +49,14 @@
                             <input class="form-control" type="checkbox" id="block_chatbot_enabled">
                         </div>
                     </div>
+                    <!--
                     <div class="row mb-1">
                         <label class="col-sm-8 col-form-label" for="block_chatbot_logging">Unterhaltungen speichern:</label>
                         <div class="col-sm-3">
                             <input class="form-control" type="checkbox" id="block_chatbot_logging">
                         </div>
                     </div>
+                    -->
                     <div class="row mb-1">
                         <label class="col-sm-8 col-form-label" for="block_chatbot_openonlogin">Öffne bei Login:</label>
                         <div class="col-sm-3">
@@ -173,37 +175,19 @@
                 </button>
             </div>
 
-            <!-- Consense window -->    
-            {{#firstturn}}
-                <h5 style="padding-left: 1rem; padding-top: 1rem;" class="modal-title">Datenschutzerklärung</h5>
-                <div class="modal-body">
-                   Ich stimme zu, dass Unterhaltungen mit dem Kibi-Assistenten gespeichert werden.
-                   Diese Unterhaltungen werden innerhalb der Moodle-Datenbank gespeichert und nur zur Fehlersuche der Entwickler genutzt.
-                   Diese Einwilligung kann jederzeit in den Einstellungen widerrufen werden.
-                   In diesem Fall werden die gespeicherten Unterhaltungen gelöscht.
-                   Falls ich mich am Ende des Kurses zur anonymen Spende meiner Logdaten entschließe, sind in dieser Spende auch die zu diesem Zeitpunkt gespeicherten Unterhaltungen enthalten, falls die Einwilligung (noch) erteilt ist.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-action="block_chatbot/agreeConsent">Zustimmen</button>
-                    <button type="button" class="btn btn-secondary" data-action="block_chatbot/rejectConsent">Ablehnen</button>
-                </div>
-            {{/firstturn }}
-
-            {{^firstturn}}
-                <div id="block_chatbot-messagelist" class="block_chatbot-messagelist"></div>
-                <div class="block_chatbot-inputContainer">
-                    <input class="block_chatbot-text_input" id="block_chatbot-userUtterance" data-action="block_chatbot/textInput" placeholder="Bitte hier Fragen etc. eingeben"/>
-                    <button class="block_chatbot-text_send" data-action="block_chatbot/sendMessage">
-                        <svg width="100%" height="100%" viewBox="0 0 1476 1080" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-                            <g transform="matrix(1,0,0,1,-481.72,-1034.63)">
-                                <g transform="matrix(0.264968,0.964257,-2.90486,0.798226,3459.05,-407.579)">
-                                    <path d="M1144.86,1031C1013.4,1048.92 634.031,1124.93 634.031,1065.52C634.031,998.539 999.161,625.501 1181.73,625.501C1364.29,625.501 1729.42,998.539 1729.42,1065.52C1729.42,1124.93 1350.05,1048.92 1218.59,1031C1220.52,1029.44 1221.59,1027.74 1221.59,1025.95L1221.59,878.361C1221.59,871.057 1203.73,865.128 1181.73,865.128C1159.72,865.128 1141.86,871.057 1141.86,878.361L1141.86,1025.95C1141.86,1027.74 1142.93,1029.44 1144.86,1031Z" style="fill:white;"/>
-                                </g>
+            <div id="block_chatbot-messagelist" class="block_chatbot-messagelist"></div>
+            <div class="block_chatbot-inputContainer">
+                <input class="block_chatbot-text_input" id="block_chatbot-userUtterance" data-action="block_chatbot/textInput" placeholder="Bitte hier Fragen etc. eingeben"/>
+                <button class="block_chatbot-text_send" data-action="block_chatbot/sendMessage">
+                    <svg width="100%" height="100%" viewBox="0 0 1476 1080" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+                        <g transform="matrix(1,0,0,1,-481.72,-1034.63)">
+                            <g transform="matrix(0.264968,0.964257,-2.90486,0.798226,3459.05,-407.579)">
+                                <path d="M1144.86,1031C1013.4,1048.92 634.031,1124.93 634.031,1065.52C634.031,998.539 999.161,625.501 1181.73,625.501C1364.29,625.501 1729.42,998.539 1729.42,1065.52C1729.42,1124.93 1350.05,1048.92 1218.59,1031C1220.52,1029.44 1221.59,1027.74 1221.59,1025.95L1221.59,878.361C1221.59,871.057 1203.73,865.128 1181.73,865.128C1159.72,865.128 1141.86,871.057 1141.86,878.361L1141.86,1025.95C1141.86,1027.74 1142.93,1029.44 1144.86,1031Z" style="fill:white;"/>
                             </g>
-                        </svg>
-                    </button>
-                </div>
-            {{/firstturn}}
+                        </g>
+                    </svg>
+                </button>
+            </div>
         </div>
     <div>
 {{/enabled}}
