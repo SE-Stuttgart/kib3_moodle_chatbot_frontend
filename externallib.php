@@ -1246,13 +1246,14 @@ class block_chatbot_external extends external_api {
                         'glossaryid' => new external_value(PARAM_TEXT, "id of glossary entry appears in"),
                         'concept' => new external_value(PARAM_TEXT, "concept"),
                         'definition' => new external_value(PARAM_RAW, "definition of concept"),
+                        'url' => new external_value(PARAM_RAW, "link to glossary index")
                     )
                 )
         );
     }
 
     public static function search_glossary($userid, $courseid, $searchterm, $fullsearch, $startidx, $limit) {
-        global $DB;
+        global $DB, $CFG;
 
         $params = self::validate_parameters(self::search_glossary_parameters(), array(
             'userid' => $userid,
@@ -1279,7 +1280,8 @@ class block_chatbot_external extends external_api {
                     "id" => $item->id,
                     "glossaryid" => $item->glossaryid,
                     "concept" => $item->concept,
-                    "definition" => $item->definition
+                    "definition" => $item->definition,
+                    "url" => '<a href="' . $CFG->wwwroot . '/mod/glossary/showentry.php?eid=' . $item->id . '">' . $item->concept . '</a>'
                 ));
             }
         }
