@@ -1264,26 +1264,23 @@ class block_chatbot_external extends external_api {
         ));
 
         // get glossaries for course
-        $glossary_ids = $DB->get_fieldset_select('glossary', 'id', 
-        'course = :courseid', 
-        array(
-            'courseid' => $params['courseid']
+        $glossaries = $DB->get_records('glossary', array(
+            'course' => $params['courseid']
             )
         );
-        [$_insql_glossaryids, $_insql_glossaryids_params] = $DB->get_in_or_equal($glossary_ids, SQL_PARAMS_NAMED, 'glossaryids');
         
         // search 
         $results = array();
-        $context = context_system::instance();
-        foreach($glossary_ids as $glossary_id) {
-            [$res, $num_results] = glossary_get_entries_by_search($glossary_id, $context, $params['searchterm'], $params['fullsearch'], "CONCEPT", "ASC", $params['startidx'], $params['limit']);
+        $context = null; //context_system::instance();
+        foreach($glossaries as $glossary) {
+            [$res, $num_results] = glossary_get_entries_by_search($glossary, $context, $params['searchterm'], $params['fullsearch'], "CONCEPT", "ASC", $params['startidx'], $params['limit']);
             foreach($res as $item) {
-            array_push($results, array(
-                "id" => $item->id,
-                "glossaryid" => $item->glossaryid,
-                "concept" => $item->concept,
-                "definition" => $item->definition
-            ));
+                array_push($results, array(
+                    "id" => $item->id,
+                    "glossaryid" => $item->glossaryid,
+                    "concept" => $item->concept,
+                    "definition" => $item->definition
+                ));
             }
         }
         return $results;
