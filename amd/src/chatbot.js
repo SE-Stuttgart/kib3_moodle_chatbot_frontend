@@ -264,12 +264,13 @@ const resizeWindow = (size) => {
 };
 
 class ChatbotConnection {
-    constructor(server_name, server_port, wwwroot, userid, courseid, booksearchtoken, wsuserid, timestamp) {
+    constructor(server_name, server_port, wwwroot, userid, username, courseid, booksearchtoken, wsuserid, timestamp) {
         this.server_name = server_name;
         this.server_port = server_port;
         this.wwwroot = wwwroot;
         this.protocol = wwwroot.startsWith("https://")? "wss" : "ws";
         this.userid = userid;
+        this.username = username;
         this.courseid = courseid;
         this.booksearchtoken = booksearchtoken;
         this.wsuserid = wsuserid;
@@ -290,6 +291,8 @@ class ChatbotConnection {
                 domain: 0,
                 topic: 'start_dialog',
                 courseid: this.courseid,
+                userid: this.userid,
+                username: this.username,
                 booksearchtoken: this.booksearchtoken,
                 wsuserid: this.wsuserid,
                 timestamp: this.timestamp
@@ -413,7 +416,8 @@ export const init = (enabled, firstturn, server_name, server_port, wwwroot, user
 
     Plotly = plotly;
     registerEventListeners();
-    conn = new ChatbotConnection(server_name, server_port, wwwroot, userid, courseid, booksearchtoken, wsuserid, timestamp);
+    conn = new ChatbotConnection(server_name, server_port, wwwroot, userid, username,
+                                 courseid, booksearchtoken, wsuserid, timestamp);
     if(enabled) {
 
         // Move container into document root

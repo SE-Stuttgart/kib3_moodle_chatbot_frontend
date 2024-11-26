@@ -114,7 +114,7 @@ class block_chatbot extends block_base {
 			"wwwroot" => $CFG->wwwroot,
 			// block_chatbot_get_chat_container(),
 			"userid" => $USER->id,
-			'username' => $USER->username,
+			'username' => $USER->firstname,
 			"courseid" => $COURSE->id,
 			"booksearchtoken" => $booksearch_token,
 			"wsuserid" => $DB->get_field("user", "id", array(
